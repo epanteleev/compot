@@ -58,13 +58,6 @@ internal class StoreIntCodegen(val type: PrimitiveType, val asm: Assembler): GPO
     }
 
     override fun default(dst: Operand, src: Operand) {
-        if (dst is GPRegister && src is XmmRegister) {
-            asm.movf(size, src, Address.from(dst, 0))
-        } else if (dst is GPRegister && src is Address) {
-            asm.mov(size, src, temp1)
-            asm.mov(size, temp1, Address.from(dst, 0))
-        } else {
-            throw RuntimeException("Internal error: '${Store.NAME}' dst=$dst, src=$src")
-        }
+        throw RuntimeException("Internal error: '${Store.NAME}' dst=$dst, src=$src")
     }
 }

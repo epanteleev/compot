@@ -7,7 +7,7 @@ import ir.types.StructType
 
 abstract class Module(internal val functions: Map<String, FunctionData>,
                       internal val functionDeclarations: Map<String, DirectFunctionPrototype>,
-                      internal val constantPool: Map<String, GlobalConstant>,
+                      internal val constantPool: MutableMap<String, GlobalConstant>,
                       internal val globals: Map<String, AnyGlobalValue>,
                       internal val types: Map<String, StructType>) {
     val prototypes: List<AnyFunctionPrototype> by lazy {
@@ -22,6 +22,11 @@ abstract class Module(internal val functions: Map<String, FunctionData>,
         return constantPool[name] ?: throw NoSuchElementException("Cannot find function: $name")
     }
 
+    fun addConstant(constant: GlobalConstant): GlobalConstant {
+        val old = constantPool.put(constant.name(), constant) ?: return constant
+        throw IllegalArgumentException("Constant with name ${constant.name()} already exists: $old")
+    }
+
     abstract fun copy(): Module
 
     fun functions(): Collection<FunctionData> {
@@ -31,7 +36,7 @@ abstract class Module(internal val functions: Map<String, FunctionData>,
 
 class SSAModule(functions: Map<String, FunctionData>,
                 externFunctions: Map<String, DirectFunctionPrototype>,
-                constantPool: Map<String, GlobalConstant>,
+                constantPool: MutableMap<String, GlobalConstant>,
                 globals: Map<String, AnyGlobalValue>,
                 types: Map<String, StructType>):
     Module(functions, externFunctions, constantPool, globals, types) {
@@ -41,7 +46,7 @@ class SSAModule(functions: Map<String, FunctionData>,
             newMap[name] = function.copy()
         }
 
-        return SSAModule(newMap, functionDeclarations, constantPool, globals, types)
+        return SSAModule(newMap, functionDeclarations, constantPool, globals, types) //TODO deep copy constantPool
     }
 
     override fun toString(): String {

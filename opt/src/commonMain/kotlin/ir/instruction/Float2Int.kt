@@ -7,8 +7,8 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Float2Int private constructor(id: Identity, owner: Block, private val toType: IntegerType, value: Value):
-    ValueInstruction(id, owner, arrayOf(value)) {
+class Float2Int private constructor(id: Identity, owner: Block, toType: IntegerType, value: Value):
+    Unary(id, owner, toType, value) {
     override fun dump(): String {
         return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
     }
@@ -21,7 +21,7 @@ class Float2Int private constructor(id: Identity, owner: Block, private val toTy
         return operands[0]
     }
 
-    override fun type(): IntegerType = toType
+    override fun type(): IntegerType = tp.asType()
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

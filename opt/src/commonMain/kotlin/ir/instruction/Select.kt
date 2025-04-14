@@ -31,12 +31,20 @@ class Select private constructor(id: Identity, owner: Block, private val ty: Int
         return operands[1]
     }
 
+    fun onTrue(newOnTrue: Value) = owner.df {
+        update(1, newOnTrue)
+    }
+
     fun onFalse(): Value {
         assertion(operands.size == 3) {
             "size should be 3 in $this instruction"
         }
 
         return operands[2]
+    }
+
+    fun onFalse(newOnFalse: Value) = owner.df {
+        update(2, newOnFalse)
     }
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {

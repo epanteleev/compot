@@ -1,7 +1,8 @@
 package ir.platform.x64.auxiliary
 
+import asm.x64.Imm
 import ir.global.AnyAggregateGlobalConstant
-import ir.global.ExternValue
+import ir.global.*
 import ir.types.*
 import ir.value.*
 import ir.module.Module
@@ -15,10 +16,14 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.ExternFunction
 import ir.module.FunctionPrototype
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
+import ir.platform.x64.CallConvention
 
 
-internal class Lowering private constructor(val cfg: FunctionData): IRInstructionVisitor<Instruction?>() {
+internal class Lowering private constructor(private val cfg: FunctionData, private val module: Module, private val idx: Int): IRInstructionVisitor<Instruction?>() {
     private var bb: Block = cfg.begin()
+    private var constantIndex = 0
+
+    private fun constName(): String = "${PREFIX}.$idx.${constantIndex++}"
 
     private fun pass() {
         for (bb in cfg.analysis(BfsOrderOrderFabric)) {
@@ -32,6 +37,9 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     private fun gAggregate(): ValueMatcher = { it is AnyAggregateGlobalConstant || it is FunctionPrototype }
 
     private fun function(): ValueMatcher = { it is FunctionPrototype }
+
+    private fun u64imm32(): ValueMatcher = { it is U64Value && !Imm.canBeImm32(it.u64) }
+    private fun i64imm32(): ValueMatcher = { it is I64Value && !Imm.canBeImm32(it.i64) }
 
     override fun visit(alloc: Alloc): Instruction {
         // Before:
@@ -47,27 +55,96 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
     override fun visit(lea: Lea): Instruction = lea
 
+    private fun lowerArithmeticOperands(binary: ArithmeticBinary) {
+        val lhs = binary.lhs()
+        if (lhs.isa(u64imm32())) {
+            val operand = lhs.asValue<U64Value>()
+            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
+            binary.lhs(constant)
+
+        } else if (lhs.isa(i64imm32())) {
+            val operand = lhs.asValue<I64Value>()
+            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
+            binary.lhs(constant)
+
+        } else if (lhs.isa(f32v())) {
+            val operand = lhs.asValue<F32Value>()
+            val constant = module.addConstant(F32ConstantValue(constName(), operand.f32))
+            binary.lhs(constant)
+
+        } else if (lhs.isa(f64v())) {
+            val operand = lhs.asValue<F64Value>()
+            val constant = module.addConstant(F64ConstantValue(constName(), operand.f64))
+            binary.lhs(constant)
+        }
+
+        val rhs = binary.rhs()
+        if (rhs.isa(u64imm32())) {
+            val operand = rhs.asValue<U64Value>()
+            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
+            binary.rhs(constant)
+
+        } else if (rhs.isa(i64imm32())) {
+            val operand = rhs.asValue<I64Value>()
+            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
+            binary.rhs(constant)
+
+        } else if (rhs.isa(f32v())) {
+            val operand = rhs.asValue<F32Value>()
+            val constant = module.addConstant(F32ConstantValue(constName(), operand.f32))
+            binary.rhs(constant)
+
+        } else if (rhs.isa(f64v())) {
+            val operand = rhs.asValue<F64Value>()
+            val constant = module.addConstant(F64ConstantValue(constName(), operand.f64))
+            binary.rhs(constant)
+        }
+    }
+
+    private fun lowerUnaryOperand(unary: Unary): Boolean {
+        val operand = unary.operand()
+        if (operand.isa(f32v())) {
+            val value = operand.asValue<F32Value>()
+            val constant = module.addConstant(F32ConstantValue(constName(), value.f32))
+            unary.operand(constant)
+            return true
+
+        } else if (operand.isa(f64v())) {
+            val value = operand.asValue<F64Value>()
+            val constant = module.addConstant(F64ConstantValue(constName(), value.f64))
+            unary.operand(constant)
+            return true
+        }
+        return false
+    }
+
     override fun visit(add: Add): Instruction {
+        lowerArithmeticOperands(add)
         return add
     }
 
     override fun visit(and: And): Instruction {
+        lowerArithmeticOperands(and)
         return and
     }
 
     override fun visit(sub: Sub): Instruction {
+        lowerArithmeticOperands(sub)
         return sub
     }
 
     override fun visit(mul: Mul): Instruction {
+        lowerArithmeticOperands(mul)
         return mul
     }
 
     override fun visit(or: Or): Instruction {
+        lowerArithmeticOperands(or)
         return or
     }
 
     override fun visit(xor: Xor): Instruction {
+        lowerArithmeticOperands(xor)
         return xor
     }
 
@@ -87,9 +164,10 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val copy = bb.putBefore(shl, Copy.copy(shl.rhs()))
             shl.rhs(copy)
+            lowerArithmeticOperands(shl) //TODO: check if it is needed
             return shl
         }
-
+        lowerArithmeticOperands(shl) //TODO: check if it is needed
         return shl
     }
 
@@ -105,24 +183,27 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val copy = bb.putBefore(shr, Copy.copy(shr.rhs()))
             shr.rhs(copy)
+            lowerArithmeticOperands(shr) //TODO: check if it is needed
             return shr
         }
-
+        lowerArithmeticOperands(shr) //TODO: check if it is needed
         return shr
     }
 
     override fun visit(div: Div): Instruction {
+        lowerArithmeticOperands(div)
         return div
     }
 
     override fun visit(neg: Neg): Instruction {
+        lowerUnaryOperand(neg)
         val type = neg.type()
-        if (type.isa(fp())) {
-            val constant = when (neg.asType<FloatingPointType>()) {
-                F32Type -> F32_SUBZERO
-                F64Type -> F64_SUBZERO
-            }
+        if (type.isa(f32())) {
+            val constant = module.addConstant(F32ConstantValue(constName(), F32_SUBZERO))
+            return bb.replace(neg, Fxor.xor(neg.operand(), constant))
 
+        } else if (type.isa(f64())) {
+            val constant = module.addConstant(F64ConstantValue(constName(), F64_SUBZERO))
             return bb.replace(neg, Fxor.xor(neg.operand(), constant))
         }
 
@@ -178,20 +259,25 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(fptruncate: FpTruncate): Instruction {
+        lowerUnaryOperand(fptruncate)
         return fptruncate
     }
 
     override fun visit(fpext: FpExtend): Instruction {
+        lowerUnaryOperand(fpext)
         return fpext
     }
 
     override fun visit(fptosi: Float2Int): Instruction {
+        lowerUnaryOperand(fptosi)
         return fptosi
     }
 
     override fun visit(copy: Copy): Instruction {
         val operand = copy.operand()
-        if (operand.isa(generate())) {
+        if (lowerUnaryOperand(copy)) {
+            return copy
+        } else if (operand.isa(generate())) {
             // Before:
             //  %res = copy %gen
             //
@@ -248,7 +334,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             // After:
             //  %lea = leastv %gen, %idx
 
-            val baseType = gep.accessType().asType<PrimitiveType>()
+            val baseType = gep.basicType.asType<PrimitiveType>()
             return bb.replace(gep, LeaStack.lea(gep.source(), baseType, gep.index()))
 
         } else if (ty.isa(aggregate())) {
@@ -446,6 +532,30 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(fcmp: FloatCompare): Instruction {
+        val lhs = fcmp.lhs()
+        if (lhs.isa(f32v())) {
+            val operand = lhs.asValue<F32Value>()
+            val constant = module.addConstant(F32ConstantValue(constName(), operand.f32))
+            fcmp.lhs(constant)
+
+        } else if (lhs.isa(f64v())) {
+            val operand = lhs.asValue<F64Value>()
+            val constant = module.addConstant(F64ConstantValue(constName(), operand.f64))
+            fcmp.lhs(constant)
+        }
+
+        val rhs = fcmp.rhs()
+        if (rhs.isa(f32v())) {
+            val operand = rhs.asValue<F32Value>()
+            val constant = module.addConstant(F32ConstantValue(constName(), operand.f32))
+            fcmp.rhs(constant)
+
+        } else if (rhs.isa(f64v())) {
+            val operand = rhs.asValue<F64Value>()
+            val constant = module.addConstant(F64ConstantValue(constName(), operand.f64))
+            fcmp.rhs(constant)
+        }
+
         return fcmp
     }
 
@@ -533,7 +643,26 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         throw UnsupportedOperationException("UncompletedPhi is not supported in lowering")
     }
 
+    private fun lowerReturnArg(returnValue: ReturnValue, index: Int) {
+        val retVal = returnValue.returnValue(index)
+        if (retVal.isa(f32v())) {
+            val operand = retVal.asValue<F32Value>()
+            val constant = module.addConstant(F32ConstantValue(constName(), operand.f32))
+            returnValue.returnValue(index, constant)
+
+        } else if (retVal.isa(f64v())) {
+            val operand = retVal.asValue<F64Value>()
+            val constant = module.addConstant(F64ConstantValue(constName(), operand.f64))
+            returnValue.returnValue(index, constant)
+        }
+    }
+
     override fun visit(returnValue: ReturnValue): Instruction {
+        lowerReturnArg(returnValue, 0)
+        if (returnValue.operands().size == 2) {
+            lowerReturnArg(returnValue, 1)
+        }
+
         returnValue.match(ret(gValue(anytype()))) {
             // Before:
             //  ret @global
@@ -648,6 +777,30 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(select: Select): Instruction {
+        val onTrue = select.onTrue()
+        if (onTrue.isa(i64imm32())) { //TODO temporary solution
+            val operand = onTrue.asValue<I64Value>()
+            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
+            select.onTrue(constant)
+
+        } else if (onTrue.isa(u64imm32())) {
+            val operand = onTrue.asValue<U64Value>()
+            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
+            select.onTrue(constant)
+        }
+
+        val onFalse = select.onFalse()
+        if (onFalse.isa(i64imm32())) { //TODO temporary solution
+            val operand = onFalse.asValue<I64Value>()
+            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
+            select.onFalse(constant)
+
+        } else if (onFalse.isa(u64imm32())) {
+            val operand = onFalse.asValue<U64Value>()
+            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
+            select.onFalse(constant)
+        }
+
         select.match(select(any(), value(i8()), value(i8()))) {
             // Before:
             //  %cond = icmp <predicate> i8 %a, %b
@@ -705,6 +858,28 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(store: Store): Instruction {
+        val value = store.value()
+        if (value.isa(f32v())) {
+            val operand = value.asValue<F32Value>()
+            val constant = module.addConstant(F32ConstantValue(constName(), operand.f32))
+            store.value(constant)
+
+        } else if (value.isa(f64v())) {
+            val operand = value.asValue<F64Value>()
+            val constant = module.addConstant(F64ConstantValue(constName(), operand.f64))
+            store.value(constant)
+
+        } else if (value.isa(u64imm32())) { //TODO remove it in future
+            val operand = value.asValue<U64Value>()
+            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
+            store.value(constant)
+
+        } else if (value.isa(i64imm32())) { //TODO remove it in future
+            val operand = value.asValue<I64Value>()
+            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
+            store.value(constant)
+        }
+
         store.match(store(extern(), any())) {
             // Before:
             //  store @global, %val
@@ -1109,6 +1284,30 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(tupleDiv: TupleDiv): Instruction {
+        val lhs = tupleDiv.lhs()
+        if (lhs.isa(i64imm32())) {
+            val operand = lhs.asValue<I64Value>()
+            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
+            tupleDiv.lhs(constant)
+
+        } else if (lhs.isa(u64imm32())) {
+            val operand = lhs.asValue<U64Value>()
+            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
+            tupleDiv.lhs(constant)
+        }
+
+        val rhs = tupleDiv.rhs()
+        if (rhs.isa(i64imm32())) {
+            val operand = rhs.asValue<I64Value>()
+            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
+            tupleDiv.rhs(constant)
+
+        } else if (rhs.isa(u64imm32())) {
+            val operand = rhs.asValue<U64Value>()
+            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
+            tupleDiv.rhs(constant)
+        }
+
         tupleDiv.match(tupleDiv(value(i8()), value(i8()))) {
             // Before:
             //  %resANDrem = div i8 %a, %b
@@ -1235,12 +1434,13 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     companion object {
-        private val F32_SUBZERO = F32Value(-0.0f)
-        private val F64_SUBZERO = F64Value(-0.0)
+        private const val F32_SUBZERO: Float = -0.0f
+        private const val F64_SUBZERO: Double = -0.0
+        private const val PREFIX = CallConvention.CONSTANT_POOL_PREFIX
 
         fun run(module: Module): Module {
-            for (fn in module.functions()) {
-                Lowering(fn).pass()
+            for ((idx, fn) in module.functions().withIndex()) {
+                Lowering(fn, module, idx).pass()
             }
 
             return module

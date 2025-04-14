@@ -8,7 +8,7 @@ import ir.platform.x64.auxiliary.DumpLModule
 
 class LModule(functions: Map<String, FunctionData>,
               externFunctions: Map<String, DirectFunctionPrototype>,
-              constantPool: Map<String, GlobalConstant>,
+              constantPool: MutableMap<String, GlobalConstant>,
               globals: Map<String, AnyGlobalValue>,
               types: Map<String, StructType>):
     Module(functions, externFunctions, constantPool, globals, types) {

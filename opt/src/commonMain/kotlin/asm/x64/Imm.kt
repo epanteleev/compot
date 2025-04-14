@@ -54,8 +54,8 @@ class Imm8 private constructor(private val value: Byte) : Imm() {
         private val table = arrayOfNulls<Imm8>(SIZE.toInt())
 
         fun of(value: Long): Imm8 {
-            assertion(canBeImm8(value)) {
-                "cannot be cast to imm8: value=$value"
+            if (!canBeImm8(value)) {
+                throw IllegalArgumentException("value=$value is not in range of Byte")
             }
 
             return round(value)
@@ -85,18 +85,14 @@ class Imm32 private constructor(private val value: Int) : Imm() {
         private val table = arrayOfNulls<Imm32>(SIZE.toInt())
 
         fun of(value: Long): Imm32 {
-            assertion(canBeImm32(value)) {
-                "cannot be cast to imm32: value=$value"
+            if (!canBeImm32(value)) {
+                throw IllegalArgumentException("value=$value is not in range of Int")
             }
 
             return getOrCreate(value, table) { Imm32(value.toInt()) }
         }
 
         fun of(value: Int): Imm32 {
-            assertion(canBeImm32(value.toLong())) {
-                "cannot be cast to imm32: value=$value"
-            }
-
             return getOrCreate(value, table) { Imm32(value) }
         }
     }
@@ -114,8 +110,8 @@ class Imm64 private constructor(val value: Long) : Imm() {
     }
 
     override fun asImm32(): Imm32 {
-        assertion(canBeImm32(value)) {
-            "cannot be cast to imm32: value=$value"
+        if (!canBeImm32(value)) {
+            throw IllegalArgumentException("value=$value is not in range of Int")
         }
 
         return Imm32.of(value)

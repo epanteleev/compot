@@ -71,7 +71,7 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
 
         private fun isAppropriateTypes(dstType: Type, srcType: Type, length: UnsignedIntegerConstant): Boolean {
             return true
-            if (length.value() == 0UL) {
+            if (length.value() == 0L) {
                 return false
             }
             return dstType == srcType && dstType is PtrType

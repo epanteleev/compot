@@ -10,6 +10,8 @@ sealed interface IntegerConstant: PrimitiveConstant {
         is SignedIntegerConstant   -> value().toInt()
     }
 
+    fun value(): Long
+
     companion object {
         internal const val SIZE = 0xFL
         internal const val MASK = (SIZE - 1).inv()

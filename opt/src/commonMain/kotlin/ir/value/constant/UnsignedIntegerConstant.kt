@@ -6,8 +6,6 @@ import ir.value.constant.IntegerConstant.Companion.getOrCreate
 
 
 sealed interface UnsignedIntegerConstant: IntegerConstant {
-    fun value(): ULong
-
     companion object {
         fun of(kind: UnsignedIntType, value: Number): UnsignedIntegerConstant = when (kind) {
             U8Type  -> U8Value.of(value.toByte())
@@ -20,7 +18,7 @@ sealed interface UnsignedIntegerConstant: IntegerConstant {
 
 class U8Value private constructor(val u8: Byte): UnsignedIntegerConstant {
     override fun type(): U8Type = U8Type
-    override fun value(): ULong = u8.toUByte().toULong()
+    override fun value(): Long = u8.toUByte().toLong()
     override fun toString(): String = u8.toString()
 
     companion object {
@@ -32,7 +30,7 @@ class U8Value private constructor(val u8: Byte): UnsignedIntegerConstant {
 
 class U16Value private constructor(val u16: Short): UnsignedIntegerConstant {
     override fun type(): U16Type = U16Type
-    override fun value(): ULong = u16.toUShort().toULong()
+    override fun value(): Long = u16.toUShort().toLong()
     override fun toString(): String = u16.toString()
 
     companion object {
@@ -44,7 +42,7 @@ class U16Value private constructor(val u16: Short): UnsignedIntegerConstant {
 
 class U32Value private constructor(val u32: Int): UnsignedIntegerConstant {
     override fun type(): U32Type = U32Type
-    override fun value(): ULong = u32.toUInt().toULong()
+    override fun value(): Long = u32.toUInt().toLong()
     override fun toString(): String = u32.toString()
 
     companion object {
@@ -57,7 +55,7 @@ class U32Value private constructor(val u32: Int): UnsignedIntegerConstant {
 class U64Value private constructor(val u64: Long): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType = U64Type
 
-    override fun value(): ULong = u64.toULong()
+    override fun value(): Long = u64.toLong()
 
     override fun toString(): String = u64.toString()
 

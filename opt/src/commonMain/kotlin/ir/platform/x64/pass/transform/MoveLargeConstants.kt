@@ -3,6 +3,8 @@ package ir.platform.x64.pass.transform
 import asm.x64.Imm.Companion.canBeImm32
 import ir.global.*
 import ir.instruction.IntCompare
+import ir.instruction.ReturnValue
+import ir.instruction.Select
 import ir.instruction.Unary
 import ir.module.Module
 import ir.module.block.Block
@@ -11,6 +13,7 @@ import ir.module.SSAModule
 import ir.platform.x64.CallConvention
 import ir.types.FloatingPointType
 import ir.value.constant.*
+import kotlin.concurrent.thread
 
 
 // Move large constant to constant pool
@@ -27,7 +30,7 @@ class MoveLargeConstants private constructor(val functions: Map<String, Function
 
     private fun makeConstantOrNull(operand: Constant): GlobalConstant? {
         val global = when {
-            operand is U64Value && !canBeImm32(operand.u64) -> U64ConstantValue("$PREFIX${constantIndex}", operand.u64.toULong())
+            operand is U64Value && !canBeImm32(operand.u64) -> U64ConstantValue("$PREFIX${constantIndex}", operand.u64)
             operand is I64Value && !canBeImm32(operand.i64) -> I64ConstantValue("$PREFIX${constantIndex}", operand.i64)
             operand is F32Value -> F32ConstantValue("$PREFIX${constantIndex}", operand.f32)
             operand is F64Value -> F64ConstantValue("$PREFIX${constantIndex}", operand.f64)
@@ -45,12 +48,16 @@ class MoveLargeConstants private constructor(val functions: Map<String, Function
             if (inst is IntCompare) {
                 return@transform inst
             }
+            if (inst is ReturnValue || inst is Select) {
+                return@transform inst
+            }
             for ((i, operand) in inst.operands().withIndex()) {
                 if (operand !is Constant) {
                     continue
                 }
 
                 val constant = makeConstantOrNull(operand) ?: continue
+                throw IllegalStateException("Constant ${inst.dump()}")
                 constants[constant.name()] = constant
                 inst.update(i, constant)
             }

@@ -62,7 +62,7 @@ class I32ConstantValue(override val name: String, private val i32: Int): Primiti
     override fun constant(): I32Value = I32Value.of(i32)
 }
 
-class U64ConstantValue(override val name: String, private val u64: ULong): PrimitiveGlobalConstant(name) {
+class U64ConstantValue(override val name: String, private val u64: Long): PrimitiveGlobalConstant(name) {
     override fun dump(): String {
         return "@$name = constant ${type()} $u64"
     }

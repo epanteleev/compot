@@ -5,11 +5,14 @@ import ir.value.Value
 import ir.instruction.*
 import ir.attributes.ByValue
 import ir.global.ExternValue
+import ir.global.GlobalConstant
 import ir.global.GlobalValue
 import ir.instruction.lir.Generate
 import ir.value.ArgumentValue
 import ir.value.LocalValue
 import ir.value.constant.Constant
+import ir.value.constant.F32Value
+import ir.value.constant.F64Value
 
 
 typealias ValueMatcher = (Value) -> Boolean
@@ -152,7 +155,15 @@ inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
     it is GlobalValue && type(it.contentType())
 }
 
+inline fun gConstant(crossinline type: TypeMatcher): ValueMatcher = {
+    it is GlobalConstant && type(it.type())
+}
+
 fun argumentByValue(): ValueMatcher = { it is ArgumentValue && it.attributes.any { it is ByValue } }
+
+fun f32v(): ValueMatcher = { it is F32Value }
+
+fun f64v(): ValueMatcher = { it is F64Value }
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // Type matchers
@@ -179,8 +190,8 @@ fun u64(): TypeMatcher = { it == U64Type }
 
 fun fp(): TypeMatcher = { it is FloatingPointType }
 
-fun it_is(value: Value): ValueMatcher = { it == value }
-
+fun f32(): TypeMatcher = { it == F32Type }
+fun f64(): TypeMatcher = { it == F64Type }
 ////////////////////////////////////////////////////////////////////////////////////////
 // Operations
 ////////////////////////////////////////////////////////////////////////////////////////

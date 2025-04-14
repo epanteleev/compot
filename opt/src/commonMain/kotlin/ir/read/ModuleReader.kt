@@ -109,7 +109,7 @@ class ModuleReader private constructor(string: String) {
                     I32Type -> I32ConstantValue(name, data.int.toInt())
                     U32Type  -> U32ConstantValue(name, data.int.toUInt())
                     I64Type -> I64ConstantValue(name, data.int)
-                    U64Type -> U64ConstantValue(name, data.int.toULong())
+                    U64Type -> U64ConstantValue(name, data.int)
                 }
             }
             is FloatValue -> {

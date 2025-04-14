@@ -6,8 +6,6 @@ import ir.value.constant.IntegerConstant.Companion.getOrCreate
 
 
 sealed interface SignedIntegerConstant: IntegerConstant {
-    fun value(): Long
-
     companion object {
         fun of(kind: SignedIntType, value: Number): SignedIntegerConstant = when (kind) {
             I8Type  -> I8Value.of(value.toByte())
