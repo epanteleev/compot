@@ -95,7 +95,7 @@ internal class OrCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPO
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
         val or = first.value() or second.value()
-        asm.mov(size, Imm64.of(or), dst)
+        asm.mov(size, Imm32.of(or), dst)
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {

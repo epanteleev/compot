@@ -29,11 +29,16 @@ internal class MoveIntCodegen(val type: PrimitiveType, val asm: Assembler): GPOp
         asm.mov(size, temp1, dst)
     }
 
-    override fun ai(dst: Address, src: Imm32) {
-        asm.mov(size, src, dst)
+    override fun ai(dst: Address, src: Imm) {
+        if (Imm.canBeImm32(src.value())) {
+            asm.mov(size, src.asImm32(), dst)
+        } else {
+            asm.mov(size, src, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
-    override fun ri(dst: GPRegister, src: Imm32) = default(dst, src)
+    override fun ri(dst: GPRegister, src: Imm) = default(dst, src)
     override fun rr(dst: GPRegister, src: GPRegister) = default(dst, src)
     override fun ra(dst: GPRegister, src: Address) = default(dst, src)
     override fun default(dst: Operand, src: Operand) {

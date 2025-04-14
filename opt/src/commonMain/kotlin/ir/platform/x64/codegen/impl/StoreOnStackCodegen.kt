@@ -25,11 +25,11 @@ internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: Inte
                         asm.movf(size, source, Address.from(dst.base, dst.offset, index, ScaleFactor.from(size)))
                     }
                     dst is Address2 && source is XmmRegister && index is Imm -> {
-                        val indexImm = index as ImmInt
+                        val indexImm = index as Imm
                         asm.movf(size, source, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
                     }
                     dst is Address2 && source is Address && index is Imm -> {
-                        val indexImm = index as ImmInt
+                        val indexImm = index as Imm
                         asm.movf(indexSize, source, xmmTemp1)
                         asm.movf(size, xmmTemp1, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
                     }

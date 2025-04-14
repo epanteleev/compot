@@ -65,7 +65,7 @@ internal class SarCodegen (type: ArithmeticType, val asm: X64MacroAssembler): GP
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
         asm.copy(size, first, dst)
-        asm.sar(size, second, dst)
+        asm.sar(size, Imm8.round(second.value()), dst)
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
@@ -84,7 +84,7 @@ internal class SarCodegen (type: ArithmeticType, val asm: X64MacroAssembler): GP
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
         asm.mov(size, first, dst)
-        asm.sar(size, second, dst)
+        asm.sar(size, Imm8.round(second.value()), dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
@@ -107,15 +107,15 @@ internal class SarCodegen (type: ArithmeticType, val asm: X64MacroAssembler): GP
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
         asm.mov(size, first, dst)
-        asm.sar(size, second, dst)
+        asm.sar(size, Imm8.round(second.value()), dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
         if (dst == first) {
-            asm.sar(size, second, dst)
+            asm.sar(size, Imm8.round(second.value()), dst)
         } else {
             asm.mov(size, first, temp1)
-            asm.sar(size, second, temp1)
+            asm.sar(size, Imm8.round(second.value()), temp1)
             asm.mov(size, temp1, dst)
         }
     }

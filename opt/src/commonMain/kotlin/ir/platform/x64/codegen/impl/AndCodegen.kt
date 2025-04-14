@@ -98,7 +98,7 @@ internal class AndCodegen(val type: IntegerType, val asm: X64MacroAssembler): GP
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
         val and = first.value() and second.value()
-        asm.mov(size, Imm64.of(and), dst)
+        asm.mov(size, Imm32.of(and), dst)
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {

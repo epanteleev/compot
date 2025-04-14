@@ -38,13 +38,23 @@ internal class StoreIntCodegen(val type: PrimitiveType, val asm: Assembler): GPO
         asm.mov(size, temp2, Address.from(temp1, 0))
     }
 
-    override fun ri(dst: GPRegister, src: Imm32) {
-        asm.mov(size, src, Address.from(dst, 0))
+    override fun ri(dst: GPRegister, src: Imm) {
+        if (Imm.canBeImm32(src.value())) {
+            asm.mov(size, src.asImm32(), Address.from(dst, 0))
+        } else {
+            asm.mov(size, src, temp1)
+            asm.mov(size, temp1, Address.from(dst, 0))
+        }
     }
 
-    override fun ai(dst: Address, src: Imm32) {
+    override fun ai(dst: Address, src: Imm) {
         asm.mov(POINTER_SIZE, dst, temp1)
-        asm.mov(size, src, Address.from(temp1, 0))
+        if (Imm.canBeImm32(src.value())) {
+            asm.mov(size, src.asImm32(), Address.from(temp1, 0))
+        } else {
+            asm.mov(size, src, temp2)
+            asm.mov(size, temp2, Address.from(temp1, 0))
+        }
     }
 
     override fun default(dst: Operand, src: Operand) {

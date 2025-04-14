@@ -35,12 +35,17 @@ internal class TruncateCodegen(fromType: IntegerType, toType: IntegerType, val a
         asm.mov(toSize, temp1, dst)
     }
 
-    override fun ri(dst: GPRegister, src: Imm32) {
+    override fun ri(dst: GPRegister, src: Imm) {
         asm.mov(toSize, src, dst)
     }
 
-    override fun ai(dst: Address, src: Imm32) {
-        asm.mov(toSize, src, dst)
+    override fun ai(dst: Address, src: Imm) {
+        if (Imm.canBeImm32(src.value())) {
+            asm.mov(toSize, src.asImm32(), dst)
+        } else {
+            asm.mov(toSize, src, temp1)
+            asm.mov(toSize, temp1, dst)
+        }
     }
 
     override fun default(dst: Operand, src: Operand) {

@@ -102,24 +102,24 @@ abstract class Assembler(functionName: String, val id: Int): AnonymousDirective(
 
     // Signed logical Shift Left
     fun sar(size: Int, src: GPRegister, dst: GPRegister) = add(Sar(size, src, dst))
-    fun sar(size: Int, src: Imm32, dst: GPRegister)      = add(Sar(size, src, dst))
+    fun sar(size: Int, src: Imm8, dst: GPRegister)      = add(Sar(size, src, dst))
     fun sar(size: Int, src: GPRegister, dst: Address)    = add(Sar(size, src, dst))
     fun sar(size: Int, src: Address, dst: GPRegister)    = add(Sar(size, src, dst))
-    fun sar(size: Int, src: Imm32, dst: Address)         = add(Sar(size, src, dst))
+    fun sar(size: Int, src: Imm8, dst: Address)         = add(Sar(size, src, dst))
 
     // Unsigned logical Shift Left
     fun shl(size: Int, src: GPRegister, dst: GPRegister) = add(Shl(size, src, dst))
-    fun shl(size: Int, src: Imm32, dst: GPRegister)      = add(Shl(size, src, dst))
+    fun shl(size: Int, src: Imm8, dst: GPRegister)       = add(Shl(size, src, dst))
     fun shl(size: Int, src: GPRegister, dst: Address)    = add(Shl(size, src, dst))
     fun shl(size: Int, src: Address, dst: GPRegister)    = add(Shl(size, src, dst))
-    fun shl(size: Int, src: Imm32, dst: Address)         = add(Shl(size, src, dst))
+    fun shl(size: Int, src: Imm8, dst: Address)          = add(Shl(size, src, dst))
 
     // Signed logical Shift Right
     fun sal(size: Int, src: GPRegister, dst: GPRegister) = add(Sal(size, src, dst))
-    fun sal(size: Int, src: Imm32, dst: GPRegister)      = add(Sal(size, src, dst))
+    fun sal(size: Int, src: Imm8, dst: GPRegister)       = add(Sal(size, src, dst))
     fun sal(size: Int, src: GPRegister, dst: Address)    = add(Sal(size, src, dst))
     fun sal(size: Int, src: Address, dst: GPRegister)    = add(Sal(size, src, dst))
-    fun sal(size: Int, src: Imm32, dst: Address)         = add(Sal(size, src, dst))
+    fun sal(size: Int, src: Imm8, dst: Address)          = add(Sal(size, src, dst))
 
     // Two's Complement Negation
     fun neg(size: Int, dst: GPRegister) = add(Neg(size, dst))
@@ -163,8 +163,8 @@ abstract class Assembler(functionName: String, val id: Int): AnonymousDirective(
     protected fun mov(size: Int, src: GPRegister, dst: GPRegister) = add(Mov(size, src, dst))
     fun mov(size: Int, src: Address, dst: GPRegister)    = add(Mov(size, src, dst))
     fun mov(size: Int, src: GPRegister, dst: Address)    = add(Mov(size, src, dst))
-    fun mov(size: Int, imm: ImmInt, dst: Address)        = add(Mov(size, imm, dst))
-    fun mov(size: Int, imm: ImmInt, dst: GPRegister)     = add(Mov(size, imm, dst))
+    fun mov(size: Int, imm: Imm32, dst: Address)        = add(Mov(size, imm, dst))
+    fun mov(size: Int, imm: Imm, dst: GPRegister)     = add(Mov(size, imm, dst))
 
     // Move With Sign-Extension
     private fun movsx(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister)  = add(Movsx(fromSize, toSize, src, dst))

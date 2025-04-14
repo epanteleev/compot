@@ -37,12 +37,17 @@ internal class CopyIntCodegen(val type: PrimitiveType, val asm: X64MacroAssemble
         asm.mov(size, temp1, dst)
     }
 
-    override fun ri(dst: GPRegister, src: Imm32) {
+    override fun ri(dst: GPRegister, src: Imm) {
         asm.copy(size, src, dst)
     }
 
-    override fun ai(dst: Address, src: Imm32) {
-        asm.mov(size, src, dst)
+    override fun ai(dst: Address, src: Imm) {
+        if (Imm.canBeImm32(src.value())) {
+            asm.mov(size, src.asImm32(), dst)
+        } else {
+            asm.mov(size, src, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun default(dst: Operand, src: Operand) {

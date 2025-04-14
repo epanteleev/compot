@@ -146,7 +146,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         mov(size, src, dst)
     }
 
-    fun copy(size: Int, src: ImmInt, dst: GPRegister) {
+    fun copy(size: Int, src: Imm, dst: GPRegister) {
         if (src.value() == 0L) {
             xor(size, dst, dst)
         } else {

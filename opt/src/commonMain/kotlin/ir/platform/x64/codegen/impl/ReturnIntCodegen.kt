@@ -23,7 +23,7 @@ internal class ReturnIntCodegen(type: PrimitiveType, val asm: X64MacroAssembler)
         asm.mov(size, src, dst)
     }
 
-    override fun ri(dst: GPRegister, src: ImmInt) {
+    override fun ri(dst: GPRegister, src: Imm) {
         asm.copy(size, src, dst)
     }
 

@@ -7,7 +7,7 @@ import asm.x64.*
 interface ReturnGPOperandVisitor {
     fun rr(dst: GPRegister, src: GPRegister)
     fun ra(dst: GPRegister, src: Address)
-    fun ri(dst: GPRegister, src: ImmInt)
+    fun ri(dst: GPRegister, src: Imm)
     fun default(dst: Operand, src: Operand)
 
     companion object {
@@ -15,7 +15,7 @@ interface ReturnGPOperandVisitor {
             is GPRegister -> when (src) {
                 is GPRegister -> closure.rr(dst, src)
                 is Address    -> closure.ra(dst, src)
-                is ImmInt      -> closure.ri(dst, src)
+                is Imm      -> closure.ri(dst, src)
                 else -> closure.default(dst, src)
             }
             else -> closure.default(dst, src)

@@ -5,6 +5,7 @@ import asm.x64.*
 import ir.types.PrimitiveType
 import ir.instruction.IntCompare
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.CmpGPOperandVisitor
 
@@ -33,27 +34,38 @@ internal class IntCmpCodegen(val type: PrimitiveType, val asm: X64MacroAssembler
         asm.cmp(size, second, temp1)
     }
 
-    override fun ai(first: Address, second: Imm32) {
-        asm.cmp(size, second, first)
+    override fun ai(first: Address, second: Imm) {
+        if (Imm.canBeImm32(second.value())) {
+            asm.cmp(size, second.asImm32(), first)
+        } else {
+            asm.copy(size, second, temp1)
+            asm.cmp(size, temp1, first)
+        }
     }
 
-    override fun ia(first: Imm32, second: Address) {
+    override fun ia(first: Imm, second: Address) {
         asm.copy(size, first, temp1)
         asm.cmp(size, second, temp1)
     }
 
-    override fun ir(first: Imm32, second: GPRegister) {
+    override fun ir(first: Imm, second: GPRegister) {
         asm.copy(size, first, temp1)
         asm.cmp(size, second, temp1)
     }
 
-    override fun ri(first: GPRegister, second: Imm32) {
-        asm.cmp(size, second, first)
+    override fun ri(first: GPRegister, second: Imm) {
+        if (Imm.canBeImm32(second.value())) {
+            asm.cmp(size, second.asImm32(), first)
+        } else {
+            asm.copy(size, second, temp1)
+            asm.cmp(size, temp1, first)
+        }
     }
 
-    override fun ii(first: Imm32, second: Imm32) {
+    override fun ii(first: Imm, second: Imm) {
         asm.copy(size, first, temp1)
-        asm.cmp(size, second, temp1)
+        asm.copy(size, second, temp2)
+        asm.cmp(size, temp2, temp1)
     }
 
     override fun default(first: Operand, second: Operand) {

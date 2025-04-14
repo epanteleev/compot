@@ -55,16 +55,21 @@ internal class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val
         }
     }
 
-    override fun ri(dst: GPRegister, src: Imm32) {
+    override fun ri(dst: GPRegister, src: Imm) {
         val mask = (1L shl fromTypeSize * 8) - 1
         val value = src.value() and mask
         asm.copy(toTypeSize, Imm64.of(value), dst)
     }
 
-    override fun ai(dst: Address, src: Imm32) {
+    override fun ai(dst: Address, src: Imm) {
         val mask = (1L shl fromTypeSize * 8) - 1
         val value = src.value() and mask
-        asm.mov(toTypeSize, Imm64.of(value), dst)
+        if (Imm.canBeImm32(value)) {
+            asm.mov(toTypeSize, Imm32.of(value), dst)
+        } else {
+            asm.mov(fromTypeSize, src, temp1)
+            asm.mov(toTypeSize, temp1, dst)
+        }
     }
 
     override fun default(dst: Operand, src: Operand) {

@@ -9,8 +9,8 @@ interface GPOperandsVisitorUnaryOp {
     fun ra(dst: GPRegister, src: Address)
     fun ar(dst: Address, src: GPRegister)
     fun aa(dst: Address, src: Address)
-    fun ri(dst: GPRegister, src: Imm32)
-    fun ai(dst: Address, src: Imm32)
+    fun ri(dst: GPRegister, src: Imm)
+    fun ai(dst: Address, src: Imm)
     fun default(dst: Operand, src: Operand)
 
     companion object {
@@ -19,7 +19,7 @@ interface GPOperandsVisitorUnaryOp {
                 when (src) {
                     is GPRegister -> closure.rr(dst, src)
                     is Address    -> closure.ra(dst, src)
-                    is ImmInt     -> closure.ri(dst, src.asImm32())
+                    is Imm     -> closure.ri(dst, src)
                     else -> closure.default(dst, src)
                 }
             }
@@ -27,7 +27,7 @@ interface GPOperandsVisitorUnaryOp {
                 when (src) {
                     is GPRegister -> closure.ar(dst, src)
                     is Address    -> closure.aa(dst, src)
-                    is ImmInt     -> closure.ai(dst, src.asImm32())
+                    is Imm     -> closure.ai(dst, src)
                     else -> closure.default(dst, src)
                 }
             }

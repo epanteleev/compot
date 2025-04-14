@@ -21,22 +21,22 @@ class IndexedFloatLoadCodegen(loadedType: FloatingPointType, indexType: Primitiv
         if (dst is XmmRegister && operand is GPRegister && index is GPRegister) {
             asm.movf(size, Address.from(operand, 0, index, ScaleFactor.from(size)), dst)
 
-        } else if (dst is XmmRegister && operand is GPRegister && index is ImmInt) {
+        } else if (dst is XmmRegister && operand is GPRegister && index is Imm) {
             asm.movf(size, Address.from(operand, index.value().toInt() * size), dst)
 
         } else if (dst is XmmRegister && operand is GPRegister && index is Address) {
             asm.mov(indexSize, index, temp1)
             asm.movf(size, Address.from(operand, 0, temp1, ScaleFactor.from(size)), dst)
 
-        } else if (dst is XmmRegister && operand is Address && index is ImmInt) {
+        } else if (dst is XmmRegister && operand is Address && index is Imm) {
             asm.mov(POINTER_SIZE, operand, temp1)
             asm.movf(size, Address.from(temp1, index.value().toInt() * size), dst)
 
-        } else if (dst is Address && operand is GPRegister && index is ImmInt) {
+        } else if (dst is Address && operand is GPRegister && index is Imm) {
             asm.movf(size, Address.from(operand, index.value().toInt() * size), xmmTemp1)
             asm.movf(size, xmmTemp1, dst)
 
-        } else if (dst is Address && operand is Address && index is ImmInt) {
+        } else if (dst is Address && operand is Address && index is Imm) {
             asm.mov(POINTER_SIZE, operand, temp1)
             asm.movf(size, Address.from(temp1, index.value().toInt() * size), xmmTemp1)
             asm.movf(size, xmmTemp1, dst)

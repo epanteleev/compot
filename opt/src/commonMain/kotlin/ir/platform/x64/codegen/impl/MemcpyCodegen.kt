@@ -43,9 +43,9 @@ internal class MemcpyCodegen(val length: UnsignedIntegerConstant, val asm: Assem
 
     override fun aa(dst: Address, src: Address) = default(dst, src)
 
-    override fun ri(dst: GPRegister, src: Imm32) = default(dst, src)
+    override fun ri(dst: GPRegister, src: Imm) = default(dst, src)
 
-    override fun ai(dst: Address, src: Imm32) = default(dst, src)
+    override fun ai(dst: Address, src: Imm) = default(dst, src)
 
     override fun default(dst: Operand, src: Operand) {
         throw RuntimeException("Internal error: '${Memcpy.NAME}' dst=$dst, src=$src")

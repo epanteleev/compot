@@ -486,7 +486,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                 val size = flag2Int.type().sizeOf()
                 val res = if (compare.bool) 1L else 0L
                 when (dst) {
-                    is Address    -> asm.mov(size, Imm64.of(res), dst)
+                    is Address    -> asm.mov(size, Imm32.of(res), dst)
                     is GPRegister -> asm.mov(size, Imm64.of(res), dst)
                     else -> throw CodegenException("unknown dst=$dst")
                 }

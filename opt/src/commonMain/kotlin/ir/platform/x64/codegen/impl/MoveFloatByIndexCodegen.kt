@@ -16,18 +16,18 @@ internal class MoveFloatByIndexCodegen(type: FloatingPointType, val asm: Assembl
         if (dst is GPRegister && source is XmmRegister && index is GPRegister) {
             asm.movf(size, source, Address.from(dst, 0, index, ScaleFactor.from(size)))
 
-        } else if (dst is GPRegister && source is XmmRegister && index is ImmInt) {
+        } else if (dst is GPRegister && source is XmmRegister && index is Imm) {
             asm.movf(size, source, Address.from(dst, index.value().toInt() * size))
 
-        } else if (dst is GPRegister && source is Address && index is ImmInt) {
+        } else if (dst is GPRegister && source is Address && index is Imm) {
             asm.movf(size, source, xmmTemp1)
             asm.movf(size, xmmTemp1, Address.from(dst, index.value().toInt() * size))
 
-        } else if (dst is Address && source is XmmRegister && index is ImmInt) {
+        } else if (dst is Address && source is XmmRegister && index is Imm) {
             asm.mov(POINTER_SIZE, dst, temp1)
             asm.movf(size, source, Address.from(temp1, index.value().toInt() * size))
 
-        } else if (dst is Address && source is Address && index is ImmInt) {
+        } else if (dst is Address && source is Address && index is Imm) {
             asm.mov(POINTER_SIZE, dst, temp1)
             asm.movf(size, source, xmmTemp1)
             asm.movf(size, xmmTemp1, Address.from(temp1, index.value().toInt() * size))

@@ -40,12 +40,17 @@ internal class NegCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): 
         }
     }
 
-    override fun ri(dst: GPRegister, src: Imm32) {
-        asm.copy(size, Imm32.of(-src.value()), dst)
+    override fun ri(dst: GPRegister, src: Imm) {
+        asm.copy(size, Imm64.of(-src.value()), dst)
     }
 
-    override fun ai(dst: Address, src: Imm32) {
-        asm.mov(size, Imm32.of(-src.value()), dst)
+    override fun ai(dst: Address, src: Imm) {
+        if (Imm.canBeImm32(src.value())) {
+            asm.mov(size, Imm32.of(-src.value()), dst)
+        } else {
+            asm.mov(size, Imm64.of(-src.value()), temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun default(dst: Operand, src: Operand) {

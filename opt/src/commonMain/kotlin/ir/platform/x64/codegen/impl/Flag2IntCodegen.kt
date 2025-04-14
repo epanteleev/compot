@@ -33,11 +33,11 @@ internal class Flag2IntCodegen(private val toSize: Int, private val asm: Assembl
         asm.mov(toSize, temp1, dst)
     }
 
-    override fun ri(dst: GPRegister, src: Imm32) {
+    override fun ri(dst: GPRegister, src: Imm) {
         TODO("Not yet implemented")
     }
 
-    override fun ai(dst: Address, src: Imm32) {
+    override fun ai(dst: Address, src: Imm) {
         TODO("Not yet implemented")
     }
 

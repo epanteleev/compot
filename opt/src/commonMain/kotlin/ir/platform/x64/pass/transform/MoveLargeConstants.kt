@@ -1,12 +1,15 @@
 package ir.platform.x64.pass.transform
 
-import asm.x64.ImmInt.Companion.canBeImm32
+import asm.x64.Imm.Companion.canBeImm32
 import ir.global.*
+import ir.instruction.IntCompare
+import ir.instruction.Unary
 import ir.module.Module
 import ir.module.block.Block
 import ir.module.FunctionData
 import ir.module.SSAModule
 import ir.platform.x64.CallConvention
+import ir.types.FloatingPointType
 import ir.value.constant.*
 
 
@@ -36,6 +39,12 @@ class MoveLargeConstants private constructor(val functions: Map<String, Function
 
     private fun handleBlock(bb: Block) {
         bb.transform { inst ->
+            if (inst is Unary && inst.type() !is FloatingPointType) {
+                return@transform inst
+            }
+            if (inst is IntCompare) {
+                return@transform inst
+            }
             for ((i, operand) in inst.operands().withIndex()) {
                 if (operand !is Constant) {
                     continue

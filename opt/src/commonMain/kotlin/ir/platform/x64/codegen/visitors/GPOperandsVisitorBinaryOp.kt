@@ -33,7 +33,7 @@ interface GPOperandsVisitorBinaryOp {
                             when (second) {
                                 is GPRegister -> closure.rrr(dst, first, second)
                                 is Address    -> closure.rra(dst, first, second)
-                                is ImmInt     -> closure.rri(dst, first, second.asImm32())
+                                is Imm        -> closure.rri(dst, first, second.asImm32())
                                 else -> closure.default(dst, first, second)
                             }
                         }
@@ -41,15 +41,15 @@ interface GPOperandsVisitorBinaryOp {
                             when (second) {
                                 is GPRegister -> closure.rar(dst, first, second)
                                 is Address    -> closure.raa(dst, first, second)
-                                is ImmInt     -> closure.rai(dst, first, second.asImm32())
+                                is Imm        -> closure.rai(dst, first, second.asImm32())
                                 else -> closure.default(dst, first, second)
                             }
                         }
-                        is ImmInt -> {
+                        is Imm -> {
                             when (second) {
                                 is GPRegister -> closure.rir(dst, first.asImm32(), second)
                                 is Address    -> closure.ria(dst, first.asImm32(), second)
-                                is ImmInt     -> closure.rii(dst, first.asImm32(), second.asImm32())
+                                is Imm        -> closure.rii(dst, first.asImm32(), second.asImm32())
                                 else -> closure.default(dst, first, second)
                             }
                         }
@@ -62,7 +62,7 @@ interface GPOperandsVisitorBinaryOp {
                             when (second) {
                                 is GPRegister -> closure.arr(dst, first, second)
                                 is Address    -> closure.ara(dst, first, second)
-                                is ImmInt     -> closure.ari(dst, first, second.asImm32())
+                                is Imm        -> closure.ari(dst, first, second.asImm32())
                                 else -> closure.default(dst, first, second)
                             }
                         }
@@ -70,15 +70,15 @@ interface GPOperandsVisitorBinaryOp {
                             when (second) {
                                 is GPRegister -> closure.aar(dst, first, second)
                                 is Address    -> closure.aaa(dst, first, second)
-                                is ImmInt     -> closure.aai(dst, first, second.asImm32())
+                                is Imm        -> closure.aai(dst, first, second.asImm32())
                                 else -> closure.default(dst, first, second)
                             }
                         }
-                        is ImmInt -> {
+                        is Imm -> {
                             when (second) {
                                 is GPRegister -> closure.air(dst, first.asImm32(), second)
                                 is Address    -> closure.aia(dst, first.asImm32(), second)
-                                is ImmInt     -> closure.aii(dst, first.asImm32(), second.asImm32())
+                                is Imm        -> closure.aii(dst, first.asImm32(), second.asImm32())
                                 else -> closure.default(dst, first, second)
                             }
                         }

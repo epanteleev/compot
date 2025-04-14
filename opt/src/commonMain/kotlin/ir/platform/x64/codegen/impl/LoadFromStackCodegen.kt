@@ -15,7 +15,7 @@ internal class LoadFromStackCodegen (val type: PrimitiveType, indexType: Integer
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {
             is FloatingPointType -> {
-                if (dst is XmmRegister && source is Address2 && index is ImmInt) {
+                if (dst is XmmRegister && source is Address2 && index is Imm) {
                     asm.movf(size, Address.from(source.base, source.offset + index.value().toInt() * size), dst)
                 } else if (dst is XmmRegister && source is Address2 && index is GPRegister) {
                     asm.movf(size, Address.from(source.base, source.offset, index, ScaleFactor.from(size)), dst)

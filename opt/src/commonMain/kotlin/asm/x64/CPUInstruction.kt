@@ -127,7 +127,7 @@ internal data class And(val size: Int, val src: Operand, val dst: Operand): CPUI
 
 internal data class Shr(val size: Int, val src: Operand, val dst: Operand): CPUInstruction() {
     init {
-        assertion(src == GPRegister.rcx || src is ImmInt) { "src=$src" }
+        assertion(src == GPRegister.rcx || src is Imm) { "src=$src" }
     }
 
     override fun toString(): String {
@@ -137,7 +137,7 @@ internal data class Shr(val size: Int, val src: Operand, val dst: Operand): CPUI
 
 internal data class Sar(val size: Int, val src: Operand, val dst: Operand): CPUInstruction() {
     init {
-        assertion(src == GPRegister.rcx || src is ImmInt) { "src=$src" }
+        assertion(src == GPRegister.rcx || src is Imm) { "src=$src" }
     }
 
     override fun toString(): String {
@@ -147,7 +147,7 @@ internal data class Sar(val size: Int, val src: Operand, val dst: Operand): CPUI
 
 internal data class Shl(val size: Int, val src: Operand, val dst: Operand): CPUInstruction() {
     init {
-        assertion(src == GPRegister.rcx || src is ImmInt) { "src=$src" }
+        assertion(src == GPRegister.rcx || src is Imm) { "src=$src" }
     }
 
     override fun toString(): String {
@@ -157,7 +157,7 @@ internal data class Shl(val size: Int, val src: Operand, val dst: Operand): CPUI
 
 internal data class Sal(val size: Int, val src: Operand, val dst: Operand): CPUInstruction() {
     init {
-        assertion(src == GPRegister.rcx || src is ImmInt) { "src=$src" }
+        assertion(src == GPRegister.rcx || src is Imm) { "src=$src" }
     }
 
     override fun toString(): String {
