@@ -66,7 +66,7 @@ internal class FXorCodegen(val type: FloatingPointType, val asm: X64MacroAssembl
 
     override fun aaa(dst: Address, first: Address, second: Address) {
         asm.movf(size, first, xmmTemp1)
-        asm.xorpf(size, dst, xmmTemp1)
+        asm.xorpf(size, second, xmmTemp1)
         asm.movf(size, xmmTemp1, dst)
     }
 
