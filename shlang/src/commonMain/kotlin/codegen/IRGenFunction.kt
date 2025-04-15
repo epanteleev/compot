@@ -1667,13 +1667,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.branch(conditionBlock)
             ir.switchLabel(conditionBlock)
             val cond = forStatement.condition
-            if (cond is EmptyExpression) {
-                ir.branch(bodyBlock)
-            } else {
-                val condition = makeConditionFromExpression(cond)
-                val endBlock = loopStmtInfo.resolveExit(ir)
-                ir.branchCond(condition, bodyBlock, endBlock)
+
+            val condition = when (cond) {
+                is EmptyExpression -> BoolValue.TRUE
+                else -> makeConditionFromExpression(cond)
             }
+            val endBlock = loopStmtInfo.resolveExit(ir)
+            ir.branchCond(condition, bodyBlock, endBlock)
 
             if (ir.last() !is TerminateInstruction) {
                 ir.branch(conditionBlock)
@@ -1693,10 +1693,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 visitUpdate(forStatement.update)
                 ir.branch(conditionBlock)
             }
-            if (ir.last() !is TerminateInstruction || loopStmtInfo.exit() != null) {
-                val endBlock = loopStmtInfo.resolveExit(ir)
-                ir.switchLabel(endBlock)
-            }
+
+            ir.switchLabel(endBlock)
         }
     }
 
