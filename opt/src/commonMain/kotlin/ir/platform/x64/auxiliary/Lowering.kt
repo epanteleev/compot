@@ -1256,30 +1256,6 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
     }
 
     override fun visit(tupleDiv: TupleDiv): Instruction {
-        val lhs = tupleDiv.lhs()
-        if (lhs.isa(i64imm32())) {
-            val operand = lhs.asValue<I64Value>()
-            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
-            tupleDiv.lhs(constant)
-
-        } else if (lhs.isa(u64imm32())) {
-            val operand = lhs.asValue<U64Value>()
-            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
-            tupleDiv.lhs(constant)
-        }
-
-        val rhs = tupleDiv.rhs()
-        if (rhs.isa(i64imm32())) {
-            val operand = rhs.asValue<I64Value>()
-            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
-            tupleDiv.rhs(constant)
-
-        } else if (rhs.isa(u64imm32())) {
-            val operand = rhs.asValue<U64Value>()
-            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
-            tupleDiv.rhs(constant)
-        }
-
         tupleDiv.match(tupleDiv(value(i8()), value(i8()))) {
             // Before:
             //  %resANDrem = div i8 %a, %b

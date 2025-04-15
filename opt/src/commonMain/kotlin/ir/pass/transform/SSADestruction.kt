@@ -6,7 +6,6 @@ import ir.pass.common.TransformPass
 import ir.platform.x64.LModule
 import ir.pass.transform.auxiliary.*
 import ir.platform.x64.auxiliary.Lowering
-import ir.platform.x64.pass.transform.*
 
 
 class SSADestruction(module: Module): TransformPass(module) {
@@ -18,7 +17,5 @@ class SSADestruction(module: Module): TransformPass(module) {
 }
 
 object SSADestructionFabric: TransformPassFabric() {
-    override fun create(module: Module): TransformPass {
-        return SSADestruction(module.copy())
-    }
+    override fun create(module: Module): TransformPass = SSADestruction(module.copy())
 }
