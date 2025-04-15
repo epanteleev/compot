@@ -7,13 +7,13 @@ import ir.instruction.lir.StoreOnStack
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.visitors.GPOperandsVisitorArithmeticBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.types.FloatingPointType
 import ir.types.IntegerType
 import ir.types.PtrType
 
 
-internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorArithmeticBinaryOp {
+internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
     private val size = type.sizeOf()
     private val indexSize = indexType.sizeOf()
 
@@ -37,7 +37,7 @@ internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: Inte
                     }
                 }
             }
-            is IntegerType, is PtrType -> GPOperandsVisitorArithmeticBinaryOp.apply(dst, source, index, this)
+            is IntegerType, is PtrType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }
     }
@@ -59,7 +59,7 @@ internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: Inte
         TODO("Not yet implemented")
     }
 
-    override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
+    override fun rir(dst: GPRegister, first: Imm, second: GPRegister) {
         TODO("Not yet implemented")
     }
 
@@ -67,7 +67,7 @@ internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: Inte
         TODO("Not yet implemented")
     }
 
-    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
+    override fun rri(dst: GPRegister, first: GPRegister, second: Imm) {
         TODO("Not yet implemented")
     }
 
@@ -75,15 +75,15 @@ internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: Inte
         TODO("Not yet implemented")
     }
 
-    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
+    override fun rii(dst: GPRegister, first: Imm, second: Imm) {
         TODO("Not yet implemented")
     }
 
-    override fun ria(dst: GPRegister, first: Imm32, second: Address) {
+    override fun ria(dst: GPRegister, first: Imm, second: Address) {
         TODO("Not yet implemented")
     }
 
-    override fun rai(dst: GPRegister, first: Address, second: Imm32) {
+    override fun rai(dst: GPRegister, first: Address, second: Imm) {
         TODO("Not yet implemented")
     }
 
@@ -95,30 +95,51 @@ internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: Inte
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
-    override fun aii(dst: Address, first: Imm32, second: Imm32) = when (dst) {
-        is Address2 -> asm.mov(size, first, dst.withOffset(second.value().toInt() * size))
-        else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
-    }
-
-    override fun air(dst: Address, first: Imm32, second: GPRegister) = when (dst) {
-        is Address2 -> asm.mov(size, first, Address.from(dst.base, dst.offset, second, ScaleFactor.from(size)))
-        else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
-    }
-
-    override fun aia(dst: Address, first: Imm32, second: Address) = when (dst) {
-        is Address2 -> {
-            asm.mov(indexSize, second, temp1)
-            asm.mov(size, first, Address.from(dst.base, dst.offset, temp1, ScaleFactor.from(size)))
+    override fun aii(dst: Address, first: Imm, second: Imm) {
+        if (dst !is Address2) {
+            throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
-        else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
+        if (Imm.canBeImm32(first.value())) {
+            asm.mov(size, first.asImm32(), dst.withOffset(second.value().toInt() * size))
+        } else {
+            asm.mov(size, first, temp1)
+            asm.mov(size, temp1, dst.withOffset(second.value().toInt() * size))
+        }
     }
 
-    override fun ari(dst: Address, first: GPRegister, second: Imm32) = when (dst) {
+    override fun air(dst: Address, first: Imm, second: GPRegister) {
+        if (dst !is Address2) {
+            throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
+        }
+
+        if (Imm.canBeImm32(first.value())) {
+            asm.mov(size, first.asImm32(), Address.from(dst.base, dst.offset, second, ScaleFactor.from(size)))
+        } else {
+            asm.mov(size, first, temp1)
+            asm.mov(size, temp1, Address.from(dst.base, dst.offset, second, ScaleFactor.from(size)))
+        }
+    }
+
+    override fun aia(dst: Address, first: Imm, second: Address) {
+        if (dst !is Address2) {
+            throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
+        }
+
+        asm.mov(indexSize, second, temp1)
+        if (Imm.canBeImm32(first.value())) {
+            asm.mov(size, first.asImm32(), Address.from(dst.base, dst.offset, temp1, ScaleFactor.from(size)))
+        } else {
+            asm.mov(size, first, temp2)
+            asm.mov(size, temp2, Address.from(dst.base, dst.offset, temp1, ScaleFactor.from(size)))
+        }
+    }
+
+    override fun ari(dst: Address, first: GPRegister, second: Imm) = when (dst) {
         is Address2 -> asm.mov(size, first, Address.from(dst.base, dst.offset + second.value().toInt() * size))
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
-    override fun aai(dst: Address, first: Address, second: Imm32) = when (dst) {
+    override fun aai(dst: Address, first: Address, second: Imm) = when (dst) {
         is Address2 -> {
             asm.mov(size, first, temp1)
             asm.mov(size, temp1, Address.from(dst.base, dst.offset + second.value().toInt() * size))

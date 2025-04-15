@@ -7,15 +7,15 @@ import ir.Definitions.POINTER_SIZE
 import ir.instruction.lir.MoveByIndex
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
-import ir.platform.x64.codegen.visitors.GPOperandsVisitorArithmeticBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-internal class MoveIntByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val asm: Assembler) : GPOperandsVisitorArithmeticBinaryOp {
+internal class MoveIntByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
     private val size = type.sizeOf()
     private val indexSize = indexType.sizeOf()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) = when (type) {
-        is IntegerType, is PtrType -> GPOperandsVisitorArithmeticBinaryOp.apply(dst, source, index, this)
+        is IntegerType, is PtrType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
     }
 
@@ -33,8 +33,13 @@ internal class MoveIntByIndexCodegen(val type: PrimitiveType, indexType: NonTriv
         asm.mov(size, temp1, Address.from(dst, 0, second, ScaleFactor.from(size)))
     }
 
-    override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        asm.mov(size, first, Address.from(dst, 0, second, ScaleFactor.from(size)))
+    override fun rir(dst: GPRegister, first: Imm, second: GPRegister) {
+        if (Imm.canBeImm32(first.value())) {
+            asm.mov(size, first.asImm32(), Address.from(dst, 0, second, ScaleFactor.from(size)))
+        } else {
+            asm.mov(size, first, temp1)
+            asm.mov(size, temp1, Address.from(dst, 0, second, ScaleFactor.from(size)))
+        }
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
@@ -42,7 +47,7 @@ internal class MoveIntByIndexCodegen(val type: PrimitiveType, indexType: NonTriv
         asm.mov(size, first, Address.from(dst, 0, temp1, ScaleFactor.from(size)))
     }
 
-    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
+    override fun rri(dst: GPRegister, first: GPRegister, second: Imm) {
         asm.mov(size, first, Address.from(dst, second.value().toInt() * size))
     }
 
@@ -52,16 +57,26 @@ internal class MoveIntByIndexCodegen(val type: PrimitiveType, indexType: NonTriv
         asm.mov(size, temp1, Address.from(dst, 0, temp2, ScaleFactor.from(size)))
     }
 
-    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        asm.mov(size, first, Address.from(dst, second.value().toInt() * size))
+    override fun rii(dst: GPRegister, first: Imm, second: Imm) {
+        if (Imm.canBeImm32(first.value())) {
+            asm.mov(size, first.asImm32(), Address.from(dst, second.value().toInt() * size))
+        } else {
+            asm.mov(size, first, temp1)
+            asm.mov(size, temp1, Address.from(dst, second.value().toInt() * size))
+        }
     }
 
-    override fun ria(dst: GPRegister, first: Imm32, second: Address) {
+    override fun ria(dst: GPRegister, first: Imm, second: Address) {
         asm.mov(indexSize, second, temp1)
-        asm.mov(size, first, Address.from(dst, 0, temp1, ScaleFactor.from(size)))
+        if (Imm.canBeImm32(first.value())) {
+            asm.mov(size, first.asImm32(), Address.from(dst, 0, temp1, ScaleFactor.from(size)))
+        } else {
+            asm.mov(size, first, temp2)
+            asm.mov(size, temp2, Address.from(dst, 0, temp1, ScaleFactor.from(size)))
+        }
     }
 
-    override fun rai(dst: GPRegister, first: Address, second: Imm32) {
+    override fun rai(dst: GPRegister, first: Address, second: Imm) {
         asm.mov(size, first, temp1)
         asm.mov(size, temp1, Address.from(dst, second.value().toInt() * size))
     }
@@ -72,28 +87,44 @@ internal class MoveIntByIndexCodegen(val type: PrimitiveType, indexType: NonTriv
         asm.mov(size, first, Address.from(temp1, 0, temp2, ScaleFactor.from(size)))
     }
 
-    override fun aii(dst: Address, first: Imm32, second: Imm32) {
+    override fun aii(dst: Address, first: Imm, second: Imm) {
         asm.mov(POINTER_SIZE, dst, temp1)
-        asm.mov(size, first, Address.from(temp1, second.value().toInt() * size))
+        if (Imm.canBeImm32(first.value())) {
+            asm.mov(size, first.asImm32(), Address.from(temp1, second.value().toInt() * size))
+        } else {
+            asm.mov(size, first, temp2)
+            asm.mov(size, temp2, Address.from(temp1, second.value().toInt() * size))
+        }
     }
 
-    override fun air(dst: Address, first: Imm32, second: GPRegister) {
+    override fun air(dst: Address, first: Imm, second: GPRegister) {
         asm.mov(POINTER_SIZE, dst, temp1)
-        asm.mov(size, first, Address.from(temp1, 0, second, ScaleFactor.from(size)))
+        if (Imm.canBeImm32(first.value())) {
+            asm.mov(size, first.asImm32(), Address.from(temp1, 0, second, ScaleFactor.from(size)))
+        } else {
+            asm.mov(size, first, temp2)
+            asm.mov(size, temp2, Address.from(temp1, 0, second, ScaleFactor.from(size)))
+        }
     }
 
-    override fun aia(dst: Address, first: Imm32, second: Address) {
+    override fun aia(dst: Address, first: Imm, second: Address) {
         asm.mov(POINTER_SIZE, dst, temp1)
         asm.mov(indexSize, second, temp2)
-        asm.mov(size, first, Address.from(temp1, 0, temp2, ScaleFactor.from(size)))
+        if (Imm.canBeImm32(first.value())) {
+            asm.mov(size, first.asImm32(), Address.from(temp1, 0, temp2, ScaleFactor.from(size)))
+        } else {
+            asm.lea(POINTER_SIZE, Address.from(temp1, 0, temp2, ScaleFactor.from(size)), temp1)
+            asm.mov(size, first, temp2)
+            asm.mov(size, temp2, Address.from(temp1, 0))
+        }
     }
 
-    override fun ari(dst: Address, first: GPRegister, second: Imm32) {
+    override fun ari(dst: Address, first: GPRegister, second: Imm) {
         asm.mov(POINTER_SIZE, dst, temp1)
         asm.mov(size, first, Address.from(temp1, second.value().toInt() * size))
     }
 
-    override fun aai(dst: Address, first: Address, second: Imm32) {
+    override fun aai(dst: Address, first: Address, second: Imm) {
         asm.mov(POINTER_SIZE, dst, temp1)
         asm.mov(size, first, temp2)
         asm.mov(size, temp2, Address.from(temp1, second.value().toInt() * size))

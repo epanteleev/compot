@@ -841,15 +841,6 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
             val constant = module.addConstant(F64ConstantValue(constName(), operand.f64))
             store.value(constant)
 
-        } else if (value.isa(u64imm32())) { //TODO remove it in future
-            val operand = value.asValue<U64Value>()
-            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
-            store.value(constant)
-
-        } else if (value.isa(i64imm32())) { //TODO remove it in future
-            val operand = value.asValue<I64Value>()
-            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
-            store.value(constant)
         }
 
         store.match(store(extern(), any())) {
