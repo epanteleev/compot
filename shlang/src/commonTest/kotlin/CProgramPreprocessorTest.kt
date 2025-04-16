@@ -1295,9 +1295,26 @@ class CProgramPreprocessorTest {
             |
             |
             |fprintf(stderr, "Flag");
-            |fprintf(stderr, "X = %d\n",x);
+            |fprintf(stderr, "X = %d\n", x);
             |puts("The first, second, and third items.");
-            |((x>y)?puts("x>y"):          printf("x is %d but y is %d",x,y));
+            |((x>y)?puts("x>y"):          printf("x is %d but y is %d", x, y));
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
+
+    @Test
+    fun testVariadicMacro3() {
+        val data = """
+            |#define showlist(...)    puts(##__VA_ARGS__)
+            |showlist("x", y)
+        """.trimMargin()
+
+        val tokens = apply(data)
+        val ctx = PreprocessorContext.create(headerHolder)
+        val p = create(tokens, ctx)
+        val expected = """
+            |
+            |puts("x", y)
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }

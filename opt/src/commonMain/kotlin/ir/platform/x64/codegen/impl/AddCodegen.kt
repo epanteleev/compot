@@ -73,7 +73,7 @@ internal class AddCodegen(val type: ArithmeticType, val asm: X64MacroAssembler):
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        asm.copy(size, Imm32.of(first.value() + second.value()), dst) //TODO overflow????
+        asm.copy(size, Imm64.of(first.value() + second.value()), dst) //TODO overflow????
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -97,7 +97,8 @@ internal class AddCodegen(val type: ArithmeticType, val asm: X64MacroAssembler):
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        asm.mov(size, Imm32.of(first.value() + second.value()), dst)
+        asm.copy(size, Imm64.of(first.value() + second.value()), temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {

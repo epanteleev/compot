@@ -32,12 +32,12 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         is ExpressionInitializer -> constEvalInitializerList(lValueType, initializer.expr)
     }
 
-    private fun constEvalInitializerList(lValueType: CType, expr: Expression): NonTrivialConstant? = when (expr) {
+    private fun constEvalInitializerList(lValueType: CType, expr: Expression, getAddress: Boolean = false): NonTrivialConstant? = when (expr) {
         is UnaryOp -> {
             if (expr.opType == PrefixUnaryOpType.ADDRESS) {
                 val nonTrivialType = expr.primary.resolveType(typeHolder)
 
-                staticAddressOf(expr.primary) ?: constEvalInitializerList(nonTrivialType, expr.primary)
+                staticAddressOf(expr.primary) ?: constEvalInitializerList(nonTrivialType, expr.primary, true)
                     ?: throw IRCodeGenError("cannon evaluate", expr.primary.begin())
             } else {
                 defaultContEval(lValueType, expr)
@@ -82,15 +82,24 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             PointerLiteral.of(mb.addConstant(gConstant))
         }
         is ArrayAccess -> {
-            val indexType = expr.expr.resolveType(typeHolder)
-            val index = constEvalInitializerList(indexType, expr.expr) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
-
+            val index = constEvalExpression0(expr.expr) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
             val primaryCType = expr.primary.resolveType(typeHolder)
-            val array = constEvalInitializerList(primaryCType, expr.primary)
-            array as PointerLiteral
-            val gConstant = array.gConstant as GlobalValue
-            index as IntegerConstant
-            PointerLiteral.of(gConstant, index.toInt())
+            when (val array = constEvalInitializerList(primaryCType, expr.primary)) {
+                is PointerLiteral -> {
+                    val gConstant = array.gConstant as GlobalValue
+                    PointerLiteral.of(gConstant, index.toInt())
+                }
+                is StringLiteralConstant -> {
+                    if (getAddress) {
+                        val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(U8Type, array.content.length), array.content)
+                        PointerLiteral.of(mb.addConstant(stringLiteral), index.toInt())
+                    } else {
+                        val ch = array.content[index.toInt()]
+                        I8Value.of(ch.code.toByte())
+                    }
+                }
+                else -> throw IRCodeGenError("Unsupported type $primaryCType, expr='${LineAgnosticAstPrinter.print(expr)}'", expr.begin())
+            }
         }
         else -> defaultContEval(lValueType, expr)
     }

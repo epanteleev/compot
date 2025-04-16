@@ -2,6 +2,7 @@ package preprocess
 
 import tokenizer.*
 import common.forEachWith
+import ir.read.Tokenizer
 import preprocess.CProgramPreprocessor.Companion.create
 import preprocess.macros.MacroExpansionException
 import preprocess.macros.MacroFunction
@@ -52,14 +53,30 @@ internal class SubstituteMacroFunction(private val macros: MacroFunction, privat
     }
 
     private fun concatVariadicArgs(): String = buildString {
-        for (arg in args) {
+        val remains = args.takeLast(args.size - macros.argNames.size + 1)
+        for (arg in remains) {
             for (tok in arg) {
                 append(tok.str())
             }
-            if (arg != args.last()) {
+            if (arg != remains.last()) {
                 append(", ")
             }
         }
+    }
+
+    private fun consumeVariadicArgs(macrosNamePos: Position): TokenList {
+        val remains = args.takeLast(args.size - macros.argNames.size + 1)
+        for (arg in remains) {
+            for (tok in arg) {
+                result.add(tok.cloneWith(macrosNamePos))
+            }
+            if (arg != remains.last()) {
+                result.add(Punctuator(",", macrosNamePos))
+                result.add(Indent.of(1))
+            }
+        }
+        eat()
+        return result
     }
 
     fun substitute(macrosNamePos: Position): TokenList {
@@ -74,7 +91,12 @@ internal class SubstituteMacroFunction(private val macros: MacroFunction, privat
             if (check("##")) {
                 eat()
                 eatSpaces()
-                concatTokens(macrosNamePos, peak())
+                if (!check("__VA_ARGS__")) {
+                    concatTokens(macrosNamePos, peak())
+                    continue
+                }
+                // ##__VA_ARGS__ pattern
+                consumeVariadicArgs(macrosNamePos)
                 continue
             }
 
@@ -94,17 +116,7 @@ internal class SubstituteMacroFunction(private val macros: MacroFunction, privat
             }
 
             if (check("__VA_ARGS__")) {
-                val remains = args.takeLast(args.size - macros.argNames.size + 1)
-
-                for (arg in remains) {
-                    for (tok in arg) {
-                        result.add(tok.cloneWith(macrosNamePos))
-                    }
-                    if (arg != remains.last()) {
-                        result.add(Punctuator(",", macrosNamePos))
-                    }
-                }
-                eat()
+                consumeVariadicArgs(macrosNamePos)
                 continue
             }
 
