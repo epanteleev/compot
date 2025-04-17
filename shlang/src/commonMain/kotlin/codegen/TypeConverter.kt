@@ -424,7 +424,7 @@ internal object TypeConverter {
                 I16Type -> icmp(lvalue, IntPredicate.Ne, I16Value.of(0))
                 I32Type -> icmp(lvalue, IntPredicate.Ne, I32Value.of(0))
                 I64Type -> icmp(lvalue, IntPredicate.Ne, I64Value.of(0))
-                U8Type  -> icmp(lvalue, IntPredicate.Ne, U8Value.of(0))
+                U8Type  -> icmp(lvalue, IntPredicate.Ne, U8Value.of(0U))
                 U16Type -> icmp(lvalue, IntPredicate.Ne, U16Value.of(0))
                 U32Type -> icmp(lvalue, IntPredicate.Ne, U32Value.of(0))
                 U64Type -> icmp(lvalue, IntPredicate.Ne, U64Value.of(0))

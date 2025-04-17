@@ -105,13 +105,13 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
 
     private fun primitive(builder: ObjBuilder, data: PrimitiveConstant) = when (data) {
         is I64Value -> builder.quad(data.i64)
-        is U64Value -> builder.quad(data.u64)
+        is U64Value -> builder.quad(data.u64.toLong())
         is I32Value -> builder.long(data.i32)
         is U32Value -> builder.long(data.u32)
         is I16Value -> builder.short(data.i16)
         is U16Value -> builder.short(data.u16)
         is I8Value  -> builder.byte(data.i8)
-        is U8Value  -> builder.byte(data.u8)
+        is U8Value  -> builder.byte(data.u8.toByte())
         is F32Value -> {
             builder.long(data.bits())
             builder.long(0)

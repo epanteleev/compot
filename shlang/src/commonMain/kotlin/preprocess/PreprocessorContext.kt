@@ -113,7 +113,7 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         private val LP64     = MacroReplacement("__LP64__", tokenListOf(PPNumber(1, INT, Position.UNKNOWN)))
         private val LINUX    = MacroReplacement("__linux__", tokenListOf(PPNumber(1, INT, Position.UNKNOWN)))
         private val UNIX     = MacroReplacement("__unix__", tokenListOf(PPNumber(1, INT, Position.UNKNOWN)))
-        private val __func__ = MacroReplacement("__func__", tokenListOf(StringLiteral("in function", Position.UNKNOWN)))
+        private val __func__ = MacroReplacement("__func__", tokenListOf(FunctionMark(Position.UNKNOWN)))
 
         private val predefined = hashMapOf(
             "__LINE__" to LINE,

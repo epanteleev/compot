@@ -282,11 +282,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             is ExpressionInitializer -> when (val expr = init.expr) {
                 is StringNode -> {
-                    if (type !is CArrayType) {
-                        throw IRCodeGenError("Expect array type, but type=$type", expr.begin())
+                    val element = when (type) {
+                        is AnyCArrayType -> type.element().cType()
+                        is AnyCStructType -> type.descriptors()[idx].cType()
                     }
                     val literal = visitStringNode(expr)
-                    when (type.element().cType()) {
+                    when (element) {
                         is CHAR, is UCHAR -> {
                             if (expr.isNotEmpty()) {
                                 ir.memcpy(lvalueAdr, literal, U64Value.of(expr.length()))
@@ -1374,7 +1375,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             typeHolder.addVar(param)
         }
 
-        val retType = functionNode.resolveType(typeHolder).retType().cType()
+        val retType = functionNode.cFunctionType().retType().cType()
         visitParameters(parameters, ir.arguments(), retType, functionNode.begin())
     }
 
@@ -1991,7 +1992,7 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
                                  nameGenerator: NameGenerator) :
     AbstractIRGenerator(moduleBuilder, functionNode.typeHolder, varStack, nameGenerator) {
     fun generate() {
-        val varDesc = typeHolder.addVar(functionNode.declareType(typeHolder))
+        val varDesc = typeHolder.addVar(functionNode.varDescriptor)
         val fnType = varDesc.cType()
             .asType<CFunctionType>(functionNode.begin())
 

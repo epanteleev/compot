@@ -20,9 +20,9 @@ fun main() {
         val exit = createLabel()
 
         val targets = listOf(b1, b2, b3)
-        val table   = listOf(U8Value.of(1), U8Value.of(2), U8Value.of(3))
+        val table   = listOf(U8Value.of(1U), U8Value.of(2U), U8Value.of(3U))
 
-        switch(U8Value.of(2), default, table, targets)
+        switch(U8Value.of(2U), default, table, targets)
         switchLabel(b1).let {
             branch(exit)
         }

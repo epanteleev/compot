@@ -44,17 +44,22 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //    : declaration
     //    | declaration-list declaration
     //    ;
-    fun function_definition(): FunctionNode? = funcRule {
-        val declspec = declaration_specifiers()?: return@funcRule null
-        val declarator = declarator()?: return@funcRule null
-        val declarations = mutableListOf<Declaration>() //TODO just skip it temporarily
-        while (true) {
-            val declaration = declaration()?: break
-            declarations.add(declaration)
+    fun function_definition(): FunctionNode? = rule {
+        val declspec = declaration_specifiers()?: return@rule null
+        val declarator = declarator()?: return@rule null
+
+        val declSpec = declspec.specifyType(globalTypeHolder)
+        val varDesc = declarator.declareVar(declSpec, globalTypeHolder)
+        return@rule funcRule(varDesc) {
+            val declarations = mutableListOf<Declaration>() //TODO just skip it temporarily
+            while (true) {
+                val declaration = declaration()?: break
+                declarations.add(declaration)
+            }
+            assertion(declarations.isEmpty()) { "Declaration list is not supported yet" }
+            val body = compound_statement() ?: return@funcRule null
+            return@funcRule FunctionNode(localTypeHolder(), currentFunction(), declspec, declarator, body)
         }
-        assertion(declarations.isEmpty()) { "Declaration list is not supported yet" }
-        val body = compound_statement() ?: return@funcRule null
-        return@funcRule FunctionNode(funcCtx!!.typeHolder, declspec, declarator, body)
     }
 
     // 6.8 Statements and blocks
@@ -85,7 +90,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             if (check(";")) {
                 eat()
-                return@rule funcCtx!!.labelResolver.addGoto(GotoStatement(ident))
+                return@rule labelResolver().addGoto(GotoStatement(ident))
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -131,7 +136,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule funcCtx!!.labelResolver.addLabel(LabeledStatement(ident, stmt))
+            return@rule labelResolver().addLabel(LabeledStatement(ident, stmt))
         }
         if (check("case")) {
             val caseKeyword = eat()
@@ -1874,12 +1879,13 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             return@rule VarNode(ident)
         }
-        if (check<StringLiteral>()) {
-            val str = peak<StringLiteral>()
-            eat()
-            val allLiterals = mutableListOf(str)
-            while (check<StringLiteral>()) {
-                allLiterals.add(peak())
+        if (check<AnyStringLiteral>()) {
+            val allLiterals = arrayListOf<StringLiteral>()
+            while (check<AnyStringLiteral>()) {
+                when (val str = peak<AnyStringLiteral>()) {
+                    is StringLiteral -> allLiterals.add(str)
+                    is FunctionMark -> allLiterals.add(StringLiteral(currentFunction().name, str.position()))
+                }
                 eat()
             }
             return@rule StringNode(allLiterals)
@@ -1916,8 +1922,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     fun external_declaration(): ExternalDeclaration? = rule {
         val function = function_definition()
         if (function != null) {
-            val fn = function.declareType(globalTypeHolder)
-            globalTypeHolder.addVar(fn)
+            globalTypeHolder.addVar(function.varDescriptor)
             return@rule FunctionDeclarationNode(function)
         }
         val declaration = declaration() ?: return@rule null

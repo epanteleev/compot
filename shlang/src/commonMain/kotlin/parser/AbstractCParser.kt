@@ -3,19 +3,26 @@ package parser
 import tokenizer.*
 import typedesc.TypeHolder
 import tokenizer.tokens.*
+import typedesc.VarDescriptor
 
-class FunctionCtx(val labelResolver: LabelResolver, val typeHolder: TypeHolder)
+class FunctionCtx(val funcName: VarDescriptor?, val labelResolver: LabelResolver, val typeHolder: TypeHolder)
 
 
 sealed class AbstractCParser(val filename: String, tokens: TokenList) {
     private var anonymousCounter = 0
     protected var current: AnyToken? = tokens.firstOrNull()
     protected val globalTypeHolder = TypeHolder.default()
-    protected var funcCtx: FunctionCtx? = FunctionCtx(LabelResolver.default(), globalTypeHolder)
+    protected var funcCtx: FunctionCtx? = FunctionCtx(null, LabelResolver.default(), globalTypeHolder)
 
     fun globalTypeHolder(): TypeHolder = globalTypeHolder
 
     protected fun typeHolder(): TypeHolder = funcCtx?.typeHolder ?: globalTypeHolder
+    protected fun localTypeHolder(): TypeHolder = funcCtx?.typeHolder ?: throw IllegalStateException("Local TypeHolder is not available")
+    protected fun labelResolver(): LabelResolver = funcCtx?.labelResolver ?: throw IllegalStateException("LabelResolver is not available")
+
+    protected fun currentFunction(): VarDescriptor {
+        return funcCtx?.funcName ?: throw IllegalStateException("Function name is not available")
+    }
 
     protected fun anonymousName(prefix: String): String {
         return "$prefix.${anonymousCounter++}"
@@ -78,8 +85,8 @@ sealed class AbstractCParser(val filename: String, tokens: TokenList) {
         return result
     }
 
-    protected inline fun<reified T> funcRule(fn: () -> T?): T? {
-        funcCtx = FunctionCtx(LabelResolver.default(), globalTypeHolder.copy())
+    protected inline fun<reified T> funcRule(funcName: VarDescriptor?, fn: () -> T?): T? {
+        funcCtx = FunctionCtx(funcName, LabelResolver.default(), globalTypeHolder.copy())
         val result = rule(fn)
         funcCtx!!.labelResolver.resolveAll()
         funcCtx = null

@@ -11,6 +11,26 @@ sealed interface FloatingPointConstant: PrimitiveConstant {
             F32Type -> F32Value(value.toFloat())
             F64Type -> F64Value(value.toDouble())
         }
+
+        fun of(kind: FloatingPointType, value: UByte): FloatingPointConstant = when (kind) {
+            F32Type -> F32Value(value.toFloat())
+            F64Type -> F64Value(value.toDouble())
+        }
+
+        fun of(kind: FloatingPointType, value: UShort): FloatingPointConstant = when (kind) {
+            F32Type -> F32Value(value.toFloat())
+            F64Type -> F64Value(value.toDouble())
+        }
+
+        fun of(kind: FloatingPointType, value: UInt): FloatingPointConstant = when (kind) {
+            F32Type -> F32Value(value.toFloat())
+            F64Type -> F64Value(value.toDouble())
+        }
+
+        fun of(kind: FloatingPointType, value: ULong): FloatingPointConstant = when (kind) {
+            F32Type -> F32Value(value.toFloat())
+            F64Type -> F64Value(value.toDouble())
+        }
     }
 }
 

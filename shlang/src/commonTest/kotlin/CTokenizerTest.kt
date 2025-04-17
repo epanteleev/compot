@@ -43,7 +43,7 @@ class CTokenizerTest {
     fun test1() {
         val tokens = apply("\"sdfsdf\" \"   \"").toCTokenList()
 
-        assertTrue { tokens[0] is StringLiteral }
+        assertTrue { tokens[0] is AnyStringLiteral }
         assertEquals("\"sdfsdf\"", tokens[0].str())
     }
 
@@ -200,7 +200,7 @@ class CTokenizerTest {
     fun testQuotedString() {
         val input = "\"\\\"Hello, World!\\\"\""
         val tokens = apply(input).toCTokenList()
-        assertTrue { tokens[0] is StringLiteral }
+        assertTrue { tokens[0] is AnyStringLiteral }
         tokens[0].isEqual(1, 1, "\"\\\"Hello, World!\\\"\"")
     }
 
@@ -244,7 +244,7 @@ class CTokenizerTest {
     fun testStringLiteralWithEscapeChar() {
         val input = "\"\\46ELF\""
         val tokens = apply(input).toCTokenList()
-        assertTrue { tokens[0] is StringLiteral }
+        assertTrue { tokens[0] is AnyStringLiteral }
         tokens[0].isEqual(1, 1, "\"&ELF\"")
     }
 }

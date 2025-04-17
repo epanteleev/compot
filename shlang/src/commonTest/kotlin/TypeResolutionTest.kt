@@ -1,5 +1,4 @@
 
-import org.junit.Ignore
 import types.*
 import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
@@ -148,7 +147,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.function_definition() as FunctionNode
         val typeResolver = TypeHolder.default()
-        val fnType = expr.resolveType(typeResolver)
+        val fnType = expr.cFunctionType()
 
         assertEquals("int add(int, int)", fnType.toString())
     }
@@ -159,7 +158,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.function_definition() as FunctionNode
         val typeResolver = TypeHolder.default()
-        val fnType = expr.resolveType(typeResolver)
+        val fnType = expr.cFunctionType()
 
         assertEquals("int add()", fnType.toString())
     }
@@ -170,7 +169,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.function_definition() as FunctionNode
         val typeResolver = TypeHolder.default()
-        val fnType = expr.resolveType(typeResolver)
+        val fnType = expr.cFunctionType()
 
         assertEquals("int add(int a(int, int), int)", fnType.toString())
     }
@@ -181,7 +180,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.function_definition() as FunctionNode
         val typeResolver = TypeHolder.default()
-        val fnType = expr.resolveType(typeResolver)
+        val fnType = expr.cFunctionType()
 
         assertEquals("int printf(const char*, ...)", fnType.toString())
     }
@@ -198,7 +197,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.function_definition() as FunctionNode
         val typeResolver = TypeHolder.default()
-        val fnType = expr.resolveType(typeResolver)
+        val fnType = expr.cFunctionType()
 
         assertEquals("int(int, int)* test1(int)", fnType.toString())
     }

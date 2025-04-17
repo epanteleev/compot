@@ -8,7 +8,7 @@ import ir.value.constant.IntegerConstant.Companion.getOrCreate
 sealed interface UnsignedIntegerConstant: IntegerConstant {
     companion object {
         fun of(kind: UnsignedIntType, value: Number): UnsignedIntegerConstant = when (kind) {
-            U8Type  -> U8Value.of(value.toByte())
+            U8Type  -> U8Value.of(value.toInt().toUByte())
             U16Type -> U16Value.of(value.toShort())
             U32Type -> U32Value.of(value.toInt())
             U64Type -> U64Value.of(value.toLong())
@@ -16,15 +16,15 @@ sealed interface UnsignedIntegerConstant: IntegerConstant {
     }
 }
 
-class U8Value private constructor(val u8: Byte): UnsignedIntegerConstant {
+class U8Value private constructor(val u8: UByte): UnsignedIntegerConstant {
     override fun type(): U8Type = U8Type
-    override fun value(): Long = u8.toUByte().toLong()
+    override fun value(): Long = u8.toLong()
     override fun toString(): String = u8.toString()
 
     companion object {
         private val table = arrayOfNulls<U8Value>(SIZE.toInt())
 
-        fun of(u8: Byte): U8Value = getOrCreate(u8, table) { U8Value(u8) }
+        fun of(u8: UByte): U8Value = getOrCreate(u8.toInt(), table) { U8Value(u8) }
     }
 }
 
@@ -52,7 +52,7 @@ class U32Value private constructor(val u32: Int): UnsignedIntegerConstant {
     }
 }
 
-class U64Value private constructor(val u64: Long): UnsignedIntegerConstant {
+class U64Value private constructor(val u64: ULong): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType = U64Type
 
     override fun value(): Long = u64.toLong()
@@ -62,7 +62,8 @@ class U64Value private constructor(val u64: Long): UnsignedIntegerConstant {
     companion object {
         private val table = arrayOfNulls<U64Value>(SIZE.toInt())
 
-        fun of(u32: Int): U64Value = getOrCreate(u32, table) { U64Value(u32.toLong()) }
-        fun of(u32: Long): U64Value = getOrCreate(u32, table) { U64Value(u32) }
+        fun of(u32: Int): U64Value = getOrCreate(u32, table) { U64Value(u32.toULong()) }
+        fun of(u32: Long): U64Value = getOrCreate(u32, table) { U64Value(u32.toULong()) }
+        fun of(u32: ULong): U64Value = getOrCreate(u32.toLong(), table) { U64Value(u32) }
     }
 }

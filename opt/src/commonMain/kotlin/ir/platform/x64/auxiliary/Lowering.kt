@@ -38,7 +38,7 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
 
     private fun function(): ValueMatcher = { it is FunctionPrototype }
 
-    private fun u64imm32(): ValueMatcher = { it is U64Value && !Imm.canBeImm32(it.u64) }
+    private fun u64imm32(): ValueMatcher = { it is U64Value && !Imm.canBeImm32(it.u64.toLong()) }
     private fun i64imm32(): ValueMatcher = { it is I64Value && !Imm.canBeImm32(it.i64) }
 
     override fun visit(alloc: Alloc): Instruction {

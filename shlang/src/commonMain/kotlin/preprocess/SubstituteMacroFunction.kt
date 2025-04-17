@@ -2,7 +2,6 @@ package preprocess
 
 import tokenizer.*
 import common.forEachWith
-import ir.read.Tokenizer
 import preprocess.CProgramPreprocessor.Companion.create
 import preprocess.macros.MacroExpansionException
 import preprocess.macros.MacroFunction

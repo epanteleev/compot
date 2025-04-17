@@ -39,6 +39,12 @@ abstract class FloatTests: CommonCTest() {
         assertEquals("nan\n", result.output)
         assertEquals(1, result.exitCode)
     }
+
+    @Test
+    fun test6() {
+        val result = runCTest("shlang/float/float6", listOf(), options())
+        assertEquals(1, result.exitCode)
+    }
 }
 
 class FloatTestsO0: FloatTests() {

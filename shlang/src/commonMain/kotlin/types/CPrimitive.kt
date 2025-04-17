@@ -174,6 +174,12 @@ sealed class CPrimitive: CompletedType() {
                     FLOAT -> FLOAT
                     DOUBLE -> DOUBLE
                     is CPointer -> type2
+                    is CEnumType -> {
+                        if (this == type2) {
+                            return this
+                        }
+                        return INT
+                    }
                     else -> return null
                 }
             }

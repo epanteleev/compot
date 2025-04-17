@@ -32,5 +32,20 @@ sealed interface PrimitiveConstant: NonTrivialConstant {
             is FloatingPointType -> FloatingPointConstant.of(kind, value)
             is UndefType -> UndefValue
         }
+
+        fun of(kind: PrimitiveType, value: ULong): PrimitiveConstant = when (kind) {
+            is FloatingPointType -> FloatingPointConstant.of(kind, value)
+            else -> of(kind, value.toLong())
+        }
+
+        fun of(kind: PrimitiveType, value: UByte): PrimitiveConstant = when (kind) {
+            is FloatingPointType -> FloatingPointConstant.of(kind, value)
+            else -> of(kind, value.toByte())
+        }
+
+        fun of(kind: PrimitiveType, value: UShort): PrimitiveConstant = when (kind) {
+            is FloatingPointType -> FloatingPointConstant.of(kind, value)
+            else -> of(kind, value.toShort())
+        }
     }
 }

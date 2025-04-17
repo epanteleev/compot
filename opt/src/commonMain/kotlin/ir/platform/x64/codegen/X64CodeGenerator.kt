@@ -80,7 +80,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         is U32Value -> Imm32.of(value.u32.toLong())
         is I32Value -> Imm32.of(value.i32.toLong())
         is I64Value -> Imm64.of(value.i64)
-        is U64Value -> Imm64.of(value.u64)
+        is U64Value -> Imm64.of(value.u64.toLong())
         is GlobalConstant -> Address.internal(value.name())
         is FunctionPrototype -> if (ctx.picEnabled) {
             Address.external(value.name())
