@@ -8,6 +8,7 @@ sealed interface ObjBuilder {
     fun quad(label: ObjLabel)
     fun quad(label: ObjLabel, offset: Int)
     fun quad(value: Long)
+    fun quad(value: ULong)
     fun string(value: String)
     fun ascii(value: String)
 }

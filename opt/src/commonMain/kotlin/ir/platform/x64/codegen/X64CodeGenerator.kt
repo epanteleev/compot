@@ -463,20 +463,44 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                 when (val predicate = compare.predicate()) {
                     is IntPredicate   -> asm.setccInt(compare.operandsType().asType(), predicate, dst)
                     is FloatPredicate -> {
-                        asm.setccFloat(predicate, dst)
-                        asm.setcc(SetCCType.SETNP, rax)
-                        when (dst) { //TODO CMPSS, CMPSD
-                            is Address -> {
-                                asm.and(BYTE_SIZE, dst, rax)
-                                asm.and(BYTE_SIZE, Imm32.of(1), rax)
-                                asm.mov(POINTER_SIZE, rax, dst)
+                        when (predicate) {
+                            FloatPredicate.One, FloatPredicate.Une -> {
+                                asm.setccFloat(predicate, dst)
+                                asm.setcc(SetCCType.SETP, rax)
+                                when (dst) { //TODO CMPSS, CMPSD
+                                    is Address -> {
+                                        asm.or(BYTE_SIZE, dst, rax)
+                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
+                                        asm.mov(BYTE_SIZE, rax, dst)
+                                    }
+                                    is GPRegister -> {
+                                        asm.or(BYTE_SIZE, dst, rax)
+                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
+                                        asm.copy(BYTE_SIZE, rax, dst)
+                                    }
+                                    else -> throw CodegenException("unknown dst=$dst")
+                                }
                             }
-                            is GPRegister -> {
-                                asm.and(BYTE_SIZE, dst, rax)
-                                asm.and(BYTE_SIZE, Imm32.of(1), rax)
-                                asm.copy(POINTER_SIZE, rax, dst)
+                            FloatPredicate.Oeq, FloatPredicate.Ueq -> {
+                                asm.setccFloat(predicate, dst)
+                                asm.setcc(SetCCType.SETNP, rax)
+                                when (dst) { //TODO CMPSS, CMPSD
+                                    is Address -> {
+                                        asm.and(BYTE_SIZE, dst, rax)
+                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
+                                        asm.mov(BYTE_SIZE, rax, dst)
+                                    }
+                                    is GPRegister -> {
+                                        asm.and(BYTE_SIZE, dst, rax)
+                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
+                                        asm.copy(BYTE_SIZE, rax, dst)
+                                    }
+                                    else -> throw CodegenException("unknown dst=$dst")
+                                }
                             }
-                            else -> throw CodegenException("unknown dst=$dst")
+                            else -> {
+                                asm.setccFloat(predicate, dst)
+                            }
                         }
                     }
                 }

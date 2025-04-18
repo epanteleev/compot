@@ -78,7 +78,11 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
     }
 
     override fun quad(value: Long) {
-        arrayToAppend.add(QuadDirective(value.toString(), 0))
+        arrayToAppend.add(QuadDirective("0x" + value.toULong().toString(16), 0))
+    }
+
+    override fun quad(value: ULong) {
+        arrayToAppend.add(QuadDirective("0x" + value.toString(16), 0))
     }
 
     override fun quad(label: ObjLabel) {
