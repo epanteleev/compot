@@ -6,8 +6,8 @@ import tokenizer.Position
 sealed class AnyToken: LListNode() {
     abstract fun str(): String
 
-    abstract fun cloneWith(pos: Position): AnyToken
-    
+    abstract fun copy(): AnyToken
+
     override fun prev(): AnyToken? {
         return super.prev() as AnyToken?
     }

@@ -1,15 +1,12 @@
 package preprocess
 
+import types.INT
 import tokenizer.*
 import tokenizer.tokens.*
 import parser.CProgramParser
 import codegen.consteval.ConstEvalExpression
 import codegen.consteval.TryConstEvalExpressionLong
-import parser.nodes.VarNode
 import preprocess.CProgramPreprocessor.Companion.create
-import typedesc.TypeHolder
-import types.CompletedType
-import types.INT
 
 
 internal class ConditionPreprocessor(filename: String, condition: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(filename, condition) {
@@ -58,8 +55,7 @@ internal class ConditionPreprocessor(filename: String, condition: TokenList, pri
             throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(preprocessed)}'")
 
         val evaluationContext = ConditionEvaluationContext(ctx)
-        val constExpr = ConstEvalExpression.eval(constexpr, TryConstEvalExpressionLong(evaluationContext)) ?:
+        return ConstEvalExpression.eval(constexpr, TryConstEvalExpressionLong(evaluationContext)) ?:
             throw PreprocessorException("Cannot evaluate expression: '${TokenPrinter.print(preprocessed)}'")
-        return constExpr
     }
 }

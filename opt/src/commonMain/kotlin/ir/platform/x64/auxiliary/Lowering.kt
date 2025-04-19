@@ -600,32 +600,24 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
 
         load.match(load(gep(stackAlloc(), any()))) {
             val pointer = load.operand().asValue<GetElementPtr>()
-            val loadFromStack = bb.replace(load, LoadFromStack.load(pointer.source(), load.type(), pointer.index()))
-            killOnDemand(pointer)
-            return loadFromStack
+            return bb.replace(load, LoadFromStack.load(pointer.source(), load.type(), pointer.index()))
         }
 
         load.match(load(gfp(stackAlloc()))) {
             val pointer = load.operand().asValue<GetFieldPtr>()
             val index = getGfpIndex(pointer, load.type())
-            val loadFromStack = bb.replace(load, LoadFromStack.load(pointer.source(), load.type(), index))
-            killOnDemand(pointer)
-            return loadFromStack
+            return bb.replace(load, LoadFromStack.load(pointer.source(), load.type(), index))
         }
 
         load.match(load(gep(stackAlloc().not(), any()))) {
             val pointer = load.operand().asValue<GetElementPtr>()
-            val indexedLoad = bb.replace(load, IndexedLoad.load(pointer.source(), load.type(), pointer.index()))
-            killOnDemand(pointer)
-            return indexedLoad
+            return bb.replace(load, IndexedLoad.load(pointer.source(), load.type(), pointer.index()))
         }
 
         load.match(load(gfp(stackAlloc().not()))) {
             val pointer = load.operand().asValue<GetFieldPtr>()
             val index = getGfpIndex(pointer, load.type())
-            val indexedLoad = bb.replace(load, IndexedLoad.load(pointer.source(), load.type(), index))
-            killOnDemand(pointer)
-            return indexedLoad
+            return bb.replace(load, IndexedLoad.load(pointer.source(), load.type(), index))
         }
 
         return load
@@ -822,13 +814,6 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
         return select
     }
 
-    private fun killOnDemand(instruction: LocalValue) {
-        instruction as Instruction
-        if (instruction.usedIn().isEmpty()) { //TODO Need DCE
-            instruction.owner().kill(instruction, UndefValue)
-        }
-    }
-
     override fun visit(store: Store): Instruction {
         val value = store.value()
         if (value.isa(f32v())) {
@@ -955,9 +940,7 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
 
             val pointer = store.pointer().asValue<GetElementPtr>()
             val storeOnSt = StoreOnStack.store(pointer.source(), pointer.index(), store.value())
-            val st = bb.replace(store, storeOnSt)
-            killOnDemand(pointer)
-            return st
+            return bb.replace(store, storeOnSt)
         }
 
         store.match(store(gfp(stackAlloc()), any())) {
@@ -971,9 +954,7 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
             val pointer = store.pointer().asValue<GetFieldPtr>()
             val index = getGfpIndex(pointer, store.value().asType())
             val storeOnSt = StoreOnStack.store(pointer.source(), index, store.value())
-            val st = bb.replace(store, storeOnSt)
-            killOnDemand(pointer)
-            return st
+            return bb.replace(store, storeOnSt)
         }
 
         store.match(store(gep(stackAlloc().not(), any()), any())) {
@@ -986,9 +967,7 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
 
             val pointer = store.pointer().asValue<GetElementPtr>()
             val moveBy = MoveByIndex.move(pointer.source(), pointer.index(), store.value())
-            val move = bb.replace(store, moveBy)
-            killOnDemand(pointer)
-            return move
+            return bb.replace(store, moveBy)
         }
 
         store.match(store(gfp(stackAlloc().not()), any())) {
@@ -1002,9 +981,7 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
             val pointer = store.pointer().asValue<GetFieldPtr>()
             val index = getGfpIndex(pointer, store.value().asType())
             val moveBy = MoveByIndex.move(pointer.source(), index, store.value())
-            val move = bb.replace(store, moveBy)
-            killOnDemand(pointer)
-            return move
+            return bb.replace(store, moveBy)
         }
 
         return store
@@ -1225,16 +1202,14 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
         val divProj = tupleDiv.quotient()
         val quotient = bb.putBefore(tupleDiv, Projection.proj(newDiv, 0))
         val quotientTrunc = bb.putBefore(tupleDiv, Truncate.trunc(quotient, type))
-        divProj.updateUsages(quotientTrunc)
-        killOnDemand(divProj)
+        divProj.die(quotientTrunc)
 
         val remainder = tupleDiv.remainder()
         val proj      = bb.putBefore(tupleDiv, Projection.proj(newDiv, 1))
         val remainderTruncate = bb.putBefore(tupleDiv, Truncate.trunc(proj, type))
-        remainder.updateUsages(remainderTruncate)
-        killOnDemand(remainder)
+        remainder.die(remainderTruncate)
 
-        killOnDemand(tupleDiv)
+        tupleDiv.die(UndefValue)
         return remainderTruncate
     }
 

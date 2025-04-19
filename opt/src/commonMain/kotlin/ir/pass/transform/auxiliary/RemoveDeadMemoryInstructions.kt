@@ -16,27 +16,27 @@ internal class RemoveDeadMemoryInstructions private constructor(private val cfg:
         fun transform(instruction: Instruction): Instruction? {
             instruction.match(load(any())) { load: Load ->
                 if (load.operand() == UndefValue) {
-                    return bb.kill(load, UndefValue)
+                    return load.die(UndefValue)
                 }
                 if (!escapeState.isNoEscape(load.operand())) {
                     return load
                 }
-                return bb.kill(load, UndefValue)
+                return load.die(UndefValue)
             }
             instruction.match(store(any(), any())) { store: Store ->
                 if (store.pointer() == UndefValue) {
-                    return bb.kill(store, UndefValue)
+                    return store.die(UndefValue)
                 }
                 if (!escapeState.isNoEscape(store.pointer())) {
                     return store
                 }
-                return bb.kill(store, UndefValue)
+                return store.die(UndefValue)
             }
             instruction.match(alloc(primitive())) { alloc: Alloc ->
                 if (!escapeState.isNoEscape(alloc)) {
                     return alloc
                 }
-                return bb.kill(alloc, UndefValue)
+                return alloc.die(UndefValue)
             }
 
             return instruction

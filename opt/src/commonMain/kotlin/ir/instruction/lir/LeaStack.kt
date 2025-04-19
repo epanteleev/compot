@@ -53,7 +53,7 @@ class LeaStack private constructor(id: Identity, owner: Block, val loadedType: P
                 "should not be $originType, but origin=$origin:$originType"
             }
 
-            return registerUser(LeaStack(id, owner, loadedType, origin, index), origin)
+            return registerUser(LeaStack(id, owner, loadedType, origin, index), origin, index)
         }
 
         fun typeCheck(copy: LeaStack): Boolean {

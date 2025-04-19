@@ -60,7 +60,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
         }
     }
 
-    internal fun destroy() {
+    private fun destroy() {
         if (this is UsableValue) {
             assertion(usedIn().isEmpty()) {
                 "removed useful instruction: removed=$this, users=${usedIn()}"
@@ -81,6 +81,17 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
 
             operands[idx] = UndefValue
         }
+    }
+
+    fun die(replacement: Value): Instruction? = owner.df {
+        val next = prev()
+        if (this is UsableValue) {
+            updateUsages(replacement)
+        }
+
+        val removed = owner.remove(this)
+        removed.destroy()
+        return@df next
     }
 
     abstract fun<T> accept(visitor: IRInstructionVisitor<T>): T

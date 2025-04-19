@@ -48,7 +48,7 @@ class IndexedLoad private constructor(id: Identity, owner: Block, private val lo
                 "should not be $originType, but origin=$origin:$originType"
             }
 
-            return registerUser(IndexedLoad(id, owner, loadedType, origin, index), origin)
+            return registerUser(IndexedLoad(id, owner, loadedType, origin, index), origin, index)
         }
 
         fun typeCheck(copy: IndexedLoad): Boolean {

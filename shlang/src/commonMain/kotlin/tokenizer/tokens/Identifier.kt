@@ -23,6 +23,10 @@ class Identifier(private val data: String, position: Position, private val hides
         return Identifier(data, pos, hideset.copy())
     }
 
+    override fun copy(): AnyToken {
+        return Identifier(data, position(), hideset.copy())
+    }
+
     override fun hashCode(): Int {
         return data.hashCode()
     }

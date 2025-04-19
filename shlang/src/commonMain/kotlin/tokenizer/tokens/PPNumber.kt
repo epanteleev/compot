@@ -31,4 +31,8 @@ class PPNumber internal constructor(private val data: String, private var number
     override fun cloneWith(pos: Position): CToken {
         return PPNumber(data, number, type, pos)
     }
+
+    override fun copy(): AnyToken {
+        return PPNumber(data, number, type, position())
+    }
 }

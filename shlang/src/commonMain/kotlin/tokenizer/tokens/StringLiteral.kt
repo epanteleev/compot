@@ -3,6 +3,7 @@ package tokenizer.tokens
 import common.quotedEscapes
 import tokenizer.Position
 
+
 class StringLiteral(private val data: String, position: Position): AnyStringLiteral(position) {
     override fun str(): String = data.quotedEscapes()
 
@@ -27,5 +28,9 @@ class StringLiteral(private val data: String, position: Position): AnyStringLite
 
     override fun cloneWith(pos: Position): CToken {
         return StringLiteral(data, pos)
+    }
+
+    override fun copy(): AnyToken {
+        return StringLiteral(data, position())
     }
 }

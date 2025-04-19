@@ -130,15 +130,15 @@ sealed class AbstractCPreprocessor(val filename: String, protected val tokens: T
         current = first
     }
 
-    protected fun addInclude(tokens: TokenList) {
-        if (tokens.isEmpty()) {
+    protected fun addInclude(headerTokens: TokenList) {
+        if (headerTokens.isEmpty()) {
             return
         }
-        val last = tokens.last()
+        val last = headerTokens.last()
         if (current == null) {
-            this.tokens.addAll(tokens)
+            tokens.addAll(headerTokens)
         } else {
-            this.tokens.addAll(current!!, tokens)
+            tokens.addAll(current!!, headerTokens)
         }
         current = last
     }

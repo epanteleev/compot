@@ -26,4 +26,8 @@ class CharLiteral(private val data: Char, position: Position): CToken(position) 
     override fun cloneWith(pos: Position): CToken {
         return CharLiteral(data, pos)
     }
+
+    override fun copy(): CToken {
+        return CharLiteral(data, position())
+    }
 }

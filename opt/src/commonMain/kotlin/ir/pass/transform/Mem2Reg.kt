@@ -71,7 +71,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
 
         completedPhis.forEachWith(uncompletedPhis) { phi, uncompletedPhi ->
             uncompletedPhi.updateUsages(phi)
-            uncompletedPhi.owner().kill(uncompletedPhi, UndefValue)
+            uncompletedPhi.die(UndefValue)
 
             for ((i, v) in phi.operands().withIndex()) {
                 val newValue = if (v == uncompletedPhi) phi else v
@@ -90,7 +90,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
 
             if (instruction.usedIn().isEmpty() || deadPool.containsAll(instruction.usedIn())) {
                 deadPool.add(instruction)
-                return bb.kill(instruction, UndefValue)
+                return instruction.die(UndefValue)
             }
 
             return instruction

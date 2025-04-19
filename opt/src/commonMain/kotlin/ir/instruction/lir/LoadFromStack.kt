@@ -53,7 +53,7 @@ class LoadFromStack private constructor(id: Identity, owner: Block, private val 
                 "should not be $originType, but origin=$origin:$originType"
             }
 
-            return registerUser(LoadFromStack(id, owner, loadedType, origin, index), origin)
+            return registerUser(LoadFromStack(id, owner, loadedType, origin, index), origin, index)
         }
 
         fun typeCheck(copy: LoadFromStack): Boolean {

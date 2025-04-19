@@ -19,4 +19,8 @@ class FunctionMark(position: Position): AnyStringLiteral(position) {
     override fun cloneWith(pos: Position): CToken {
         return FunctionMark(pos)
     }
+
+    override fun copy(): AnyToken {
+        return FunctionMark(position())
+    }
 }

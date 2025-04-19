@@ -30,4 +30,8 @@ class Punctuator(val data: String, position: Position): CToken(position) {
     override fun cloneWith(pos: Position): CToken {
         return Punctuator(data, pos)
     }
+
+    override fun copy(): AnyToken {
+        return Punctuator(data, position())
+    }
 }

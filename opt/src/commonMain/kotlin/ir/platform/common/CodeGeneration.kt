@@ -5,6 +5,7 @@ import ir.pass.CompileContext
 import ir.pass.PassPipeline
 import ir.pass.PassPipeline.Companion.create
 import ir.pass.transform.CSSAConstructionFabric
+import ir.pass.transform.DeadCodeElimination
 import ir.pass.transform.Mem2RegFabric
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.x64.LModule
@@ -53,6 +54,7 @@ class CodeGenerationFactory {
     }
 
     companion object {
-        private fun beforeCodegen(ctx: CompileContext): PassPipeline = create("before-codegen", arrayListOf(CSSAConstructionFabric, SSADestructionFabric), ctx)
+        private fun beforeCodegen(ctx: CompileContext): PassPipeline = create("before-codegen", arrayListOf(CSSAConstructionFabric, SSADestructionFabric,
+            DeadCodeElimination), ctx)
     }
 }

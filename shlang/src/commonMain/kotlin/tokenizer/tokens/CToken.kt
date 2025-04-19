@@ -12,4 +12,6 @@ sealed class CToken(private val position: Position): AnyToken() {
     override fun toString(): String {
         return "'${str()}' in $position'"
     }
+
+    abstract fun cloneWith(pos: Position): AnyToken
 }

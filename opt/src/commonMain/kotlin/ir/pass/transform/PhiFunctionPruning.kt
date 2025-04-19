@@ -76,7 +76,7 @@ internal class PhiFunctionPruning private constructor(private val cfg: FunctionD
                 "phi value is used in non phi instruction"
             }
 
-            phi.owner().kill(phi, UndefValue)
+            phi.die(UndefValue)
         }
 
         forEachUseless { phi -> removePhi(phi) }

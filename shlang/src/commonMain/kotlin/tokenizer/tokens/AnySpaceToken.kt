@@ -11,7 +11,7 @@ class Indent private constructor(private val spaces: Int): AnySpaceToken() {
 
     override fun str(): String = data
 
-    override fun cloneWith(pos: Position): AnyToken {
+    override fun copy(): AnyToken {
         return of(spaces)
     }
 
@@ -45,7 +45,7 @@ class NewLine private constructor(private val spaces: Int): AnySpaceToken() {
 
     override fun str(): String = data
 
-    override fun cloneWith(pos: Position): AnyToken {
+    override fun copy(): AnyToken {
         return of(spaces)
     }
 

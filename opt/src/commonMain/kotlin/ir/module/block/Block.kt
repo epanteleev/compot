@@ -136,22 +136,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
         fn(it)
     }
 
-    fun kill(instruction: Instruction, replacement: Value): Instruction? = mc.df {
-        assertion(instruction.owner() === this) {
-            "instruction=$instruction is not in bb=$this"
-        }
-
-        val next = instruction.prev()
-        if (instruction is UsableValue) {
-            instruction.updateUsages(replacement)
-        }
-
-        val removed = remove(instruction)
-        removed.destroy()
-        return@df next
-    }
-
-    private fun remove(instruction: Instruction): Instruction {
+    internal fun remove(instruction: Instruction): Instruction {
         return instructions.remove(instruction)
     }
 
@@ -248,7 +233,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
             }
             instruction.updateUsages(newInstruction as UsableValue)
         }
-        kill(instruction, UndefValue)
+        instruction.die(UndefValue)
         return newInstruction
     }
 

@@ -7,7 +7,7 @@ sealed class PreprocessorGuard(val filename: String, val includeLevel: Int, val 
 class EnterIncludeGuard(filename: String, includeLevel: Int, line: Int): PreprocessorGuard(filename, includeLevel, line) {
     override fun str(): String = "#enter[$includeLevel] $filename in $line\n"
 
-    override fun cloneWith(pos: Position): AnyToken {
+    override fun copy(): AnyToken {
         return EnterIncludeGuard(filename, includeLevel, line)
     }
 
@@ -28,7 +28,7 @@ class EnterIncludeGuard(filename: String, includeLevel: Int, line: Int): Preproc
 class ExitIncludeGuard(filename: String, includeLevel: Int, line: Int): PreprocessorGuard(filename, includeLevel, line) {
     override fun str(): String = "#exit[$includeLevel] $filename in $line\n"
 
-    override fun cloneWith(pos: Position): AnyToken {
+    override fun copy(): AnyToken {
         return ExitIncludeGuard(filename, includeLevel, line)
     }
 

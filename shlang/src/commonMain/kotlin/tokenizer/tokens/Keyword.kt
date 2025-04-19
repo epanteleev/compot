@@ -32,4 +32,8 @@ class Keyword(val data: String, position: Position, private val hideset: Hideset
     override fun cloneWith(pos: Position): CToken {
         return Keyword(data, pos, hideset.copy())
     }
+
+    override fun copy(): AnyToken {
+        return Keyword(data, position(), hideset.copy())
+    }
 }

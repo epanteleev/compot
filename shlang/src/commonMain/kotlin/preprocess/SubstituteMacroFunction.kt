@@ -67,7 +67,11 @@ internal class SubstituteMacroFunction(private val macros: MacroFunction, privat
         val remains = args.takeLast(args.size - macros.argNames.size + 1)
         for (arg in remains) {
             for (tok in arg) {
-                result.add(tok.cloneWith(macrosNamePos))
+                val copy = when (tok) {
+                    is CToken -> tok.cloneWith(macrosNamePos)
+                    else -> tok.copy()
+                }
+                result.add(copy)
             }
             if (arg != remains.last()) {
                 result.add(Punctuator(",", macrosNamePos))
@@ -82,7 +86,7 @@ internal class SubstituteMacroFunction(private val macros: MacroFunction, privat
         while (!eof()) {
             val current = peak<AnyToken>()
             if (current !is CToken) {
-                result.add(current.cloneWith(macrosNamePos))
+                result.add(current.copy())
                 eat()
                 continue
             }
@@ -129,7 +133,11 @@ internal class SubstituteMacroFunction(private val macros: MacroFunction, privat
             val preprocessed = create(filename, value.clone(), ctx).preprocess()
             val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, peak<CToken>().position() as OriginalPosition)
             for (tok in preprocessed) {
-                result.add(tok.cloneWith(preprocessedPosition))
+                val copy = when (tok) {
+                    is CToken -> tok.cloneWith(preprocessedPosition)
+                    else -> tok.copy()
+                }
+                result.add(copy)
             }
             eat()
         }

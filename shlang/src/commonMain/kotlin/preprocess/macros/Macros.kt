@@ -27,7 +27,7 @@ sealed class Macros(val name: String) {
     companion object {
         fun newTokenFrom(name: String, macrosNamePos: Position, tok: AnyToken): AnyToken {
             if (tok !is CToken) {
-                return tok.cloneWith(macrosNamePos)
+                return tok.copy()
             }
 
             val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, tok.position() as OriginalPosition)

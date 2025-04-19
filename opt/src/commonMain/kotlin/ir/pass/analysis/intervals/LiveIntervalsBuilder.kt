@@ -23,7 +23,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
     private val intervals       = hashMapOf<LocalValue, LiveRangeImpl>()
     private val groups          = hashMapOf<LocalValue, Group>()
     private val linearScanOrder = data.analysis(LinearScanOrderFabric)
-    private val liveness        = data.analysis(LivenessAnalysisPassFabric)
+    private val liveness        = data.analysis(LivenessAnalysisPassFabric, false)
 
     private fun setupArguments() {
         val arguments = data.arguments()
@@ -64,7 +64,9 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
         for (bb in linearScanOrder) {
             // TODO Improvement: skip this step if CFG doesn't have any loops.
             for (op in liveness.liveOut(bb)) {
-                val liveRange = intervals[op] ?: throw LiveIntervalsException("cannot find $op")
+                val liveRange = intervals[op] ?: let {
+                    throw LiveIntervalsException("cannot find $op")
+                }
 
                 val index = bb.size
                 liveRange.registerUsage(ordering + index)
