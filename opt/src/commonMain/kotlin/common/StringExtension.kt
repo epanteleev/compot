@@ -8,7 +8,7 @@ private fun wrapEscapedChar(char: Char): String? = when (char) {
     '\r'     -> "\\r"
     '\b'     -> "\\b"
     '\u000C' -> "\\f"
-    '\u0007' -> "\\a"
+    '\u0007' -> "\\x07"
     '\u0000' -> "\\0"
     '\\'     -> "\\\\"
     '"'      -> "\\\""
