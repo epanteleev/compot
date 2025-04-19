@@ -8,7 +8,7 @@ class EnterIncludeGuard(filename: String, includeLevel: Int, line: Int): Preproc
     override fun str(): String = "#enter[$includeLevel] $filename in $line\n"
 
     override fun cloneWith(pos: Position): AnyToken {
-        return this
+        return EnterIncludeGuard(filename, includeLevel, line)
     }
 
     override fun hashCode(): Int {
@@ -29,7 +29,7 @@ class ExitIncludeGuard(filename: String, includeLevel: Int, line: Int): Preproce
     override fun str(): String = "#exit[$includeLevel] $filename in $line\n"
 
     override fun cloneWith(pos: Position): AnyToken {
-        return this
+        return ExitIncludeGuard(filename, includeLevel, line)
     }
 
     override fun hashCode(): Int {

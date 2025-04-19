@@ -10,6 +10,21 @@ class TokenList: LeakedLinkedList<AnyToken>() {
         remove(token)
         return next
     }
+
+    fun clone(): TokenList {
+        val list = TokenList()
+        for (token in this) {
+            val copy = when (token) {
+                is CToken -> token.cloneWith(token.position())
+                is AnySpaceToken -> token.cloneWith(Position.UNKNOWN)
+                is EnterIncludeGuard -> token.cloneWith(Position.UNKNOWN)
+                is ExitIncludeGuard -> token.cloneWith(Position.UNKNOWN)
+            }
+
+            list.add(copy)
+        }
+        return list
+    }
 }
 
 fun tokenListOf(vararg tokens: AnyToken): TokenList {

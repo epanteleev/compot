@@ -88,6 +88,13 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("Hello, world!\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testErrno() {
+        val result = runCTest("shlang/stdlib/errno", listOf(), options())
+        assertEquals("errno: EPERM\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {

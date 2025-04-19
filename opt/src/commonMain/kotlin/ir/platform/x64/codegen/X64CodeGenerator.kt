@@ -457,7 +457,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     override fun visit(flag2Int: Flag2Int) {
         val dst = vReg(flag2Int)
-
+        val size = flag2Int.type().sizeOf()
         when (val compare = flag2Int.operand()) {
             is CompareInstruction -> {
                 when (val predicate = compare.predicate()) {
@@ -471,35 +471,32 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                                     is Address -> {
                                         asm.or(BYTE_SIZE, dst, rax)
                                         asm.and(BYTE_SIZE, Imm32.of(1), rax)
-                                        asm.mov(BYTE_SIZE, rax, dst)
+                                        asm.mov(size, rax, dst)
                                     }
                                     is GPRegister -> {
                                         asm.or(BYTE_SIZE, dst, rax)
                                         asm.and(BYTE_SIZE, Imm32.of(1), rax)
-                                        asm.copy(BYTE_SIZE, rax, dst)
-                                    }
-                                    else -> throw CodegenException("unknown dst=$dst")
-                                }
-                            }
-                            FloatPredicate.Oeq, FloatPredicate.Ueq -> {
-                                asm.setccFloat(predicate, dst)
-                                asm.setcc(SetCCType.SETNP, rax)
-                                when (dst) { //TODO CMPSS, CMPSD
-                                    is Address -> {
-                                        asm.and(BYTE_SIZE, dst, rax)
-                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
-                                        asm.mov(BYTE_SIZE, rax, dst)
-                                    }
-                                    is GPRegister -> {
-                                        asm.and(BYTE_SIZE, dst, rax)
-                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
-                                        asm.copy(BYTE_SIZE, rax, dst)
+                                        asm.copy(size, rax, dst)
                                     }
                                     else -> throw CodegenException("unknown dst=$dst")
                                 }
                             }
                             else -> {
                                 asm.setccFloat(predicate, dst)
+                                asm.setcc(SetCCType.SETNP, rax)
+                                when (dst) { //TODO CMPSS, CMPSD
+                                    is Address -> {
+                                        asm.and(BYTE_SIZE, dst, rax)
+                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
+                                        asm.mov(size, rax, dst)
+                                    }
+                                    is GPRegister -> {
+                                        asm.and(BYTE_SIZE, dst, rax)
+                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
+                                        asm.copy(size, rax, dst)
+                                    }
+                                    else -> throw CodegenException("unknown dst=$dst")
+                                }
                             }
                         }
                     }
@@ -507,7 +504,6 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                 Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, dst)
             }
             is BoolValue -> {
-                val size = flag2Int.type().sizeOf()
                 val res = if (compare.bool) 1L else 0L
                 when (dst) {
                     is Address    -> asm.mov(size, Imm32.of(res), dst)

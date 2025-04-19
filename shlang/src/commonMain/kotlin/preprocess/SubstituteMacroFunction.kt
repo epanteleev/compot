@@ -126,7 +126,7 @@ internal class SubstituteMacroFunction(private val macros: MacroFunction, privat
                 continue
             }
 
-            val preprocessed = create(filename, value, ctx).preprocess()
+            val preprocessed = create(filename, value.clone(), ctx).preprocess()
             val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, peak<CToken>().position() as OriginalPosition)
             for (tok in preprocessed) {
                 result.add(tok.cloneWith(preprocessedPosition))
