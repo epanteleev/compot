@@ -10,7 +10,7 @@ abstract class ValueInstruction(id: Identity, owner: Block, operands: Array<Valu
     override var usedIn: MutableList<Instruction> = arrayListOf()
 
     final override fun name(): String {
-        return "${owner.index}x${id}"
+        return "${owner().index}x${id}"
     }
 
     final override fun toString(): String {

@@ -28,7 +28,7 @@ class Call private constructor(id: Identity, owner: Block, private val func: Dir
         return arrayWrapperOf(operands)
     }
 
-    override fun arg(idx: Int, newValue: Value) = owner.df {
+    override fun arg(idx: Int, newValue: Value) {
         update(idx, newValue)
     }
 

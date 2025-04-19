@@ -25,7 +25,7 @@ class VoidCall private constructor(id: Identity,
         return arrayWrapperOf(operands)
     }
 
-    override fun arg(idx: Int, newValue: Value) = owner.df {
+    override fun arg(idx: Int, newValue: Value) {
         update(idx, newValue)
     }
 

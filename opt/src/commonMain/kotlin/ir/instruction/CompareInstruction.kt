@@ -24,7 +24,7 @@ sealed class CompareInstruction(id: Identity, owner: Block, val operandsType: Pr
         return operands[0]
     }
 
-    fun lhs(newLhs: Value) = owner.df {
+    fun lhs(newLhs: Value) {
         update(0, newLhs)
     }
 
@@ -36,7 +36,7 @@ sealed class CompareInstruction(id: Identity, owner: Block, val operandsType: Pr
         return operands[1]
     }
 
-    fun rhs(newRhs: Value) = owner.df {
+    fun rhs(newRhs: Value) {
         update(1, newRhs)
     }
 

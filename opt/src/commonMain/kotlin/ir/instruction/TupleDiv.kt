@@ -23,7 +23,7 @@ class TupleDiv private constructor(id: Identity, owner: Block, private val tp: T
         return operands[0]
     }
 
-    fun lhs(newValue: Value) = owner.df {
+    fun lhs(newValue: Value) {
         update(FIRST, newValue)
     }
 
@@ -35,7 +35,7 @@ class TupleDiv private constructor(id: Identity, owner: Block, private val tp: T
         return operands[1]
     }
 
-    fun rhs(newValue: Value) = owner.df {
+    fun rhs(newValue: Value) {
         update(SECOND, newValue)
     }
 

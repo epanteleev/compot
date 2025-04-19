@@ -16,7 +16,7 @@ sealed class TerminateValueInstruction(
     override var usedIn: MutableList<Instruction> = arrayListOf()
 
     final override fun name(): String {
-        return "${owner.index}x${id}"
+        return "${owner().index}x${id}"
     }
 
     final override fun toString(): String {

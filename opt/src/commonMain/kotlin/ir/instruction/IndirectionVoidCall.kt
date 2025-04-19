@@ -35,7 +35,7 @@ class IndirectionVoidCall private constructor(id: Identity,
         return operands.last()
     }
 
-    fun pointer(newPointer: Value) = owner.df {
+    fun pointer(newPointer: Value) {
         update(operands.size - 1, newPointer)
     }
 
@@ -43,7 +43,7 @@ class IndirectionVoidCall private constructor(id: Identity,
         return arrayWrapperOf(arrayWith(operands.size - 1) { operands[it] })
     }
 
-    override fun arg(idx: Int, newValue: Value) = owner.df {
+    override fun arg(idx: Int, newValue: Value) {
         if (idx >= operands.size - 1 || idx < 0) {
             throw IndexOutOfBoundsException("index=$idx, operands=${operands.joinToString { it.toString() }}")
         }

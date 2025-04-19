@@ -10,7 +10,7 @@ sealed class AnyGetElementPtr(id: Identity, owner: Block, operands: Array<Value>
 
     abstract fun source(): Value
 
-    fun source(newSource: Value) = owner.df {
+    fun source(newSource: Value) {
         update(SOURCE, newSource)
     }
 

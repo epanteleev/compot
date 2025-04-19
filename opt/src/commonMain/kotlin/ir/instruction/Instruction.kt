@@ -13,7 +13,7 @@ import ir.value.constant.UndefValue
 typealias Identity = Int
 typealias InstBuilder<T> = (Identity, Block) -> T
 
-abstract class Instruction(protected val id: Identity, protected val owner: Block, protected val operands: Array<Value>): LListNode() {
+abstract class Instruction(protected val id: Identity, private val owner: Block, protected val operands: Array<Value>): LListNode() {
     final override fun next(): Instruction? = next as Instruction?
     final override fun prev(): Instruction? = prev as Instruction?
 
@@ -43,7 +43,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
         }
     }
 
-    internal fun update(index: Int, new: Value) { // TODO inline class for 'index'?
+    internal fun update(index: Int, new: Value) = owner.df { // TODO inline class for 'index'?
         assertion(0 <= index && index < operands.size) {
             "out of range in $this"
         }

@@ -26,17 +26,17 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
 
     fun values(): List<Block> = arrayWrapperOf(incoming)
 
-    fun value(idx: Int, newValue: Value) = owner.df {
+    fun value(idx: Int, newValue: Value) {
         update(idx, newValue)
     }
 
-    fun values(closure: (Block, Value) -> Value) = owner.df {
+    fun values(closure: (Block, Value) -> Value) {
         zipWithIndex { bb, value, idx ->
             update(idx, closure(bb, value))
         }
     }
 
-    fun incoming(closure: (Block, Value) -> Block) = owner.cf {
+    fun incoming(closure: (Block, Value) -> Block) = owner().cf {
         zipWithIndex { bb, value, idx ->
             updateIncoming(closure(bb, value), idx)
         }

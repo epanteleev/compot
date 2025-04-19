@@ -14,7 +14,7 @@ abstract class ArithmeticBinary(id: Identity, owner: Block, protected val tp: Ar
         return operands[LHS]
     }
 
-    fun lhs(newLhs: Value) = owner.df {
+    fun lhs(newLhs: Value) {
         update(LHS, newLhs)
     }
 
@@ -23,7 +23,7 @@ abstract class ArithmeticBinary(id: Identity, owner: Block, protected val tp: Ar
         return operands[RHS]
     }
 
-    fun rhs(newRhs: Value) = owner.df {
+    fun rhs(newRhs: Value) {
         update(RHS, newRhs)
     }
 

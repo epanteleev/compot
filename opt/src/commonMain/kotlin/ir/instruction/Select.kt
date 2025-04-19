@@ -31,7 +31,7 @@ class Select private constructor(id: Identity, owner: Block, private val ty: Int
         return operands[1]
     }
 
-    fun onTrue(newOnTrue: Value) = owner.df {
+    fun onTrue(newOnTrue: Value) {
         update(1, newOnTrue)
     }
 
@@ -43,7 +43,7 @@ class Select private constructor(id: Identity, owner: Block, private val ty: Int
         return operands[2]
     }
 
-    fun onFalse(newOnFalse: Value) = owner.df {
+    fun onFalse(newOnFalse: Value) {
         update(2, newOnFalse)
     }
 

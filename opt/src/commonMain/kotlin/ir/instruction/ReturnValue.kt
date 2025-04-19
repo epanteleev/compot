@@ -24,7 +24,7 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
         return operands[index]
     }
 
-    fun returnValue(index: Int, newValue: Value) = owner.df {
+    fun returnValue(index: Int, newValue: Value) {
         update(index, newValue)
     }
 

@@ -16,7 +16,7 @@ sealed class Unary(id: Identity, owner: Block, protected val tp: PrimitiveType, 
         return operands[0]
     }
 
-    fun operand(newOperand: Value) = owner.df {
+    fun operand(newOperand: Value) {
         update(0, newOperand)
     }
 }

@@ -22,7 +22,7 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
         return operands[DESTINATION]
     }
 
-    fun pointer(newPointer: Value) = owner.df {
+    fun pointer(newPointer: Value) {
         update(DESTINATION, newPointer)
     }
 
@@ -34,7 +34,7 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
         return operands[VALUE]
     }
 
-    fun value(newValue: Value) = owner.df {
+    fun value(newValue: Value) {
         update(VALUE, newValue)
     }
 

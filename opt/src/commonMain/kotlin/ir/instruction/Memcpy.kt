@@ -27,7 +27,7 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
         return operands[DESTINATION]
     }
 
-    fun destination(newValue: Value) = owner.df {
+    fun destination(newValue: Value) {
         update(DESTINATION, newValue)
     }
 
@@ -39,7 +39,7 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
         return operands[SOURCE]
     }
 
-    fun source(newValue: Value) = owner.df {
+    fun source(newValue: Value) {
         update(SOURCE, newValue)
     }
 

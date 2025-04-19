@@ -34,7 +34,7 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
         return operands[INDEX]
     }
 
-    fun index(newIndex: Value) = owner.df {
+    fun index(newIndex: Value) {
         update(INDEX, newIndex)
     }
 
