@@ -32,7 +32,7 @@ class U16ConstantValue(override val name: String, private val u16: UShort): Prim
     }
 
     override fun type(): U16Type = U16Type
-    override fun constant(): U16Value = U16Value.of(u16.toShort())
+    override fun constant(): U16Value = U16Value.of(u16)
 }
 
 class I16ConstantValue(override val name: String, private val i16: Short): PrimitiveGlobalConstant(name) {
@@ -50,7 +50,7 @@ class U32ConstantValue(override val name: String, private val u32: UInt): Primit
     }
 
     override fun type(): U32Type = U32Type
-    override fun constant(): U32Value = U32Value.of(u32.toInt())
+    override fun constant(): U32Value = U32Value.of(u32)
 }
 
 class I32ConstantValue(override val name: String, private val i32: Int): PrimitiveGlobalConstant(name) {

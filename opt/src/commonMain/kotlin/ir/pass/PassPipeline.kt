@@ -5,6 +5,7 @@ import ir.pass.analysis.VerifySSA
 import ir.pass.common.TransformPassFabric
 import ir.pass.transform.DeadCodeElimination
 import ir.pass.transform.Mem2RegFabric
+import ir.pass.transform.normalizer.Normalizer
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
@@ -42,7 +43,7 @@ class PassPipeline private constructor(private val name: String, private val pas
 
     companion object {
         fun base(ctx: CompileContext): PassPipeline = create("initial", arrayListOf(), ctx)
-        fun opt(ctx: CompileContext): PassPipeline = create("initial", arrayListOf(Mem2RegFabric, DeadCodeElimination), ctx)
+        fun opt(ctx: CompileContext): PassPipeline = create("initial", arrayListOf(Mem2RegFabric, Normalizer, DeadCodeElimination), ctx)
 
         fun create(name: String, passFabrics: List<TransformPassFabric>, ctx: CompileContext): PassPipeline {
             return PassPipeline(name, passFabrics, ctx)

@@ -425,8 +425,8 @@ internal object TypeConverter {
                 I32Type -> icmp(lvalue, IntPredicate.Ne, I32Value.of(0))
                 I64Type -> icmp(lvalue, IntPredicate.Ne, I64Value.of(0))
                 U8Type  -> icmp(lvalue, IntPredicate.Ne, U8Value.of(0U))
-                U16Type -> icmp(lvalue, IntPredicate.Ne, U16Value.of(0))
-                U32Type -> icmp(lvalue, IntPredicate.Ne, U32Value.of(0))
+                U16Type -> icmp(lvalue, IntPredicate.Ne, U16Value.of(0U))
+                U32Type -> icmp(lvalue, IntPredicate.Ne, U32Value.of(0U))
                 U64Type -> icmp(lvalue, IntPredicate.Ne, U64Value.of(0))
                 PtrType -> icmp(lvalue, IntPredicate.Ne, NullValue)
                 else -> throw IllegalStateException("Cannot convert $lvalue:$vType to $toType")
@@ -667,15 +667,15 @@ internal object TypeConverter {
                 else -> BoolValue.TRUE
             }
             is U32Value -> when (value.u32) {
-                0 -> BoolValue.FALSE
+                0U -> BoolValue.FALSE
                 else -> BoolValue.TRUE
             }
-            is I64Value -> when (value.i64.toInt()) {
-                0 -> BoolValue.FALSE
+            is I64Value -> when (value.i64) {
+                0L -> BoolValue.FALSE
                 else -> BoolValue.TRUE
             }
-            is U64Value -> when (value.u64.toInt()) {
-                0 -> BoolValue.FALSE
+            is U64Value -> when (value.u64) {
+                0UL -> BoolValue.FALSE
                 else -> BoolValue.TRUE
             }
             else -> throw RuntimeException("Cannot convert $value to $type")

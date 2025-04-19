@@ -1,11 +1,12 @@
-package ir.pass.transform
+package ir.pass.transform.auxiliary
 
-import ir.module.*
 import common.assertion
 import ir.instruction.Phi
-import ir.value.constant.UndefValue
+import ir.module.FunctionData
+import ir.module.Module
 import ir.pass.analysis.traverse.PreOrderFabric
-
+import ir.value.constant.UndefValue
+import kotlin.collections.iterator
 
 internal class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
     private val usefull = hashMapOf<Phi, Boolean>()

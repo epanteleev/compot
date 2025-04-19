@@ -40,7 +40,7 @@ class CFGTraversalTest {
         builder.branch(mergeLabel)
 
         builder.switchLabel(mergeLabel)
-        val arithm = builder.sub(U16Value.of(1337), U16Value.of(64))
+        val arithm = builder.sub(U16Value.of(1337U), U16Value.of(64U))
         builder.ret(U16Type, arrayOf(arithm))
 
         val module = moduleBuilder.build()

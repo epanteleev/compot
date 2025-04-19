@@ -74,7 +74,11 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
     }
 
     override fun long(value: Int) {
-        arrayToAppend.add(LongDirective(value.toString()))
+        arrayToAppend.add(LongDirective("0x" + value.toULong().toString(16)))
+    }
+
+    override fun long(value: UInt) {
+        arrayToAppend.add(LongDirective("0x" + value.toString(16)))
     }
 
     override fun quad(value: Long) {

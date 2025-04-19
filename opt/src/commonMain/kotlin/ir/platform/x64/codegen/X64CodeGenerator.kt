@@ -77,7 +77,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         is I8Value -> Imm32.of(value.i8.toLong())
         is U16Value -> Imm32.of(value.u16.toLong())
         is I16Value -> Imm32.of(value.i16.toLong())
-        is U32Value -> Imm32.of(value.u32.toLong())
+        is U32Value -> Imm32.of(value.u32.toInt())
         is I32Value -> Imm32.of(value.i32.toLong())
         is I64Value -> Imm64.of(value.i64)
         is U64Value -> Imm64.of(value.u64.toLong())
