@@ -1304,6 +1304,16 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
     }
 
     override fun visit(proj: Projection): Instruction {
+        val operand = proj.tuple()
+        if (operand is TupleConstant) {
+            // Before:
+            //  %res = proj |c1, c2|, 0
+            //
+            // After:
+            //  %res = copy c1
+
+            return bb.replace(proj, Copy.copy(operand.inner(proj.index())))
+        }
         return proj
     }
 

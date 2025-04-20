@@ -31,11 +31,45 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
     private fun constExprAdd(add: Add): Value {
         val rhs = add.rhs()
         return when (val lhs = add.lhs()) {
-            is U8Value -> lhs + rhs.asValue()
-            is U16Value -> lhs + rhs.asValue()
-            is U32Value -> lhs + rhs.asValue()
-            is U64Value -> lhs + rhs.asValue()
+            is UnsignedIntegerConstant -> lhs + rhs.asValue()
+            is SignedIntegerConstant -> lhs + rhs.asValue()
             else -> add
+        }
+    }
+
+    private fun constExprSub(sub: Sub): Value {
+        val rhs = sub.rhs()
+        return when (val lhs = sub.lhs()) {
+            is UnsignedIntegerConstant -> lhs - rhs.asValue()
+            is SignedIntegerConstant -> lhs - rhs.asValue()
+            else -> sub
+        }
+    }
+
+    private fun constExprMul(mul: Mul): Value {
+        val rhs = mul.rhs()
+        return when (val lhs = mul.lhs()) {
+            is UnsignedIntegerConstant -> lhs * rhs.asValue()
+            is SignedIntegerConstant -> lhs * rhs.asValue()
+            else -> mul
+        }
+    }
+
+    private fun constExprTupleDiv(div: TupleDiv): Value {
+        val rhs = div.rhs()
+        return when (val lhs = div.lhs()) {
+            is UnsignedIntegerConstant -> TupleConstant.of(lhs / rhs.asValue(), lhs % rhs.asValue())
+            is SignedIntegerConstant -> TupleConstant.of(lhs / rhs.asValue(), lhs % rhs.asValue())
+            else -> div
+        }
+    }
+
+    private fun constExprOr(or: Or): Value {
+        val rhs = or.rhs()
+        return when (val lhs = or.lhs()) {
+            is UnsignedIntegerConstant -> lhs or rhs.asValue()
+            is SignedIntegerConstant -> lhs or rhs.asValue()
+            else -> or
         }
     }
 
@@ -49,11 +83,29 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
 
     override fun visit(and: And): Value = and
 
-    override fun visit(sub: Sub): Value = sub
+    override fun visit(sub: Sub): Value {
+        if (isConstexpr(sub)) {
+            return constExprSub(sub)
+        }
 
-    override fun visit(mul: Mul): Value = mul
+        return sub
+    }
 
-    override fun visit(or: Or): Value = or
+    override fun visit(mul: Mul): Value {
+        if (isConstexpr(mul)) {
+            return constExprMul(mul)
+        }
+
+        return mul
+    }
+
+    override fun visit(or: Or): Value {
+        if (isConstexpr(or)) {
+            return constExprOr(or)
+        }
+
+        return or
+    }
 
     override fun visit(xor: Xor): Value = xor
 
@@ -175,7 +227,13 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
 
     override fun visit(leaStack: LeaStack): Value = leaStack
 
-    override fun visit(tupleDiv: TupleDiv): Value = tupleDiv
+    override fun visit(tupleDiv: TupleDiv): Value {
+        if (isConstexpr(tupleDiv)) {
+            return constExprTupleDiv(tupleDiv)
+        }
+
+        return tupleDiv
+    }
 
     override fun visit(proj: Projection): Value = proj
 

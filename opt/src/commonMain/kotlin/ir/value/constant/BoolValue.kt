@@ -3,7 +3,7 @@ package ir.value.constant
 import ir.types.FlagType
 
 
-class BoolValue private constructor(val bool: Boolean): Constant {
+class BoolValue private constructor(val bool: Boolean): TrivialConstant {
     override fun type(): FlagType = FlagType
 
     override fun toString(): String {

@@ -6,6 +6,13 @@ import ir.value.constant.IntegerConstant.Companion.getOrCreate
 
 
 sealed interface SignedIntegerConstant: IntegerConstant {
+    operator fun plus(other: SignedIntegerConstant): SignedIntegerConstant
+    operator fun minus(other: SignedIntegerConstant): SignedIntegerConstant
+    operator fun times(other: SignedIntegerConstant): SignedIntegerConstant
+    operator fun div(other: SignedIntegerConstant): SignedIntegerConstant
+    operator fun rem(other: SignedIntegerConstant): SignedIntegerConstant
+    infix fun or(other: SignedIntegerConstant): SignedIntegerConstant
+
     companion object {
         fun of(kind: SignedIntType, value: Number): SignedIntegerConstant = when (kind) {
             I8Type  -> I8Value.of(value.toByte())
@@ -21,6 +28,31 @@ class I8Value private constructor(val i8: Byte): SignedIntegerConstant {
     override fun value(): Long = i8.toLong()
     override fun toString(): String = i8.toString()
 
+    override fun plus(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of((i8 + other.value()).toByte())
+    }
+
+    override fun minus(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of((i8 - other.value()).toByte())
+    }
+
+    override fun times(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of((i8 * other.value()).toByte())
+    }
+
+    override fun div(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of((i8 / other.value()).toByte())
+    }
+
+    override fun rem(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of((i8 % other.value()).toByte())
+    }
+
+    override fun or(other: SignedIntegerConstant): SignedIntegerConstant {
+        val r = i8.toInt() or other.value().toInt()
+        return of(r.toByte())
+    }
+
     companion object {
         private val table = arrayOfNulls<I8Value>(SIZE.toInt())
 
@@ -32,6 +64,31 @@ class I16Value private constructor(val i16: Short): SignedIntegerConstant {
     override fun type(): SignedIntType = I16Type
     override fun value(): Long = i16.toLong()
     override fun toString(): String = i16.toString()
+
+    override fun plus(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of((i16 + other.value()).toShort())
+    }
+
+    override fun minus(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of((i16 - other.value()).toShort())
+    }
+
+    override fun times(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of((i16 * other.value()).toShort())
+    }
+
+    override fun div(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of((i16 / other.value()).toShort())
+    }
+
+    override fun rem(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of((i16 % other.value()).toShort())
+    }
+
+    override fun or(other: SignedIntegerConstant): SignedIntegerConstant {
+        val r = i16.toInt() or other.value().toInt()
+        return of(r.toShort())
+    }
 
     companion object {
         private val table = arrayOfNulls<I16Value>(SIZE.toInt())
@@ -45,6 +102,30 @@ class I32Value private constructor(val i32: Int): SignedIntegerConstant {
     override fun value(): Long = i32.toLong()
     override fun toString(): String = i32.toString()
 
+    override fun plus(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i32 + other.value().toInt())
+    }
+
+    override fun minus(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i32 - other.value().toInt())
+    }
+
+    override fun times(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i32 * other.value().toInt())
+    }
+
+    override fun div(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i32 / other.value().toInt())
+    }
+
+    override operator fun rem(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i32 % other.value().toInt())
+    }
+
+    override fun or(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i32 or other.toInt())
+    }
+
     companion object {
         private val table = arrayOfNulls<I32Value>(SIZE.toInt())
 
@@ -57,6 +138,30 @@ class I64Value private constructor(val i64: Long): SignedIntegerConstant {
     override fun type(): SignedIntType = I64Type
     override fun value(): Long = i64
     override fun toString(): String = i64.toString()
+
+    override fun plus(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i64 + other.value())
+    }
+
+    override fun minus(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i64 - other.value())
+    }
+
+    override fun times(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i64 * other.value())
+    }
+
+    override fun div(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i64 / other.value())
+    }
+
+    override operator fun rem(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i64 % other.value())
+    }
+
+    override fun or(other: SignedIntegerConstant): SignedIntegerConstant {
+        return of(i64 or other.value())
+    }
 
     companion object {
         private val table = arrayOfNulls<I64Value>(SIZE.toInt())

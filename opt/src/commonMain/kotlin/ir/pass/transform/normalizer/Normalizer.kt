@@ -1,13 +1,14 @@
 package ir.pass.transform.normalizer
 
+import ir.value.*
 import ir.instruction.Instruction
+import ir.instruction.TupleDiv
 import ir.module.FunctionData
 import ir.module.Module
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.common.TransformPass
 import ir.pass.common.TransformPassFabric
-import ir.value.LocalValue
-import ir.value.Value
+import ir.value.constant.UndefValue
 
 
 class NormalizerPass internal constructor(module: Module): TransformPass(module) {
@@ -29,6 +30,7 @@ object Normalizer: TransformPassFabric() {
 
 internal class NormalizerPassImpl(private val cfg: FunctionData) {
     private val worklist = arrayListOf<LocalValue>()
+    private val deadPool = arrayListOf<TupleDiv>()
 
     private fun addToWorkList(operands: List<Instruction>) {
         for (operand in operands) {
@@ -43,9 +45,14 @@ internal class NormalizerPassImpl(private val cfg: FunctionData) {
     private fun canonicalize(vInst: LocalValue): Value {
         vInst as Instruction
         val new = NormalizeInstruction.normalize(vInst)
-        if (new != vInst) {
-            addToWorkList(vInst.usedIn())
-            vInst.updateUsages(new)
+        if (new == vInst) {
+            return new
+        }
+
+        addToWorkList(vInst.usedIn())
+        vInst.updateUsages(new)
+        if (vInst is TupleDiv) {
+            deadPool.add(vInst)
         }
 
         return new
@@ -62,6 +69,12 @@ internal class NormalizerPassImpl(private val cfg: FunctionData) {
         }
     }
 
+    private fun killDeadInstructions() {
+        for (v in deadPool) {
+            v.die(UndefValue)
+        }
+    }
+
     fun pass() {
         val preorder = cfg.analysis(PreOrderFabric)
         for (bb in preorder) {
@@ -74,5 +87,7 @@ internal class NormalizerPassImpl(private val cfg: FunctionData) {
                 propagate()
             }
         }
+
+        killDeadInstructions()
     }
 }
