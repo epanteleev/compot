@@ -57,6 +57,17 @@ internal class Int2FloatCodegen(toType: FloatingPointType, fromType: SignedIntTy
         }
     }
 
+    override fun ai(dst: Address, src: Imm) {
+        asm.mov(fromSize, src, temp1)
+        asm.cvtint2fp(fromSize, toSize, temp1, xmmTemp1)
+        asm.movf(toSize, xmmTemp1, dst)
+    }
+
+    override fun ri(dst: XmmRegister, src: Imm) {
+        asm.mov(fromSize, src, temp1)
+        asm.cvtint2fp(fromSize, toSize, temp1, dst)
+    }
+
     override fun default(dst: Operand, src: Operand) {
         throw RuntimeException("Internal error: '${Int2Float.NAME}' dst=$dst, src=$src")
     }

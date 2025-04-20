@@ -103,7 +103,8 @@ internal class AndCodegen(val type: IntegerType, val asm: X64MacroAssembler): GP
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.and(size, second, dst)
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {

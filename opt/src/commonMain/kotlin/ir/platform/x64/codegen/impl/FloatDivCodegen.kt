@@ -28,7 +28,9 @@ internal class FloatDivCodegen(val type: ArithmeticType, val asm: Assembler): Xm
     }
 
     override fun arr(dst: Address, first: XmmRegister, second: XmmRegister) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, xmmTemp1) //TODO
+        asm.divf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun rar(dst: XmmRegister, first: Address, second: XmmRegister) {
@@ -57,11 +59,15 @@ internal class FloatDivCodegen(val type: ArithmeticType, val asm: Assembler): Xm
     }
 
     override fun ara(dst: Address, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, xmmTemp1)
+        asm.divf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun aar(dst: Address, first: Address, second: XmmRegister) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, xmmTemp1)
+        asm.divf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {

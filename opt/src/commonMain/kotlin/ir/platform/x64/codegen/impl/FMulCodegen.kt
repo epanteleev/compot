@@ -27,7 +27,9 @@ internal class FMulCodegen(val type: FloatingPointType, val asm: X64MacroAssembl
     }
 
     override fun arr(dst: Address, first: XmmRegister, second: XmmRegister) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, xmmTemp1)
+        asm.mulf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun rar(dst: XmmRegister, first: Address, second: XmmRegister) {
@@ -55,11 +57,15 @@ internal class FMulCodegen(val type: FloatingPointType, val asm: X64MacroAssembl
     }
 
     override fun ara(dst: Address, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, xmmTemp1)
+        asm.mulf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun aar(dst: Address, first: Address, second: XmmRegister) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, xmmTemp1)
+        asm.mulf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {

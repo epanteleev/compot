@@ -9,6 +9,8 @@ interface GPOperandToXmmVisitor {
     fun ax(dst: XmmRegister, src: Address)
     fun ar(dst: Address, src: GPRegister)
     fun aa(dst: Address, src: Address)
+    fun ri(dst: XmmRegister, src: Imm)
+    fun ai(dst: Address, src: Imm)
     fun default(dst: Operand, src: Operand)
 
     companion object {
@@ -18,6 +20,7 @@ interface GPOperandToXmmVisitor {
                     when (src) {
                         is GPRegister -> closure.rx(dst, src)
                         is Address    -> closure.ax(dst, src)
+                        is Imm        -> closure.ri(dst, src)
                         else -> closure.default(dst, src)
                     }
                 }
@@ -25,6 +28,7 @@ interface GPOperandToXmmVisitor {
                     when (src) {
                         is GPRegister -> closure.ar(dst, src)
                         is Address    -> closure.aa(dst, src)
+                        is Imm        -> closure.ai(dst, src)
                         else -> closure.default(dst, src)
                     }
                 }

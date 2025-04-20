@@ -43,7 +43,7 @@ class PassPipeline private constructor(private val name: String, private val pas
 
     companion object {
         fun base(ctx: CompileContext): PassPipeline = create("initial", arrayListOf(), ctx)
-        fun opt(ctx: CompileContext): PassPipeline = create("initial", arrayListOf(Mem2RegFabric, Normalizer, DeadCodeElimination), ctx)
+        fun opt(ctx: CompileContext): PassPipeline = create("initial", arrayListOf(Mem2RegFabric), ctx)
 
         fun create(name: String, passFabrics: List<TransformPassFabric>, ctx: CompileContext): PassPipeline {
             return PassPipeline(name, passFabrics, ctx)
