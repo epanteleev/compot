@@ -4,6 +4,7 @@ import asm.x64.Operand
 import asm.x64.*
 import ir.types.FloatingPointType
 import ir.instruction.Float2Int
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.*
 import ir.types.IntegerType
 
@@ -29,7 +30,8 @@ internal class FloatToSignedCodegen(val toType: IntegerType, fromType: FloatingP
     }
 
     override fun ax(dst: Address, src: XmmRegister) {
-        TODO("Not yet implemented")
+        asm.cvtfp2int(toSize, fromSize, src, temp1)
+        asm.mov(toSize, temp1, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {

@@ -62,6 +62,12 @@ abstract class ArrayTests: CommonCTest() {
         val result = runCTest("shlang/array/array9", listOf(), options())
         assertEquals("len: 0, capacity: 1\n", result.output)
     }
+
+    @Test
+    fun test10() {
+        val result = runCTest("shlang/array/array10", listOf(), options())
+        assertEquals("gammas: 2.200000 1.000000 1.517241 1.800000 1.500000 2.400000 2.500000 2.620000 2.900000\n", result.output)
+    }
 }
 
 class ArrayTestsO0: ArrayTests() {
