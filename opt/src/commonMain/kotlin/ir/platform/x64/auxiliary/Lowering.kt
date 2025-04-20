@@ -1056,6 +1056,32 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
     }
 
     override fun visit(memcpy: Memcpy): Instruction {
+        val dst = memcpy.destination()
+        if (dst.isa(gValue(anytype()))) {
+            // Before:
+            //  memcpy %src, @global, %size
+            //
+            // After:
+            //  %lea = lea @global
+            //  memcpy %src, %lea, %size
+
+            val lea = bb.putBefore(memcpy, Lea.lea(dst))
+            memcpy.destination(lea)
+        }
+
+        val src = memcpy.source()
+        if (src.isa(gValue(anytype()))) {
+            // Before:
+            //  memcpy @global, %dst, %size
+            //
+            // After:
+            //  %lea = lea @global
+            //  memcpy %lea, %dst, %size
+
+            val lea = bb.putBefore(memcpy, Lea.lea(src))
+            memcpy.source(lea)
+        }
+
         memcpy.match(memcpy(extern(), any(), any())) {
             // Before:
             //  memcpy @extern, %dst, %size
