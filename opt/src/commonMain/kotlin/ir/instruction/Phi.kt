@@ -42,8 +42,7 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
         }
     }
 
-    // DO NOT USE THIS METHOD DIRECTLY
-    internal fun updateIncoming(block: Block, idx: Int) {
+    private fun updateIncoming(block: Block, idx: Int) {
         incoming[idx] = block
     }
 

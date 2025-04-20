@@ -193,6 +193,10 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
     }
 
     fun remove(node: T): T {
+        if (node.prev == null && node.next == null) {
+            throw IllegalStateException("node is not in the list")
+        }
+
         modificationCount++
 
         if (node.prev != null) {

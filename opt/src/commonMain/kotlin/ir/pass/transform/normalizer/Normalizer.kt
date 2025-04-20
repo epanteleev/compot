@@ -24,13 +24,13 @@ class NormalizerPass internal constructor(module: Module): TransformPass(module)
 
 object Normalizer: TransformPassFabric() {
     override fun create(module: Module): TransformPass {
-        return NormalizerPass(module)
+        return NormalizerPass(module.copy())
     }
 }
 
 internal class NormalizerPassImpl(private val cfg: FunctionData) {
     private val worklist = arrayListOf<LocalValue>()
-    private val deadPool = arrayListOf<TupleDiv>()
+    private val deadPool = hashSetOf<TupleDiv>()
 
     private fun addToWorkList(operands: List<Instruction>) {
         for (operand in operands) {
@@ -46,7 +46,7 @@ internal class NormalizerPassImpl(private val cfg: FunctionData) {
         vInst as Instruction
         val new = NormalizeInstruction.normalize(vInst)
         if (new == vInst) {
-            return new
+            return vInst
         }
 
         addToWorkList(vInst.usedIn())
