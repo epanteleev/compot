@@ -15,15 +15,6 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
     }
 
     override fun type(): PtrType = PtrType
-
-    override fun source(): Value {
-        assertion(operands.size == 2) {
-            "size should be 2 in $this instruction"
-        }
-
-        return operands[SOURCE]
-    }
-
     override fun accessType(): NonTrivialType = basicType
 
     override fun index(): Value {

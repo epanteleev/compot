@@ -1,3 +1,3 @@
 package common
 
-expect fun getInclude(filename: String): String?
+expect fun getBuildInHeader(filename: String): String?

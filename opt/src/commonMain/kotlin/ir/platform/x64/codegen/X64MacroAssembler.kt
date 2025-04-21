@@ -115,6 +115,23 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         else -> throw RuntimeException("unexpected condition type: condition=$convType")
     }
 
+    fun cMoveCondition(convType: FloatPredicate): CMoveFlag = when (convType) {
+        FloatPredicate.Oeq -> CMoveFlag.CMOVE
+        FloatPredicate.Ogt -> CMoveFlag.CMOVG
+        FloatPredicate.Oge -> CMoveFlag.CMOVGE
+        FloatPredicate.Olt -> CMoveFlag.CMOVL
+        FloatPredicate.Ole -> CMoveFlag.CMOVLE
+        FloatPredicate.One -> CMoveFlag.CMOVNE
+        FloatPredicate.Ord -> TODO()
+        FloatPredicate.Ueq -> CMoveFlag.CMOVE
+        FloatPredicate.Ugt -> CMoveFlag.CMOVA
+        FloatPredicate.Uge -> CMoveFlag.CMOVAE
+        FloatPredicate.Ult -> CMoveFlag.CMOVB
+        FloatPredicate.Ule -> CMoveFlag.CMOVBE
+        FloatPredicate.Uno -> TODO()
+        FloatPredicate.Une -> CMoveFlag.CMOVNE
+    }
+
     fun condFloatType(predicate: FloatPredicate): CondType = when (predicate) {
         FloatPredicate.Oeq -> CondType.JE
         FloatPredicate.Ogt -> CondType.JA
@@ -129,7 +146,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         FloatPredicate.Ult -> TODO()
         FloatPredicate.Ule -> CondType.JBE
         FloatPredicate.Uno -> TODO()
-        FloatPredicate.Une -> TODO()
+        FloatPredicate.Une -> CondType.JNE
     }
 
     fun indirectCall(call: Callable, pointer: Operand) {

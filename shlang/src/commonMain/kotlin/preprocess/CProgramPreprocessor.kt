@@ -219,7 +219,7 @@ class CProgramPreprocessor private constructor(filename: String, original: Token
                 val nameOrBracket = peak<AnyToken>()
                 kill()
                 if (nameOrBracket is StringLiteral) {
-                    val header = ctx.findHeader(nameOrBracket.data(), HeaderType.USER) ?:
+                    val header = ctx.findHeader(nameOrBracket.data(), filename, HeaderType.USER) ?:
                         throw PreprocessorException("Cannot find header $nameOrBracket")
 
                     val includeTokens = preprocessHeader(header, nameOrBracket.line(), ctx)
@@ -231,7 +231,7 @@ class CProgramPreprocessor private constructor(filename: String, original: Token
                         throw PreprocessorException("Expected file name: but '${peak<AnyToken>()}'")
                     }
                     val headerName = readHeaderName()
-                    val header = ctx.findHeader(headerName, HeaderType.SYSTEM) ?:
+                    val header = ctx.findHeader(headerName, filename, HeaderType.SYSTEM) ?:
                         throw PreprocessorException("Cannot find system header '$headerName'", nameOrBracket.position())
 
                     val includeTokens = preprocessHeader(header, nameOrBracket.line(), ctx)

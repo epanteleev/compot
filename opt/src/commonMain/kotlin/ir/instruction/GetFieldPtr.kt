@@ -2,7 +2,6 @@ package ir.instruction
 
 import ir.types.*
 import ir.value.*
-import common.assertion
 import ir.module.block.Block
 import ir.Definitions.QWORD_SIZE
 import ir.value.constant.IntegerConstant
@@ -18,17 +17,7 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
     }
 
     override fun type(): PtrType = PtrType
-
-    override fun source(): Value {
-        assertion(operands.size == 1) {
-            "size should be 2 in $this instruction"
-        }
-
-        return operands[SOURCE]
-    }
-
     override fun accessType(): AggregateType = basicType
-
     override fun index(): IntegerConstant = index
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
@@ -36,7 +25,6 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
     }
 
     companion object {
-        private const val SOURCE = 0
         const val NAME = "gfp"
 
         fun gfp(source: Value, type: AggregateType, index: IntegerConstant): InstBuilder<GetFieldPtr> = {

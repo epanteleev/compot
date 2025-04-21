@@ -1,6 +1,7 @@
 package preprocess
 
-import common.getInclude
+import common.FileUtils
+import common.getBuildInHeader
 import tokenizer.CTokenizer
 import tokenizer.TokenList
 import java.io.FileInputStream
@@ -30,7 +31,7 @@ sealed class HeaderHolder(val includeDirectories: Set<String>) {
         return pragmaOnce.contains(name)
     }
 
-    abstract fun getHeader(name: String, includeType: HeaderType): Header?
+    abstract fun getHeader(headerName: String, filename: String, includeType: HeaderType): Header?
 }
 
 class PredefinedHeaderHolder(includeDirectories: Set<String>): HeaderHolder(includeDirectories) {
@@ -39,12 +40,12 @@ class PredefinedHeaderHolder(includeDirectories: Set<String>): HeaderHolder(incl
         return this
     }
 
-    override fun getHeader(name: String, includeType: HeaderType): Header? {
-        return headers[name]
+    override fun getHeader(headerName: String, filename: String, includeType: HeaderType): Header? {
+        return headers[headerName]
     }
 }
 
-class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>): HeaderHolder(includeDirectories) {
+class FileHeaderHolder(includeDirectories: Set<String>): HeaderHolder(includeDirectories) {
     private fun tryReadHeader(fullPath: String, type: HeaderType): Header? {
         val filePath = Path.of(fullPath)
         if (!filePath.exists()) {
@@ -58,13 +59,14 @@ class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>)
     }
 
 
-    private fun getUserHeader(name: String): Header? {
-        val fileName = "$pwd/$name"
+    private fun getUserHeader(name: String, filename: String): Header? {
+        val dir = FileUtils.getDirName(filename)
+        val fileName = "$dir/$name"
         return tryReadHeader(fileName, HeaderType.USER)
     }
 
     private fun getSystemHeader(name: String): Header? {
-        val predefined = getInclude(name)
+        val predefined = getBuildInHeader(name)
         if (predefined != null) {
             return Header(name, predefined, HeaderType.SYSTEM)
         }
@@ -76,8 +78,8 @@ class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>)
         return null
     }
 
-    override fun getHeader(name: String, includeType: HeaderType): Header? = when (includeType) {
-        HeaderType.USER   -> getUserHeader(name) ?: getSystemHeader(name)
-        HeaderType.SYSTEM -> getSystemHeader(name)
+    override fun getHeader(headerName: String, filename: String, includeType: HeaderType): Header? = when (includeType) {
+        HeaderType.USER   -> getUserHeader(headerName, filename) ?: getSystemHeader(headerName)
+        HeaderType.SYSTEM -> getSystemHeader(headerName)
     }
 }

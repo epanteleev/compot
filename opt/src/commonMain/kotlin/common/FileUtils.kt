@@ -1,8 +1,8 @@
 package common
 
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
-
 
 object FileUtils {
     fun getBasename(name: String): String {
@@ -25,7 +25,7 @@ object FileUtils {
 
     fun createTempFile(prefix: String): Path {
         val tempDir = Path.of(System.getProperty("java.io.tmpdir"))
-        return java.nio.file.Files.createTempFile(tempDir, prefix, null).toAbsolutePath()
+        return Files.createTempFile(tempDir, prefix, null).toAbsolutePath()
     }
 
     fun deleteDirectory(directoryToBeDeleted: File): Boolean {

@@ -127,7 +127,7 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     override fun visit(functionCall: FunctionCall): Int? {
         val primary = functionCall.primary
         if (primary !is VarNode) {
-            throw ConstEvalException("Cannot evaluate function call with primary $primary")
+            return null
         }
         val evaluated = functionCall.args.map {
             it.accept(this) ?: return null

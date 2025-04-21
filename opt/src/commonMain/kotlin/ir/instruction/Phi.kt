@@ -1,7 +1,6 @@
 package ir.instruction
 
 import common.arrayWrapperOf
-import common.assertion
 import ir.types.*
 import ir.value.Value
 import common.forEachWith

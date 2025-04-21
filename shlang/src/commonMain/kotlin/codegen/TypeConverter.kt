@@ -9,6 +9,7 @@ import ir.Definitions.BYTE_SIZE
 import ir.Definitions.HWORD_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.instruction.Alloc
+import ir.instruction.FloatPredicate
 import ir.instruction.IntPredicate
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
@@ -429,6 +430,8 @@ internal object TypeConverter {
                 U32Type -> icmp(lvalue, IntPredicate.Ne, U32Value.of(0U))
                 U64Type -> icmp(lvalue, IntPredicate.Ne, U64Value.of(0))
                 PtrType -> icmp(lvalue, IntPredicate.Ne, NullValue)
+                F32Type -> fcmp(lvalue, FloatPredicate.One, F32Value(0.0f))
+                F64Type -> fcmp(lvalue, FloatPredicate.One, F64Value(0.0))
                 else -> throw IllegalStateException("Cannot convert $lvalue:$vType to $toType")
             }
             else -> throw IllegalStateException("Cannot convert $lvalue:${lvalue.type()} to $toType")

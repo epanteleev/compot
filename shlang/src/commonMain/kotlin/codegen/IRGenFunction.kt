@@ -580,8 +580,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         val irType = mb.toIRType<StructType>(typeHolder, fromType)
                         ir.gfp(value, irType, I64Value.of(0))
                     }
-                    is CPrimitive, is AnyCFunctionType, is CStringLiteral -> value
-                    is CUncompletedArrayType -> TODO()
+                    is CPrimitive,
+                    is AnyCFunctionType,
+                    is CStringLiteral,
+                    is CUncompletedArrayType -> value
                 }
                 ir.convertLVToType(baseAddr, PtrType)
             }
@@ -886,7 +888,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedRValue = ir.convertLVToType(rvalue, I64Type)
 
                 val lvalueAddress = visitExpression(binOp.left, false)
-                val lValueType    = binOp.left.resolveType(typeHolder)
+                val lValueType    = binOp.resolveType(typeHolder)
                 val lvalue        = ir.load(PtrType, lvalueAddress)
                 val ptr2intLValue = ir.ptr2int(lvalue, I64Type)
 
@@ -991,6 +993,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         is PtrType -> {
             val cmp = ir.icmp(right, IntPredicate.Ne, NullValue)
+            ir.convertLVToType(cmp, I8Type)
+        }
+        is FloatingPointType -> {
+            val cmp = ir.fcmp(right, FloatPredicate.Oeq, FloatingPointConstant.of(ty, 0.0))
             ir.convertLVToType(cmp, I8Type)
         }
         else -> throw RuntimeException("Unknown type: type=$ty")

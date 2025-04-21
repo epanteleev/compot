@@ -88,6 +88,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 }
 
                 builder.append(octal.toChar())
+                continue
             }
 
             builder.append(eat())
@@ -132,7 +133,7 @@ class CTokenizer private constructor(private val filename: String, private val r
         }
 
         if (!reader.check('\'')) {
-            throw IllegalStateException("Expected closing quote in line $line")
+            throw IllegalStateException("Expected closing quote in $filename $line:$position")
         }
         eat()
         return ch

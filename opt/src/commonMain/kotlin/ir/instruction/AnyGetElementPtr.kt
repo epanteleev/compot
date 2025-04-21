@@ -8,7 +8,9 @@ import ir.value.Value
 sealed class AnyGetElementPtr(id: Identity, owner: Block, operands: Array<Value>):
     ValueInstruction(id, owner, operands) {
 
-    abstract fun source(): Value
+    fun source(): Value {
+        return operands[SOURCE]
+    }
 
     fun source(newSource: Value) {
         update(SOURCE, newSource)

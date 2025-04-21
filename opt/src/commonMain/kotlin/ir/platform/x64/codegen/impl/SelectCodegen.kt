@@ -10,14 +10,17 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.*
 
 
-internal class SelectCodegen(type: IntegerType, val condition: IntCompare, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class SelectCodegen(type: IntegerType, val condition: CompareInstruction, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
-    private fun matchIntCondition(): CMoveFlag = asm.cMoveCondition(condition.predicate(), condition.operandsType)
+    private fun matchIntCondition(): CMoveFlag = when (val pred = condition.predicate()) {
+        is IntPredicate -> asm.cMoveCondition(pred, condition.operandsType)
+        is FloatPredicate -> asm.cMoveCondition(pred)
+    }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         if (first == second) {

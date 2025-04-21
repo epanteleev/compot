@@ -822,7 +822,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val onTrue  = operand(select.onTrue())
         val onFalse = operand(select.onFalse())
 
-        SelectCodegen(select.type(), select.condition() as IntCompare, asm)(dst, onTrue, onFalse)
+        SelectCodegen(select.type(), select.condition().asValue(), asm)(dst, onTrue, onFalse)
     }
 
     override fun visit(phi: Phi) { /* nothing to do */ }

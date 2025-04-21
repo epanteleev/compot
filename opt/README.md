@@ -12,6 +12,7 @@ See examples in `example` module.
 
 ## Available optimizations
 - Mem2Reg
+- Constant folding & Dead code elimination
 
 ## References
 - [LLVM](https://llvm.org/)

@@ -33,7 +33,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
         val usrDir = SystemConfig.systemHeadersPaths()
         val includeDirectories = cli.getIncludeDirectories() + usrDir
         val workingDirectory   = FileUtils.getDirName(filename)
-        val headerHolder       = FileHeaderHolder(pwd(), includeDirectories + workingDirectory)
+        val headerHolder       = FileHeaderHolder(includeDirectories + workingDirectory)
 
         val ctx = PreprocessorContext.create(headerHolder)
         definedMacros(ctx)
