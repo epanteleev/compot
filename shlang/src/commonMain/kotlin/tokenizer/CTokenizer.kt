@@ -82,12 +82,8 @@ class CTokenizer private constructor(private val filename: String, private val r
                     eatHexChar(builder)
                     continue
                 }
-                var octal = 0
-                while (reader.isOctal()) {
-                    octal = octal * 8 + eat().digitToInt(8)
-                }
-
-                builder.append(octal.toChar())
+                val octal = eatOctalChar()
+                builder.append(octal)
                 continue
             }
 
@@ -110,6 +106,14 @@ class CTokenizer private constructor(private val filename: String, private val r
         builder.append(c.toChar())
     }
 
+    private fun eatOctalChar(): Char {
+        var octal = 0
+        while (reader.isOctal()) {
+            octal = octal * 8 + eat().digitToInt(8)
+        }
+        return octal.toChar()
+    }
+
     private fun readEscapedChar(): Char {
         eat()
 
@@ -122,7 +126,8 @@ class CTokenizer private constructor(private val filename: String, private val r
         if (reader.check('x')) {
             return readHexChar()
         }
-        return eat()
+
+        return eatOctalChar()
     }
 
     private fun readCharLiteral(): Char {

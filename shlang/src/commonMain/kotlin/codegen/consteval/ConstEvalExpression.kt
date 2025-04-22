@@ -530,9 +530,7 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
         return ctx.callFunction(primary.nameIdent(), evaluated)
     }
 
-    override fun visit(arrayAccess: ArrayAccess): Double {
-        TODO("Not yet implemented")
-    }
+    override fun visit(arrayAccess: ArrayAccess): Double? = null
 
     override fun visit(stringNode: StringNode): Double {
         TODO("Not yet implemented")

@@ -57,6 +57,7 @@ class CTypeBuilder(private val where: Position) {
             check(baseTypes, LONG, LONG)            -> return LONG
             check(baseTypes, INT, CHAR)             -> return CHAR
             check(baseTypes, INT, SHORT)            -> return SHORT
+            check(baseTypes, SHORT, INT)            -> return SHORT
             check(baseTypes, LONG, INT)             -> return LONG
             check(baseTypes, USHORT, INT)           -> return USHORT
             check(baseTypes, LONG, DOUBLE)          -> {
