@@ -680,29 +680,6 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         return registerAllocation.callerSaveRegisters(liveOut, exclude)
     }
 
-    private fun overflowAreaSize(call: Callable): Int {
-        var argumentsSlotsSize = 0
-        for ((idx, reg) in registerAllocation.callArguments(call).withIndex()) { // TODO refactor
-            if (reg !is Address) {
-                continue
-            }
-            val prototype = call.prototype()
-            val byVal = prototype.byValue(idx)
-            if (byVal == null) {
-                argumentsSlotsSize += POINTER_SIZE
-                continue
-            }
-
-            val type = prototype.argument(idx) ?: throw CodegenException("argument type is null")
-            assertion(type is AggregateType) { "type=$type" }
-
-            argumentsSlotsSize += Definitions.alignTo(type.sizeOf(), QWORD_SIZE)
-        }
-
-        return argumentsSlotsSize
-    }
-
-
     override fun visit(downStackFrame: DownStackFrame) {
         val call = downStackFrame.call()
         val context = getState(call)
@@ -715,8 +692,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             asm.movf(QWORD_SIZE, arg, Address.from(rsp, -(QWORD_SIZE * idx + QWORD_SIZE)))
         }
 
-        val argumentsSlotsSize = overflowAreaSize(call)
-
+        val argumentsSlotsSize = registerAllocation.overflowAreaSize(call)
         val size = context.adjustStackSize(argumentsSlotsSize)
         if (size != 0) {
             asm.sub(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
@@ -727,8 +703,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val call = upStackFrame.call()
         val context = getState(call)
 
-        val argumentsSlotsSize = overflowAreaSize(call)
-
+        val argumentsSlotsSize = registerAllocation.overflowAreaSize(call)
         val size = context.adjustStackSize(argumentsSlotsSize)
         if (size != 0) {
             asm.add(POINTER_SIZE, Imm32.of(size.toLong()), rsp)

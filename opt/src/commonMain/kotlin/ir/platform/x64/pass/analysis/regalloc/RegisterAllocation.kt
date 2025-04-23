@@ -1,6 +1,9 @@
 package ir.platform.x64.pass.analysis.regalloc
 
 import asm.x64.*
+import common.assertion
+import ir.Definitions
+import ir.Definitions.POINTER_SIZE
 import ir.value.*
 import ir.Definitions.QWORD_SIZE
 import ir.instruction.Callable
@@ -9,21 +12,19 @@ import ir.pass.common.AnalysisResult
 import ir.platform.x64.CallConvention
 import ir.platform.x64.CallConvention.gpCallerSaveRegs
 import ir.platform.x64.CallConvention.xmmCallerSaveRegs
+import ir.platform.x64.codegen.CodegenException
+import ir.types.AggregateType
 import ir.types.UndefType
 
 
 class RegisterAllocation internal constructor(private val spilledLocalsStackSize: Int,
                                               private val registerMap: Map<LocalValue, VReg>,
                                               val calleeSaveRegisters: List<GPRegister>,
-                                              private val callInfo: Map<Callable, List<VReg?>>,
+                                              private val overflowAreaSize: Map<Callable, Int>,
                                               marker: MutationMarker): AnalysisResult(marker) {
 
     private fun frameSize(savedRegisters: Set<GPRegister>, savedXmmRegisters: Set<XmmRegister>): Int {
         return (savedRegisters.size + savedXmmRegisters.size + calleeSaveRegisters.size + /** include retaddr and rbp **/ 2) * QWORD_SIZE + spilledLocalsStackSize
-    }
-
-    fun callArguments(callable: Callable): List<VReg?> {
-        return callInfo[callable]!!
     }
 
     fun spilledLocalsSize(): Int = spilledLocalsStackSize
@@ -64,13 +65,13 @@ class RegisterAllocation internal constructor(private val spilledLocalsStackSize
 
     fun vRegOrNull(value: LocalValue): VReg? = registerMap[value]
 
-    override fun toString(): String {
-        val builder = StringBuilder()
-        for ((v, operand) in registerMap) {
-            builder.append("$v -> $operand ")
-        }
+    fun overflowAreaSize(call: Callable): Int =
+        overflowAreaSize[call] ?: throw IllegalArgumentException("call=$call not found in overflowAreaSize")
 
-        return builder.toString()
+    override fun toString(): String = buildString {
+        for ((v, operand) in registerMap) {
+            append("$v -> $operand ")
+        }
     }
 }
 
