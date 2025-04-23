@@ -23,8 +23,6 @@ class Fxor private constructor(id: Identity, owner: Block, tp: ArithmeticType, a
 
     companion object {
         const val NAME = "fxor"
-        const val FIRST = 0
-        const val SECOND = 1
 
         fun xor(a: Value, b: Value): InstBuilder<Fxor> = { id: Identity, owner: Block ->
             make(id, owner, a, b)

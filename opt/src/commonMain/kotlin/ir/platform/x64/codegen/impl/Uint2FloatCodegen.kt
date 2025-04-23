@@ -95,7 +95,7 @@ internal class Uint2FloatCodegen(toType: FloatingPointType, val fromType: Unsign
         val cont         = asm.anonLabel()
         asm.switchTo(currentLabel).let {
             asm.test(QWORD_SIZE, src, src)
-            asm.jcc(CondType.JS, slowPath)
+            asm.jcc(CondFlagType.S, slowPath)
         }
         currentLabel.let {
             asm.cvtint2fp(QWORD_SIZE, toSize, src, dst)
@@ -121,7 +121,7 @@ internal class Uint2FloatCodegen(toType: FloatingPointType, val fromType: Unsign
         asm.switchTo(currentLabel).let {
             asm.mov(fromSize, src, temp1)
             asm.test(QWORD_SIZE, temp1, temp1)
-            asm.jcc(CondType.JS, slowPath)
+            asm.jcc(CondFlagType.S, slowPath)
         }
         currentLabel.let {
             asm.cvtint2fp(QWORD_SIZE, toSize, src, dst)

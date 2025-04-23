@@ -418,7 +418,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val switchValue = operand(switch.value())
         switch.jumps().forEachWith(switch.table()) { target, value ->
             IntCmpCodegen(type, asm)(switchValue, Imm64.of(value.toInt()))
-            asm.jcc(CondType.JE, makeLabel(target))
+            asm.jcc(CondFlagType.EQ, makeLabel(target))
         }
 
         doJump(switch.default())
@@ -466,7 +466,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                         when (predicate) {
                             FloatPredicate.One, FloatPredicate.Une -> {
                                 asm.setccFloat(predicate, dst)
-                                asm.setcc(SetCCType.SETP, rax)
+                                asm.setcc(CondFlagType.P, rax)
                                 when (dst) { //TODO CMPSS, CMPSD
                                     is Address -> {
                                         asm.or(BYTE_SIZE, dst, rax)
@@ -483,7 +483,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                             }
                             else -> {
                                 asm.setccFloat(predicate, dst)
-                                asm.setcc(SetCCType.SETNP, rax)
+                                asm.setcc(CondFlagType.NP, rax)
                                 when (dst) { //TODO CMPSS, CMPSD
                                     is Address -> {
                                         asm.and(BYTE_SIZE, dst, rax)
@@ -601,22 +601,22 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             }
         }
         is IntCompare -> {
-            val jmpType = asm.condIntType(cond.predicate().invert(), cond.operandsType())
+            val jmpType = asm.condIntType0(cond.predicate().invert(), cond.operandsType())
             asm.jcc(jmpType, makeLabel(branchCond.onFalse()))
         }
         is FloatCompare -> when (cond.predicate()) {
             FloatPredicate.One, FloatPredicate.Une -> {
                 val onTrue = makeLabel(branchCond.onTrue())
-                val jmpType = asm.condFloatType(cond.predicate())
+                val jmpType = asm.condFloatType0(cond.predicate())
                 asm.jcc(jmpType, onTrue)
-                asm.jcc(CondType.JP, onTrue)
+                asm.jcc(CondFlagType.P, onTrue)
                 doJump(branchCond.onFalse())
             }
             else -> {
                 val onFalse = makeLabel(branchCond.onFalse())
-                val jmpType = asm.condFloatType(cond.predicate().invert())
+                val jmpType = asm.condFloatType0(cond.predicate().invert())
                 asm.jcc(jmpType, onFalse)
-                asm.jcc(CondType.JP, onFalse)
+                asm.jcc(CondFlagType.P, onFalse)
             }
         }
         else -> throw CodegenException("unknown condition type, cond=${cond}")

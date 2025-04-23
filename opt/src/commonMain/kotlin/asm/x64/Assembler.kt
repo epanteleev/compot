@@ -149,8 +149,8 @@ abstract class Assembler(functionName: String, val id: Int): AnonymousDirective(
     fun test(size: Int, first: Imm32, second: GPRegister)      = add(Test(size, first, second))
     fun test(size: Int, first: Imm32, second: Address)         = add(Test(size, first, second))
 
-    fun setcc(tp: SetCCType, dst: GPRegister)= add(SetCc(tp, dst))
-    fun setcc(tp: SetCCType, dst: Address)   = add(SetCc(tp, dst))
+    fun setcc(tp: CondFlagType, dst: GPRegister)= add(SetCc(tp, dst))
+    fun setcc(tp: CondFlagType, dst: Address)   = add(SetCc(tp, dst))
 
     // Push Word, Doubleword, or Quadword Onto the Stack
     fun push(size: Int, reg: GPRegister) = add(Push(size, reg))
@@ -199,12 +199,12 @@ abstract class Assembler(functionName: String, val id: Int): AnonymousDirective(
     }
 
     // Conditional Move
-    fun cmovcc(size: Int, flag: CMoveFlag, src: Address, dst: GPRegister) = when (size) {
+    fun cmovcc(size: Int, flag: CondFlagType, src: Address, dst: GPRegister) = when (size) {
         2, 4, 8 -> add(CMOVcc(size, flag, src, dst))
         else -> throw IllegalArgumentException("size=$size, flag=$flag, src=$src, dst=$dst")
     }
 
-    fun cmovcc(size: Int, flag: CMoveFlag, src: GPRegister, dst: GPRegister) = when (size) {
+    fun cmovcc(size: Int, flag: CondFlagType, src: GPRegister, dst: GPRegister) = when (size) {
         2, 4, 8 -> add(CMOVcc(size, flag, src, dst))
         else -> throw IllegalArgumentException("size=$size, flag=$flag, src=$src, dst=$dst")
     }
@@ -222,8 +222,8 @@ abstract class Assembler(functionName: String, val id: Int): AnonymousDirective(
     fun cmp(size: Int, first: Address, second: GPRegister)    = add(Cmp(size, first, second))
 
     // Jump if Condition Is Met
-    fun jcc(jmpType: CondType, label: String) = add(Jcc(jmpType, label))
-    fun jcc(jmpType: CondType, label: Label) = add(Jcc(jmpType, label.id))
+    fun jcc(jmpType: CondFlagType, label: String) = add(Jcc(jmpType, label))
+    fun jcc(jmpType: CondFlagType, label: Label) = add(Jcc(jmpType, label.id))
 
     // Jump
     fun jump(label: String) = add(Jump(label))

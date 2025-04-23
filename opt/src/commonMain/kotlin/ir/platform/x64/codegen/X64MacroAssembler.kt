@@ -19,55 +19,17 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         return TargetPlatform.X64
     }
 
-    private fun floatPredicateToSetCCType(jmpType: FloatPredicate): SetCCType = when (jmpType) {
-        FloatPredicate.Oeq -> SetCCType.SETE
-        FloatPredicate.Ogt -> SetCCType.SETA
-        FloatPredicate.Oge -> SetCCType.SETAE
-        FloatPredicate.Olt -> SetCCType.SETB
-        FloatPredicate.Ole -> SetCCType.SETBE
-        FloatPredicate.One -> SetCCType.SETNE
-        FloatPredicate.Ord -> TODO()
-        FloatPredicate.Ueq -> SetCCType.SETE
-        FloatPredicate.Ugt -> SetCCType.SETA
-        FloatPredicate.Uge -> SetCCType.SETAE
-        FloatPredicate.Ult -> SetCCType.SETB
-        FloatPredicate.Ule -> SetCCType.SETBE
-        FloatPredicate.Uno -> TODO()
-        FloatPredicate.Une -> SetCCType.SETNE
-    }
-
     fun setccFloat(jmpType: FloatPredicate, dst: Operand) {
-        val type = floatPredicateToSetCCType(jmpType)
+        val type = condFloatType0(jmpType)
         when (dst) {
             is Address    -> setcc(type, dst)
             is GPRegister -> setcc(type, dst)
             else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
         }
-    }
-
-    private fun intPredicateToSetCCType(type: PrimitiveType, jmpType: IntPredicate): SetCCType = when(type) {
-        is SignedIntType, is PtrType -> when (jmpType) {
-            IntPredicate.Eq -> SetCCType.SETE
-            IntPredicate.Ne -> SetCCType.SETNE
-            IntPredicate.Gt -> SetCCType.SETG
-            IntPredicate.Ge -> SetCCType.SETGE
-            IntPredicate.Lt -> SetCCType.SETL
-            IntPredicate.Le -> SetCCType.SETLE
-        }
-        is UnsignedIntType -> when (jmpType) {
-            IntPredicate.Eq -> SetCCType.SETE
-            IntPredicate.Ne -> SetCCType.SETNE
-            IntPredicate.Gt -> SetCCType.SETA
-            IntPredicate.Ge -> SetCCType.SETAE
-            IntPredicate.Lt -> SetCCType.SETB
-            IntPredicate.Le -> SetCCType.SETBE
-        }
-        is UndefType -> TODO("undefined behavior")
-        is FloatingPointType -> throw MacroAssemblerException("invalid type: type=$type")
     }
 
     fun setccInt(operandsType: PrimitiveType, jmpType: IntPredicate, dst: VReg) {
-        val type = intPredicateToSetCCType(operandsType, jmpType)
+        val type = condIntType0(jmpType, operandsType)
         when (dst) {
             is Address    -> setcc(type, dst)
             is GPRegister -> setcc(type, dst)
@@ -75,78 +37,35 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         }
     }
 
-    fun condIntType(convType: IntPredicate, type: PrimitiveType): CondType = when (type) {
+    fun condIntType0(convType: IntPredicate, type: PrimitiveType): CondFlagType = when (type) {
         is SignedIntType, is PtrType -> when (convType) {
-            IntPredicate.Eq -> CondType.JE
-            IntPredicate.Ne -> CondType.JNE
-            IntPredicate.Gt -> CondType.JG
-            IntPredicate.Ge -> CondType.JGE
-            IntPredicate.Lt -> CondType.JL
-            IntPredicate.Le -> CondType.JLE
+            IntPredicate.Eq -> CondFlagType.EQ
+            IntPredicate.Ne -> CondFlagType.NE
+            IntPredicate.Gt -> CondFlagType.G
+            IntPredicate.Ge -> CondFlagType.GE
+            IntPredicate.Lt -> CondFlagType.L
+            IntPredicate.Le -> CondFlagType.LE
         }
         is UnsignedIntType -> when (convType) {
-            IntPredicate.Eq -> CondType.JE
-            IntPredicate.Ne -> CondType.JNE
-            IntPredicate.Gt -> CondType.JA
-            IntPredicate.Ge -> CondType.JAE
-            IntPredicate.Lt -> CondType.JB
-            IntPredicate.Le -> CondType.JBE
+            IntPredicate.Eq -> CondFlagType.EQ
+            IntPredicate.Ne -> CondFlagType.NE
+            IntPredicate.Gt -> CondFlagType.A
+            IntPredicate.Ge -> CondFlagType.AE
+            IntPredicate.Lt -> CondFlagType.B
+            IntPredicate.Le -> CondFlagType.BE
         }
         else -> throw CodegenException("unknown conversion type: type=$type")
     }
 
-    fun cMoveCondition(convType: IntPredicate, type: PrimitiveType): CMoveFlag = when (type) {
-        is SignedIntType, is PtrType -> when (convType) {
-            IntPredicate.Eq -> CMoveFlag.CMOVE
-            IntPredicate.Ne -> CMoveFlag.CMOVNE
-            IntPredicate.Gt -> CMoveFlag.CMOVG
-            IntPredicate.Ge -> CMoveFlag.CMOVGE
-            IntPredicate.Lt -> CMoveFlag.CMOVL
-            IntPredicate.Le -> CMoveFlag.CMOVLE
-        }
-        is UnsignedIntType -> when (convType) {
-            IntPredicate.Eq -> CMoveFlag.CMOVE
-            IntPredicate.Ne -> CMoveFlag.CMOVNE
-            IntPredicate.Gt -> CMoveFlag.CMOVA
-            IntPredicate.Ge -> CMoveFlag.CMOVAE
-            IntPredicate.Lt -> CMoveFlag.CMOVB
-            IntPredicate.Le -> CMoveFlag.CMOVBE
-        }
-        else -> throw RuntimeException("unexpected condition type: condition=$convType")
-    }
-
-    fun cMoveCondition(convType: FloatPredicate): CMoveFlag = when (convType) {
-        FloatPredicate.Oeq -> CMoveFlag.CMOVE
-        FloatPredicate.Ogt -> CMoveFlag.CMOVG
-        FloatPredicate.Oge -> CMoveFlag.CMOVGE
-        FloatPredicate.Olt -> CMoveFlag.CMOVL
-        FloatPredicate.Ole -> CMoveFlag.CMOVLE
-        FloatPredicate.One -> CMoveFlag.CMOVNE
+    fun condFloatType0(predicate: FloatPredicate): CondFlagType = when (predicate) {
+        FloatPredicate.Oeq, FloatPredicate.Ueq -> CondFlagType.EQ
+        FloatPredicate.Ogt, FloatPredicate.Ugt -> CondFlagType.A
+        FloatPredicate.Oge, FloatPredicate.Uge -> CondFlagType.AE
+        FloatPredicate.Olt, FloatPredicate.Ult -> CondFlagType.B
+        FloatPredicate.Ole, FloatPredicate.Ule -> CondFlagType.BE
+        FloatPredicate.One, FloatPredicate.Une -> CondFlagType.NE
         FloatPredicate.Ord -> TODO()
-        FloatPredicate.Ueq -> CMoveFlag.CMOVE
-        FloatPredicate.Ugt -> CMoveFlag.CMOVA
-        FloatPredicate.Uge -> CMoveFlag.CMOVAE
-        FloatPredicate.Ult -> CMoveFlag.CMOVB
-        FloatPredicate.Ule -> CMoveFlag.CMOVBE
         FloatPredicate.Uno -> TODO()
-        FloatPredicate.Une -> CMoveFlag.CMOVNE
-    }
-
-    fun condFloatType(predicate: FloatPredicate): CondType = when (predicate) {
-        FloatPredicate.Oeq -> CondType.JE
-        FloatPredicate.Ogt -> CondType.JA
-        FloatPredicate.Oge -> CondType.JAE
-        FloatPredicate.Olt -> CondType.JB
-        FloatPredicate.Ole -> CondType.JBE
-        FloatPredicate.One -> CondType.JNE
-        FloatPredicate.Ord -> TODO()
-        FloatPredicate.Ueq -> TODO()
-        FloatPredicate.Ugt -> CondType.JA
-        FloatPredicate.Uge -> TODO()
-        FloatPredicate.Ult -> TODO()
-        FloatPredicate.Ule -> CondType.JBE
-        FloatPredicate.Uno -> TODO()
-        FloatPredicate.Une -> CondType.JNE
     }
 
     fun indirectCall(call: Callable, pointer: Operand) {

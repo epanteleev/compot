@@ -17,9 +17,9 @@ internal class SelectCodegen(type: IntegerType, val condition: CompareInstructio
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
-    private fun matchIntCondition(): CMoveFlag = when (val pred = condition.predicate()) {
-        is IntPredicate -> asm.cMoveCondition(pred, condition.operandsType)
-        is FloatPredicate -> asm.cMoveCondition(pred)
+    private fun matchIntCondition(): CondFlagType = when (val pred = condition.predicate()) {
+        is IntPredicate -> asm.condIntType0(pred, condition.operandsType)
+        is FloatPredicate -> asm.condFloatType0(pred)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {

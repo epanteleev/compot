@@ -24,7 +24,7 @@ class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, 
     override fun constant(): StringLiteralConstant = StringLiteralConstant(tp, string)
 }
 
-sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivialType, protected val elements: InitializerListValue): AnyAggregateGlobalConstant(name) {
+sealed class AggregateGlobalConstant(override val name: String, protected val tp: NonTrivialType, protected val elements: InitializerListValue): AnyAggregateGlobalConstant(name) {
     fun elements(): InitializerListValue {
         return elements
     }

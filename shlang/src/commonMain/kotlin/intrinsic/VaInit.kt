@@ -1,10 +1,7 @@
 package intrinsic
 
+import asm.x64.*
 import types.*
-import asm.x64.Operand
-import asm.x64.Address
-import asm.x64.Address2
-import asm.x64.CondType
 import asm.x64.GPRegister.*
 import asm.x64.XmmRegister.*
 import common.assertion
@@ -36,7 +33,7 @@ class VaInit(private val firstArgType: CType): IntrinsicProvider("va_init") { //
         masm.switchTo(currentLabel)
         masm.apply {
             test(Definitions.BYTE_SIZE, rax, rax)
-            jcc(CondType.JE, gprBlock)
+            jcc(CondFlagType.EQ, gprBlock)
 
             val isGPOperand = isGPOperand(firstArgType)
             if (isGPOperand) {

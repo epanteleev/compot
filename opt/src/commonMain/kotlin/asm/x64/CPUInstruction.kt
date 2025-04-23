@@ -210,63 +210,31 @@ data class Label(val id: String) {
     }
 }
 
-enum class CondType { // TODO: unify with SetCCType
-    JE { // Jump if equal (ZF=1).
-        override fun toString(): String = "je"
-    },
-    JNE { // Jump if not equal (ZF=0).
-        override fun toString(): String = "jne"
-    },
-    JG { // Jump if greater (ZF=0 and SF=OF).
-        override fun toString(): String = "jg"
-    },
-    JGE  { // Jump if greater or equal (SF=OF).
-        override fun toString(): String = "jge"
-    },
-    JL { // Jump if less (SF≠ OF).
-        override fun toString(): String = "jl"
-    },
-    JLE { // Jump if less or equal (ZF=1 or SF≠ OF).
-        override fun toString(): String = "jle"
-    },
-    JA { // Jump if below (CF=1).
-        override fun toString(): String = "ja"
-    },
-    JAE { // Jump if above or equal (CF=0).
-        override fun toString(): String = "jae"
-    },
-    JB { // Jump if below (CF=1).
-        override fun toString(): String = "jb"
-    },
-    JBE { // Jump if below or equal (CF=1 or ZF=1).
-        override fun toString(): String = "jbe"
-    },
-    JNA { // Jump if not above (CF=1 or ZF=1).
-        override fun toString(): String = "jna"
-    },
-    JNAE { // Jump if not above or equal (CF=1).
-        override fun toString(): String = "jnae"
-    },
-    JNB { // Jump if not below (CF=0).
-        override fun toString(): String = "jnb"
-    },
-    JP { // Jump if parity (PF=1).
-        override fun toString(): String = "jp"
-    },
-    JS { // Jump if sign (SF=1).
-        override fun toString(): String = "js"
-    },
-    JZ { // Jump short if zero (ZF = 1).
-        override fun toString(): String = "jz"
-    },
-    JNP {
-        override fun toString(): String = "jnp"
+internal data class Jcc(val jumpType: CondFlagType, val label: String): CPUInstruction() {
+    private fun flagToJump(f: CondFlagType): String = when (f) {
+        CondFlagType.EQ -> "je"
+        CondFlagType.NE -> "jne"
+        CondFlagType.G -> "jg"
+        CondFlagType.GE -> "jge"
+        CondFlagType.L -> "jl"
+        CondFlagType.LE -> "jle"
+        CondFlagType.A -> "ja"
+        CondFlagType.AE -> "jae"
+        CondFlagType.B -> "jb"
+        CondFlagType.BE -> "jbe"
+        CondFlagType.NA -> "jna"
+        CondFlagType.NAE -> "jnae"
+        CondFlagType.JNB -> "jnb"
+        CondFlagType.P -> "jp"
+        CondFlagType.S -> "js"
+        CondFlagType.NS -> "jns"
+        CondFlagType.Z -> "jz"
+        CondFlagType.NZ -> "jnz"
+        CondFlagType.NP -> "jnp"
     }
-}
 
-internal data class Jcc(val jumpType: CondType, val label: String): CPUInstruction() {
     override fun toString(): String {
-        return "$jumpType $label"
+        return "${flagToJump(jumpType)} $label"
     }
 }
 
@@ -297,57 +265,31 @@ internal data class Test(val size: Int, val first: Operand, val second: Operand)
     }
 }
 
-enum class SetCCType {
-    SETL {
-        override fun toString(): String = "setl"
-    },
-    SETE {
-        override fun toString(): String = "sete"
-    },
-    SETG {
-        override fun toString(): String = "setg"
-    },
-    SETGE {
-        override fun toString(): String = "setge"
-    },
-    SETLE  {
-        override fun toString(): String = "setle"
-    },
-    SETNE {
-        override fun toString(): String = "setne"
-    },
-    SETA {
-        override fun toString(): String = "seta"
-    },
-    SETAE {
-        override fun toString(): String = "setae"
-    },
-    SETB {
-        override fun toString(): String = "setb"
-    },
-    SETBE {
-        override fun toString(): String = "setbe"
-    },
-    SETNA {
-        override fun toString(): String = "setna"
-    },
-    SETNAE {
-        override fun toString(): String = "setnae"
-    },
-    SETNB {
-        override fun toString(): String = "setnb"
-    },
-    SETP {
-        override fun toString(): String = "setp"
-    },
-    SETNP {
-        override fun toString(): String = "setnp"
-    },
-}
+internal data class SetCc(val tp: CondFlagType, val reg: Operand): CPUInstruction() {
+    private fun flagToSet(f: CondFlagType): String = when (f) {
+        CondFlagType.EQ -> "sete"
+        CondFlagType.NE -> "setne"
+        CondFlagType.G -> "setg"
+        CondFlagType.GE -> "setge"
+        CondFlagType.L -> "setl"
+        CondFlagType.LE -> "setle"
+        CondFlagType.A -> "seta"
+        CondFlagType.AE -> "setae"
+        CondFlagType.B -> "setb"
+        CondFlagType.BE -> "setbe"
+        CondFlagType.NA -> "setna"
+        CondFlagType.NAE -> "setnae"
+        CondFlagType.JNB -> "setnb"
+        CondFlagType.P -> "setp"
+        CondFlagType.S -> "sets"
+        CondFlagType.NS -> "setns"
+        CondFlagType.Z -> "setz"
+        CondFlagType.NZ -> "setnz"
+        CondFlagType.NP -> "setnp"
+    }
 
-internal data class SetCc(val tp: SetCCType, val reg: Operand): CPUInstruction() {
     override fun toString(): String {
-        return "$tp ${reg.toString(1)}"
+        return "${flagToSet(tp)} ${reg.toString(1)}"
     }
 }
 
@@ -489,134 +431,31 @@ internal data class Cvtsi2sd(val fromSize: Int, val src: Operand, val dst: Opera
     }
 }
 
-enum class CMoveFlag { //TODO: unify with CondType
-    CMOVA { // Move if above (CF=0 and ZF=0).
-        override fun toString(): String = "cmova"
-        override fun invert(): CMoveFlag = CMOVNA
-    },
-    CMOVAE { // Move if above or equal (CF=0).
-        override fun toString(): String = "cmovae"
-        override fun invert(): CMoveFlag = CMOVNAE
-    },
-    CMOVB { // Move if below (CF=1).
-        override fun toString(): String = "cmovb"
-        override fun invert(): CMoveFlag = CMOVNB
-    },
-    CMOVBE { // Move if below or equal (CF=1 or ZF=1).
-        override fun toString(): String = "cmovbe"
-        override fun invert(): CMoveFlag = CMOVNBE
-    },
-    CMOVC { // Move if carry (CF=1).
-        override fun toString(): String = "cmovc"
-        override fun invert(): CMoveFlag = CMOVNC
-    },
-    CMOVE { // Move if equal (ZF=1).
-        override fun toString(): String = "cmove"
-        override fun invert(): CMoveFlag = CMOVNE
-    },
-    CMOVG { // Move if greater (ZF=0 and SF=OF).
-        override fun toString(): String = "cmovg"
-        override fun invert(): CMoveFlag = CMOVNG
-    },
-    CMOVGE { // Move if greater or equal (SF=OF).
-        override fun toString(): String = "cmovge"
-        override fun invert(): CMoveFlag = CMOVNGE
-    },
-    CMOVL { // Move if less (SF≠ OF).
-        override fun toString(): String = "cmovl"
-        override fun invert(): CMoveFlag = CMOVNL
-    },
-    CMOVLE { // Move if less or equal (ZF=1 or SF≠ OF).
-        override fun toString(): String = "cmovle"
-        override fun invert(): CMoveFlag = CMOVNLE
-    },
-    CMOVNA { // Move if not above (CF=1 or ZF=1).
-        override fun toString(): String = "cmovna"
-        override fun invert(): CMoveFlag = CMOVA
-    },
-    CMOVNAE { // Move if not above or equal (CF=1).
-        override fun toString(): String = "cmovnae"
-        override fun invert(): CMoveFlag = CMOVAE
-    },
-    CMOVNB { // Move if not below (CF=0).
-        override fun toString(): String = "cmovnb"
-        override fun invert(): CMoveFlag = CMOVB
-    },
-    CMOVNBE { // Move if not below or equal (CF=0 and ZF=0).
-        override fun toString(): String = "cmovnbe"
-        override fun invert(): CMoveFlag = CMOVBE
-    },
-    CMOVNC { // Move if not carry (CF=0).
-        override fun toString(): String = "cmovnc"
-        override fun invert(): CMoveFlag = CMOVC
-    },
-    CMOVNE { // Move if not equal (ZF=0).
-        override fun toString(): String = "cmovne"
-        override fun invert(): CMoveFlag = CMOVE
-    },
-    CMOVNG { // Move if not greater (ZF=1 or SF≠ OF).
-        override fun toString(): String = "cmovng"
-        override fun invert(): CMoveFlag = CMOVG
-    },
-    CMOVNGE { // Move if not greater or equal (SF≠ OF).
-        override fun toString(): String = "cmovnge"
-        override fun invert(): CMoveFlag = CMOVGE
-    },
-    CMOVNL { // Move if not less (SF=OF).
-        override fun toString(): String = "cmovnl"
-        override fun invert(): CMoveFlag = CMOVL
-    },
-    CMOVNLE { // Move if not less or equal (ZF=0 and SF=OF).
-        override fun toString(): String = "cmovnle"
-        override fun invert(): CMoveFlag = CMOVLE
-    },
-    CMOVNO { // Move if not overflow (OF=0).
-        override fun toString(): String = "cmovno"
-        override fun invert(): CMoveFlag = CMOVO
-    },
-    CMOVNP { // Move if not parity (PF=0).
-        override fun toString(): String = "cmovnp"
-        override fun invert(): CMoveFlag = CMOVP
-    },
-    CMOVNS { // Move if not sign (SF=0).
-        override fun toString(): String = "cmovns"
-        override fun invert(): CMoveFlag = CMOVS
-    },
-    CMOVNZ { // Move if not zero (ZF=0).
-        override fun toString(): String = "cmovnz"
-        override fun invert(): CMoveFlag = CMOVZ
-    },
-    CMOVO { // Move if overflow (OF=1).
-        override fun toString(): String = "cmovo"
-        override fun invert(): CMoveFlag = CMOVNO
-    },
-    CMOVP { // Move if parity (PF=1).
-        override fun toString(): String = "cmovp"
-        override fun invert(): CMoveFlag = CMOVNP
-    },
-    CMOVPE { // Move if parity even (PF=1).
-        override fun toString(): String = "cmovpe"
-        override fun invert(): CMoveFlag = CMOVPO
-    },
-    CMOVPO { // Move if parity odd (PF=0).
-        override fun toString(): String = "cmovpo"
-        override fun invert(): CMoveFlag = CMOVPE
-    },
-    CMOVS { // Move if sign (SF=1).
-        override fun toString(): String = "cmovs"
-        override fun invert(): CMoveFlag = CMOVNS
-    },
-    CMOVZ { // Move if zero (ZF=1).
-        override fun toString(): String = "cmovz"
-        override fun invert(): CMoveFlag = CMOVNZ
-    };
+internal data class CMOVcc(val size: Int, val flag: CondFlagType, val src: Operand, val dst: Operand): CPUInstruction() {
+    private fun flagToCMov(f: CondFlagType): String = when (f) {
+        CondFlagType.EQ -> "cmove"
+        CondFlagType.NE -> "cmovne"
+        CondFlagType.G -> "cmovg"
+        CondFlagType.GE -> "cmovge"
+        CondFlagType.L -> "cmovl"
+        CondFlagType.LE -> "cmovle"
+        CondFlagType.A -> "cmova"
+        CondFlagType.AE -> "cmovae"
+        CondFlagType.B -> "cmovb"
+        CondFlagType.BE -> "cmovbe"
+        CondFlagType.NA -> "cmovna"
+        CondFlagType.NAE -> "cmovnae"
+        CondFlagType.JNB -> "cmovnb"
+        CondFlagType.P -> "cmovp"
+        CondFlagType.S -> "cmovs"
+        CondFlagType.NS -> "cmovns"
+        CondFlagType.Z -> "cmovz"
+        CondFlagType.NZ -> "cmovnz"
+        CondFlagType.NP -> "cmovnp"
+    }
 
-    abstract fun invert(): CMoveFlag
-}
-
-internal data class CMOVcc(val size: Int, val flag: CMoveFlag, val src: Operand, val dst: Operand): CPUInstruction() {
     override fun toString(): String {
-        return "$flag ${src.toString(size)}, ${dst.toString(size)}"
+        return "${flagToCMov(flag)} ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
