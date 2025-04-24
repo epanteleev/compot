@@ -95,6 +95,12 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("errno: EPERM\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testGlob() {
+        val result = runCTest("shlang/stdlib/glob", listOf(), options() + "-E")
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {
