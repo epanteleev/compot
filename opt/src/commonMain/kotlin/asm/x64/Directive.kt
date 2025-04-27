@@ -99,10 +99,12 @@ class QuadDirective(val value: String, val offset: Int): AnonymousDirective() {
     }
 }
 
-class StringDirective(val value: String): AnonymousDirective() {
-    override fun toString(): String {
-        return ".string $value"
-    }
+class StringDirective(private val value: String): AnonymousDirective() {
+    override fun toString(): String = ".string $value\n"
+}
+
+class SizeDirective(private val label: String, private val size: Int): AnonymousDirective() {
+    override fun toString(): String = ".size $label, $size"
 }
 
 class CommSymbol(override val name: String, val size: Int): NamedDirective() {

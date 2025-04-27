@@ -14,11 +14,15 @@ import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
 import ir.intrinsic.IntrinsicProvider
 import ir.platform.MacroAssembler
+import ir.platform.x64.CallConvention
 import ir.platform.x64.codegen.X64MacroAssembler
 import typedesc.TypeDesc
 
 
 class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_start") {
+    private val numberOfGPArgs = arguments.count { isGPOperand(it.cType()) }
+    private val numberOfFPArgs = arguments.count { isFPOperand(it.cType()) }
+
     init {
         require(arguments.isNotEmpty()) { "va_start must have 2 arguments" }
     }
@@ -40,9 +44,20 @@ class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_sta
         }
     }
 
+    private fun argumentsInOverflowArea(): Int {
+        var overflowArea = 0
+        if (CallConvention.gpArgumentRegisters.size < numberOfGPArgs) {
+            overflowArea += numberOfGPArgs - CallConvention.gpArgumentRegisters.size
+        }
+
+        if (CallConvention.xmmArgumentRegisters.size < numberOfFPArgs) {
+            overflowArea += numberOfFPArgs - CallConvention.xmmArgumentRegisters.size
+        }
+
+        return overflowArea * QWORD_SIZE
+    }
+
     private fun implementX64(masm: X64MacroAssembler, vaStart: Address2, vaInit: Address2) {
-        val numberOfGPArgs = arguments.count { isGPOperand(it.cType()) }
-        val numberOfFPArgs = arguments.count { isFPOperand(it.cType()) }
         masm.apply {
             // vaStart.gp_offset = 8
             mov(WORD_SIZE, Imm32.of(numberOfGPArgs * QWORD_SIZE), vaStart)
@@ -52,7 +67,7 @@ class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_sta
 
             // vaStart.overflow_arg_area = lea [rbp + 16]
             // TODO correct only for -fno-omit-frame-pointer mode
-            lea(POINTER_SIZE, Address.from(rbp, 16), rax)
+            lea(POINTER_SIZE, Address.from(rbp, 16 + argumentsInOverflowArea()), rax)
             mov(POINTER_SIZE, rax, Address.from(vaStart.base, vaStart.offset + OVERFLOW_ARG_AREA_OFFSET))
 
             // vaStart.reg_save_area = lea $vaInit

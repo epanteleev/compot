@@ -104,6 +104,18 @@ sealed class VarArgsTests: CommonCTest() {
         val result = runCTest("shlang/varArgs/varArgs16", listOf(), options())
         assertEquals("Hello, world!\n", result.output)
     }
+
+    @Test
+    fun test17() {
+        val result = runCTest("shlang/varArgs/varArgs17", listOf(), options())
+        assertEquals("variadic: 1 2 3 4 5 6\nNumbers: 7 8 9\n", result.output)
+    }
+
+    @Test
+    fun test18() {
+        val result = runCTest("shlang/varArgs/varArgs18", listOf(), options())
+        assertEquals("variadic: 1 2 3 4\nNumbers: 6 7 8 9\n", result.output)
+    }
 }
 
 class VarArgsTestsO0: VarArgsTests() {

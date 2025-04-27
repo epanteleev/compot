@@ -1,6 +1,5 @@
 package asm.x64
 
-import common.assertion
 import common.getOrSet
 
 

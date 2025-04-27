@@ -113,6 +113,14 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
         arrayToAppend.add(AsciiDirective(value))
     }
 
+    override fun size(label: String, size: Int) {
+        if (size < 0) {
+            throw IllegalArgumentException("size must be non-negative: $size")
+        }
+
+        arrayToAppend.add(SizeDirective(label, size))
+    }
+
     override fun toString(): String {
         val builder = StringBuilder()
         for ((idx, symbol) in symbols.withIndex()) {

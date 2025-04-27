@@ -2,7 +2,6 @@ package ir.instruction
 
 import ir.types.*
 import ir.value.Value
-import common.assertion
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 

@@ -98,7 +98,7 @@ sealed class StdlibTest: CommonCTest() {
 
     @Test
     fun testGlob() {
-        val result = runCTest("shlang/stdlib/glob", listOf(), options() + "-E")
+        val result = runCTest("shlang/stdlib/glob", listOf(), options())
         assertEquals(0, result.exitCode)
     }
 }

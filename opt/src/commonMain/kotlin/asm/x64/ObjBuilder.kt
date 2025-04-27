@@ -12,4 +12,5 @@ sealed interface ObjBuilder {
     fun quad(value: ULong)
     fun string(value: String)
     fun ascii(value: String)
+    fun size(label: String, size: Int)
 }

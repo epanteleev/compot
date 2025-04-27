@@ -65,7 +65,7 @@ object CallConvention {
         r15
     ) { it.encoding() }
 
-    val xmmArgumentRegister: Array<XmmRegister> = arrayOf(
+    val xmmArgumentRegisters: Array<XmmRegister> = arrayOf(
         xmm0,
         xmm1,
         xmm2,

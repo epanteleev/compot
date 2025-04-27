@@ -8,10 +8,9 @@ sealed interface AggregateConstant: NonTrivialConstant
 
 class StringLiteralConstant(private val ty: ArrayType, val content: String): AggregateConstant {
     override fun type(): ArrayType = ty
+    fun length(): Int = content.length
 
-    override fun toString(): String {
-        return content.asCString()
-    }
+    override fun toString(): String = content.asCString()
 }
 
 class InitializerListValue(private val type: AggregateType, val elements: List<NonTrivialConstant>): AggregateConstant, Iterable<Constant> {

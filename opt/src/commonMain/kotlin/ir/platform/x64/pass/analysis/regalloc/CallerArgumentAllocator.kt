@@ -63,7 +63,7 @@ internal class CallerArgumentAllocator private constructor(private val stackFram
 
     companion object {
         private val gpRegisters = CallConvention.gpArgumentRegisters
-        private val fpRegisters = CallConvention.xmmArgumentRegister
+        private val fpRegisters = CallConvention.xmmArgumentRegisters
 
         fun alloc(stackFrame: StackFrame, arguments: List<Value>): List<VReg?> {
             return CallerArgumentAllocator(stackFrame, arguments).calculate()

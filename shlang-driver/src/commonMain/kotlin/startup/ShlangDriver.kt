@@ -71,14 +71,12 @@ class ShlangDriver(private val cli: ShlangArguments) {
 
     private fun makeOptCLIArguments(inputFilename: ProcessedFile): OptCLIArguments {
         val file = FileUtils.createTempFile(inputFilename.basename() + Random.nextInt() + ".o")
-        val optCLIArguments = OptCLIArguments()
-        optCLIArguments.setFilename(inputFilename.withExtension(Extension.IR))
+        return OptCLIArguments()
+            .setFilename(inputFilename.withExtension(Extension.IR))
             .setOptLevel(cli.getOptLevel())
             .setDumpIrDirectory(cli.getDumpIrDirectory())
             .setOutputFilename(ProcessedFile.fromFilename(file.toString()))
             .setPic(cli.pic())
-
-        return optCLIArguments
     }
 
     private fun compile(filename: String): Module? {
@@ -120,6 +118,39 @@ class ShlangDriver(private val cli: ShlangArguments) {
         return objFile
     }
 
+    private fun compileCFiles(compiled: List<ProcessedFile>) {
+        val output = cli.getOutputFilename()
+        if (output != ShlangArguments.DEFAULT_OUTPUT) {
+            val src = compiled.first()
+            logDebug {
+                "Copying file: $src to $output"
+            }
+
+            val srsPath = Path.of(src.filename)
+            val dstPath = Path.of(output.filename)
+            srsPath.copyTo(dstPath, overwrite = true)
+            return
+        }
+
+        for (i in cli.inputs().indices) {
+            val input = cli.inputs()[i]
+            val compiledFile = compiled[i]
+            if (input.extension != Extension.C) {
+                continue
+            }
+
+            val dst = input.withExtension(Extension.OBJ)
+            val src = compiledFile.filename
+            logDebug {
+                "Copying file: $src to $dst"
+            }
+
+            val srsPath = Path.of(src)
+            val dstPath = Path.of(dst.filename)
+            srsPath.copyTo(dstPath, overwrite = true)
+        }
+    }
+
     fun run() { //TODo: move some actions to separate class LDDriver
         val processedFiles = arrayListOf<ProcessedFile>()
         val compiled = arrayListOf<ProcessedFile>()
@@ -136,37 +167,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
         }
 
         if (cli.isCompile()) {
-            val output = cli.getOutputFilename()
-            if (output != ShlangArguments.DEFAULT_OUTPUT) {
-                val src = compiled.first()
-                logDebug {
-                    "Copying file: $src to $output"
-                }
-
-                val srsPath = Path.of(src.filename)
-                val dstPath = Path.of(output.filename)
-                srsPath.copyTo(dstPath, overwrite = true)
-                return
-            }
-
-            for (i in cli.inputs().indices) {
-                val input = cli.inputs()[i]
-                val compiledFile = compiled[i]
-                if (input.extension != Extension.C) {
-                    continue
-                }
-
-                val dst = input.withExtension(Extension.OBJ)
-                val src = compiledFile.filename
-                logDebug {
-                    "Copying file: $src to $dst"
-                }
-
-                val srsPath = Path.of(src)
-                val dstPath = Path.of(dst.filename)
-                srsPath.copyTo(dstPath, overwrite = true)
-            }
-
+            compileCFiles(compiled)
             return
         }
 

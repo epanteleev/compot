@@ -11,8 +11,6 @@ import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.assertion
 import common.forEachWith
-import ir.Definitions
-import ir.Definitions.BYTE_SIZE
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.attributes.GlobalValueAttribute
@@ -188,9 +186,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val dst    = vReg(mul)
 
         when (val type = mul.type()) {
-            is IntegerType     -> IMulCodegen(type, asm)(dst, first, second)
+            is IntegerType -> IMulCodegen(type, asm)(dst, first, second)
             is FloatingPointType -> FMulCodegen(type, asm)(dst, first, second)
-            is UndefType       -> {}
+            is UndefType -> {}
         }
     }
 
@@ -237,12 +235,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     private fun emitRetValue(retInstType: PrimitiveType, returnOperand: Operand) = when (retInstType) {
-        is IntegerType, is PtrType -> {
-            ReturnIntCodegen(retInstType, asm)(retReg, returnOperand)
-        }
-        is FloatingPointType -> {
-            ReturnFloatCodegen(retInstType, asm)(fpRet, returnOperand)
-        }
+        is IntegerType, is PtrType -> ReturnIntCodegen(retInstType, asm)(retReg, returnOperand)
+        is FloatingPointType -> ReturnFloatCodegen(retInstType, asm)(fpRet, returnOperand)
         is UndefType -> TODO("undefined behavior")
     }
 
@@ -440,12 +434,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
         val callOp = operand(call)
         when (val retType = call.type()) {
-            is IntegerType, is PtrType -> {
-                CallIntCodegen(retType, asm)(callOp, retReg)
-            }
-            is FloatingPointType -> {
-                CallFloatCodegen(retType, asm)(callOp, fpRet)
-            }
+            is IntegerType, is PtrType -> CallIntCodegen(retType, asm)(callOp, retReg)
+            is FloatingPointType -> CallFloatCodegen(retType, asm)(callOp, fpRet)
             is UndefType -> println("UB in call") //TODO remove this
         }
 
@@ -459,50 +449,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val dst = vReg(flag2Int)
         val size = flag2Int.type().sizeOf()
         when (val compare = flag2Int.operand()) {
-            is CompareInstruction -> {
-                when (val predicate = compare.predicate()) {
-                    is IntPredicate   -> asm.setccInt(compare.operandsType().asType(), predicate, dst)
-                    is FloatPredicate -> {
-                        when (predicate) {
-                            FloatPredicate.One, FloatPredicate.Une -> {
-                                asm.setccFloat(predicate, dst)
-                                asm.setcc(CondFlagType.P, rax)
-                                when (dst) { //TODO CMPSS, CMPSD
-                                    is Address -> {
-                                        asm.or(BYTE_SIZE, dst, rax)
-                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
-                                        asm.mov(size, rax, dst)
-                                    }
-                                    is GPRegister -> {
-                                        asm.or(BYTE_SIZE, dst, rax)
-                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
-                                        asm.copy(size, rax, dst)
-                                    }
-                                    else -> throw CodegenException("unknown dst=$dst")
-                                }
-                            }
-                            else -> {
-                                asm.setccFloat(predicate, dst)
-                                asm.setcc(CondFlagType.NP, rax)
-                                when (dst) { //TODO CMPSS, CMPSD
-                                    is Address -> {
-                                        asm.and(BYTE_SIZE, dst, rax)
-                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
-                                        asm.mov(size, rax, dst)
-                                    }
-                                    is GPRegister -> {
-                                        asm.and(BYTE_SIZE, dst, rax)
-                                        asm.and(BYTE_SIZE, Imm32.of(1), rax)
-                                        asm.copy(size, rax, dst)
-                                    }
-                                    else -> throw CodegenException("unknown dst=$dst")
-                                }
-                            }
-                        }
-                    }
-                }
-                Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, dst)
-            }
+            is CompareInstruction -> Flag2IntCodegen(size, compare.operandsType(), compare.predicate(), asm)(dst, dst)
             is BoolValue -> {
                 val res = if (compare.bool) 1L else 0L
                 when (dst) {
@@ -521,12 +468,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
         val callOp = operand(indirectionCall)
         when (val retType = indirectionCall.type()) {
-            is IntegerType, is PtrType -> {
-                CallIntCodegen(retType, asm)(callOp, retReg)
-            }
-            is FloatingPointType -> {
-                CallFloatCodegen(retType, asm)(callOp, fpRet)
-            }
+            is IntegerType, is PtrType -> CallIntCodegen(retType, asm)(callOp, retReg)
+            is FloatingPointType -> CallFloatCodegen(retType, asm)(callOp, fpRet)
             is UndefType -> TODO("undefined behavior")
         }
     }
@@ -645,7 +588,6 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             is FloatingPointType -> MoveFloatCodegen(type, asm)(destination, source)
             is UndefType -> TODO("undefined behavior")
         }
-
     }
 
     override fun visit(move: MoveByIndex) {
@@ -813,10 +755,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(generate: Generate) { /* nothing to do */ }
 
     override fun visit(lea: Lea) {
-        val dst = vReg(lea)
         val gen = operand(lea.operand()) as Address
-
-        when (dst) {
+        when (val dst = vReg(lea)) {
             is Address -> {
                 asm.lea(POINTER_SIZE, gen, temp1)
                 asm.mov(POINTER_SIZE, temp1, dst)

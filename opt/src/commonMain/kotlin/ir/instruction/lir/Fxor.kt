@@ -1,13 +1,10 @@
 package ir.instruction.lir
 
-import ir.instruction.*
-import ir.instruction.utils.IRInstructionVisitor
-import ir.module.block.Block
-import ir.types.ArithmeticType
-import ir.types.FloatingPointType
-import ir.types.Type
-import ir.types.asType
+import ir.types.*
 import ir.value.Value
+import ir.instruction.*
+import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Fxor private constructor(id: Identity, owner: Block, tp: ArithmeticType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {

@@ -14,7 +14,7 @@ class IndirectionVoidCall private constructor(id: Identity,
                                               private val func: IndirectFunctionPrototype,
                                               private val attributes: Set<FunctionAttribute>,
                                               usages: Array<Value>, target: Block):
-    TerminateInstruction(id, owner, usages, arrayOf(target)), Callable {
+    TerminateInstruction(id, owner, usages, arrayOf(target)), IndirectionCallable {
     init {
         assertion(func.returnType() == VoidType) { "Must be $VoidType" }
     }
@@ -27,7 +27,7 @@ class IndirectionVoidCall private constructor(id: Identity,
         return targets[0]
     }
 
-    fun pointer(): Value {
+    override fun pointer(): Value {
         assertion(operands.isNotEmpty()) {
             "size should be at least 1 operand in $this instruction"
         }
@@ -35,7 +35,7 @@ class IndirectionVoidCall private constructor(id: Identity,
         return operands.last()
     }
 
-    fun pointer(newPointer: Value) {
+    override fun pointer(newPointer: Value) {
         update(operands.size - 1, newPointer)
     }
 
@@ -61,15 +61,13 @@ class IndirectionVoidCall private constructor(id: Identity,
         return visitor.visit(this)
     }
 
-    override fun dump(): String {
-        val builder = StringBuilder()
-        builder.append("call $VoidType ${pointer()}(")
-        arguments().joinTo(builder) {
+    override fun dump(): String = buildString {
+        append("call $VoidType ${pointer()}(")
+        arguments().joinTo(this) {
             "$it:${it.type()}"
         }
-        builder.append(") br label ")
-        builder.append(target())
-        return builder.toString()
+        append(") br label ")
+        append(target())
     }
 
     companion object {

@@ -18,7 +18,7 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
                                           operands: Array<Value>,
                                           target: Block):
     TerminateValueInstruction(id, owner, func.returnType(), operands, arrayOf(target)),
-    Callable {
+    IndirectionCallable {
     init {
         assertion(func.returnType() !is TrivialType) { "Must be non trivial type" }
     }
@@ -33,7 +33,7 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
         return targets[0]
     }
 
-    fun pointer(): Value {
+    override fun pointer(): Value {
         assertion(operands.isNotEmpty()) {
             "size should be at least 1 operand in $this instruction, but '${operands.joinToString { it.toString() }}' found"
         }
@@ -41,7 +41,7 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
         return operands.last()
     }
 
-    fun pointer(newPointer: Value) {
+    override fun pointer(newPointer: Value) {
         update(operands.size - 1, newPointer)
     }
 
@@ -67,11 +67,9 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
         return visitor.visit(this)
     }
 
-    override fun dump(): String {
-        val builder = StringBuilder()
-        builder.append("%${name()} = call $tp ${pointer()}(")
-        printArguments(builder)
-        return builder.toString()
+    override fun dump(): String = buildString {
+        append("%${name()} = call $tp ${pointer()}(")
+        printArguments(this)
     }
 
     companion object {

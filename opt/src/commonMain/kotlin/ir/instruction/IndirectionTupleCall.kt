@@ -17,7 +17,7 @@ class IndirectionTupleCall private constructor(
     target: Block
 ) :
     TerminateTupleInstruction(id, owner, func.returnType().asType(), operands, arrayOf(target)),
-    Callable {
+    IndirectionCallable {
 
     override fun type(): TupleType = tp.asType()
 
@@ -29,7 +29,7 @@ class IndirectionTupleCall private constructor(
         return targets[0]
     }
 
-    fun pointer(): Value {
+    override fun pointer(): Value {
         assertion(operands.isNotEmpty()) {
             "size should be at least 1 operand in $this instruction, but '${operands.joinToString { it.toString() }}' found"
         }
@@ -37,7 +37,7 @@ class IndirectionTupleCall private constructor(
         return operands.last()
     }
 
-    fun pointer(newPointer: Value) {
+    override fun pointer(newPointer: Value) {
         update(operands.size - 1, newPointer)
     }
 
@@ -63,11 +63,9 @@ class IndirectionTupleCall private constructor(
         return visitor.visit(this)
     }
 
-    override fun dump(): String {
-        val builder = StringBuilder()
-        builder.append("%${name()} = $NAME $tp ${pointer()}(")
-        printArguments(builder)
-        return builder.toString()
+    override fun dump(): String = buildString {
+        append("%${name()} = $NAME $tp ${pointer()}(")
+        printArguments(this)
     }
 
     companion object {

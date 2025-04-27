@@ -1,11 +1,9 @@
 package ir.instruction.lir
 
-import ir.instruction.Identity
-import ir.instruction.InstBuilder
-import ir.instruction.ValueInstruction
 import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
+import ir.instruction.*
 import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Generate private constructor(id: Identity, owner: Block, private val allocatedType: NonTrivialType):

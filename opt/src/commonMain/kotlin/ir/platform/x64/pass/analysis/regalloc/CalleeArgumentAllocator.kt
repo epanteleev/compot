@@ -2,7 +2,6 @@ package ir.platform.x64.pass.analysis.regalloc
 
 import asm.x64.*
 import ir.types.*
-import asm.x64.Operand
 import asm.x64.GPRegister.rbp
 import ir.value.ArgumentValue
 import ir.Definitions.QWORD_SIZE
@@ -65,7 +64,7 @@ internal class CalleeArgumentAllocator private constructor() {
         const val OVERFLOW_AREA_OFFSET = RETURN_ADDRESS_SIZE + FRAME_POINTER_SIZE
 
         private val gpRegisters = CallConvention.gpArgumentRegisters
-        private val fpRegisters = CallConvention.xmmArgumentRegister
+        private val fpRegisters = CallConvention.xmmArgumentRegisters
 
         fun allocate(arguments: List<ArgumentValue>): List<VReg> {
             return CalleeArgumentAllocator().allocate(arguments)

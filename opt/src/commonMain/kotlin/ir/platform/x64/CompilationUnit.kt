@@ -20,6 +20,8 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             //    .string "string"
             label(globalValue.name()) {
                 string(globalValue.constant().toString())
+                string("\"\"")
+                size(globalValue.name(), globalValue.constant().length())
             }
         }
         is AggregateGlobalConstant -> makeAggregateConstant(globalValue.name(), globalValue.contentType().asType(), globalValue.elements())
@@ -44,7 +46,10 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         for (e in linear) {
             when (e) {
                 is PrimitiveConstant -> primitive(this, e)
-                is StringLiteralConstant -> string(e.toString())
+                is StringLiteralConstant -> {
+                    string(e.toString())
+                    size(name, e.length())
+                }
                 else -> throw IllegalArgumentException("unsupported constant type: $e")
             }
         }
@@ -56,6 +61,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         }
         return label(globalValue.name()) {
             string(constant.toString())
+            size(globalValue.name(), constant.length())
         }
     }
 
@@ -64,7 +70,10 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             for (e in LinearizeInitializerList.linearize(initializer, globalValue.contentType().asType())) {
                 when (e) {
                     is PrimitiveConstant -> primitive(this, e)
-                    is StringLiteralConstant -> string(e.toString())
+                    is StringLiteralConstant -> {
+                        string(e.toString())
+                        size(globalValue.name(), e.length())
+                    }
                     else -> throw IllegalArgumentException("unsupported constant type: $e")
                 }
             }
@@ -72,6 +81,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         is StringLiteralConstant -> {
             val initConstant = anonConstant {
                 string(initializer.toString())
+                size(globalValue.name(), initializer.length())
             }
             label(globalValue.name()) {
                 quad(initConstant)
