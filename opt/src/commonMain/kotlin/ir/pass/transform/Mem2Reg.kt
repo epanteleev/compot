@@ -44,7 +44,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
 
     private fun insertPhis(): List<UncompletedPhi> {
         val insertedPhis = arrayListOf<UncompletedPhi>()
-        for ((bb, vSet) in joinSet) { bb as Block
+        for ((bb, vSet) in joinSet) {
             val blocks = bb.predecessors().toTypedArray()
             for (v in vSet) {
                 val phi = bb.prepend(UncompletedPhi.phi(v.allocatedType.asType(), v, blocks))

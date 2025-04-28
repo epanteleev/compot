@@ -9,22 +9,22 @@ import ir.module.ModificationCounter
 import ir.value.constant.UndefValue
 
 
-class Block private constructor(private val mc: ModificationCounter, override val index: Int): AnyBlock, Iterable<Instruction> {
+class Block private constructor(private val mc: ModificationCounter, override val index: Int): Label, Iterable<Instruction> {
     private val instructions = InstructionList()
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
 
     private var instructionIndex: Int = 0
 
-    override fun predecessors(): List<Block> {
+    fun predecessors(): List<Block> {
         return predecessors
     }
 
-    override fun successors(): List<Block> {
+    fun successors(): List<Block> {
         return successors
     }
 
-    override fun last(): TerminateInstruction {
+    fun last(): TerminateInstruction {
         return lastOrNull() ?:
             throw IllegalStateException("Last instruction is not terminate: bb=$this, last='${instructions.lastOrNull()?.dump()}'")
     }
@@ -35,7 +35,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
 
     fun lastOrNull(): TerminateInstruction? = instructions.lastOrNull() as? TerminateInstruction
 
-    override fun begin(): Instruction {
+    fun begin(): Instruction {
         assertion(instructions.isNotEmpty()) {
             "bb=$this must have any instructions"
         }
@@ -99,7 +99,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
         updatePhi(currentSuccessor, newSuccessor)
     }
 
-    override fun contains(instruction: Instruction): Boolean {
+    fun contains(instruction: Instruction): Boolean {
         return instructions.contains(instruction)
     }
 

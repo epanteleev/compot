@@ -2,7 +2,7 @@ package ir.pass.analysis.dominance
 
 import common.intMapOf
 import ir.module.FunctionData
-import ir.module.block.AnyBlock
+import ir.module.block.Block
 import ir.module.block.Label
 import ir.pass.analysis.traverse.BlockOrder
 import ir.pass.common.AnalysisResult
@@ -41,8 +41,8 @@ sealed class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
         return finger1
     }
 
-    private fun indexBlocks(blocksOrder: BlockOrder): Map<AnyBlock, Int> {
-        val blockToIndex = intMapOf<AnyBlock, Int>(blocksOrder.size) { it : Label -> it.index }
+    private fun indexBlocks(blocksOrder: BlockOrder): Map<Block, Int> {
+        val blockToIndex = intMapOf<Block, Int>(blocksOrder.size) { it : Label -> it.index }
         for ((idx, bb) in blocksOrder.withIndex()) {
             blockToIndex[bb] = idx
         }
@@ -59,10 +59,10 @@ sealed class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
         }
     }
 
-    private fun enumerationToIdomMap(blocks: BlockOrder, indexToBlock: Map<Int, AnyBlock>, dominators: MutableMap<Int, Int>): Map<AnyBlock, AnyBlock> {
+    private fun enumerationToIdomMap(blocks: BlockOrder, indexToBlock: Map<Int, Block>, dominators: MutableMap<Int, Int>): Map<Block, Block> {
         dominators.remove(blocks.size - 1)
 
-        val dominatorTree = intMapOf<AnyBlock, AnyBlock>(blocks.size) { l: Label -> l.index }
+        val dominatorTree = intMapOf<Block, Block>(blocks.size) { l: Label -> l.index }
         for (entry in dominators) {
             dominatorTree[indexToBlock[entry.key]!!] = indexToBlock[entry.value]!!
         }
@@ -70,12 +70,12 @@ sealed class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
         return dominatorTree
     }
 
-    abstract fun calculateIncoming(postorder: BlockOrder, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> //TODO not necessary to evaluate it
+    abstract fun calculateIncoming(postorder: BlockOrder, blockToIndex: Map<Block, Int>): Map<Int, List<Int>> //TODO not necessary to evaluate it
 
     abstract fun blockOrdering(basicBlocks: FunctionData): BlockOrder
 
-    private fun evalIndexToBlock(blockToIndex: Map<AnyBlock, Int>): Map<Int, AnyBlock> {
-        val indexToBlock = intMapOf<Int, AnyBlock>(blockToIndex.size) { it }
+    private fun evalIndexToBlock(blockToIndex: Map<Block, Int>): Map<Int, Block> {
+        val indexToBlock = intMapOf<Int, Block>(blockToIndex.size) { it }
         for ((key, value) in blockToIndex) {
             indexToBlock[value] = key
         }
@@ -83,7 +83,7 @@ sealed class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
         return indexToBlock
     }
 
-    fun calculate(basicBlocks: FunctionData): Map<AnyBlock, AnyBlock> {
+    fun calculate(basicBlocks: FunctionData): Map<Block, Block> {
         val blocksOrder = blockOrdering(basicBlocks)
         val blockToIndex = indexBlocks(blocksOrder)
 

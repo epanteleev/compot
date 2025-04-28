@@ -7,7 +7,7 @@ import ir.module.block.Label
 import ir.module.FunctionData
 import ir.module.MutationMarker
 import ir.module.Sensitivity
-import ir.module.block.AnyBlock
+import ir.module.block.Block
 import ir.pass.common.AnalysisResult
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
@@ -15,7 +15,7 @@ import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.common.AnalysisType
 
 
-class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>, marker: MutationMarker) :
+class JoinPointSetResult internal constructor(private val joinSet: Map<Block, MutableSet<Alloc>>, marker: MutationMarker) :
     AnalysisResult(marker) {
     override fun toString(): String = buildString {
         for ((block, allocs) in joinSet) {
@@ -24,17 +24,17 @@ class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock,
         }
     }
 
-    operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<Alloc>>> {
+    operator fun iterator(): Iterator<Map.Entry<Block, Set<Alloc>>> {
         return joinSet.iterator()
     }
 }
 
 private class JoinPointSetEvaluate(private val functionData: FunctionData) : FunctionAnalysisPass<JoinPointSetResult>() {
     private val frontiers = functionData.analysis(DominatorTreeFabric).frontiers()
-    private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(functionData.size()) { bb: Label -> bb.index }
+    private val joinSet = intMapOf<Block, MutableSet<Alloc>>(functionData.size()) { bb: Label -> bb.index }
     private val liveness = functionData.analysis(LivenessAnalysisPassFabric)
 
-    private fun hasUserInBlock(bb: AnyBlock, variable: Alloc): Boolean {
+    private fun hasUserInBlock(bb: Block, variable: Alloc): Boolean {
         if (bb === variable.owner()) {
             return true
         }
@@ -49,8 +49,8 @@ private class JoinPointSetEvaluate(private val functionData: FunctionData) : Fun
         return false
     }
 
-    private fun calculateForVariable(v: Alloc, stores: MutableSet<AnyBlock>) {
-        val phiPlaces = mutableSetOf<AnyBlock>()
+    private fun calculateForVariable(v: Alloc, stores: MutableSet<Block>) {
+        val phiPlaces = mutableSetOf<Block>()
 
         while (stores.isNotEmpty()) {
             val x = stores.first()
@@ -84,7 +84,7 @@ private class JoinPointSetEvaluate(private val functionData: FunctionData) : Fun
         val allocInfo = functionData.analysis(AllocStoreAnalysisFabric)
 
         for ((v, vStores) in allocInfo) {
-            calculateForVariable(v, vStores as MutableSet<AnyBlock>)
+            calculateForVariable(v, vStores as MutableSet<Block>)
         }
 
         return JoinPointSetResult(joinSet, functionData.marker())

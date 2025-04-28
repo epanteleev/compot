@@ -2,11 +2,11 @@ package ir.pass.analysis.dominance
 
 import ir.module.MutationMarker
 import ir.module.block.Label
-import ir.module.block.AnyBlock
+import ir.module.block.Block
 import ir.pass.common.AnalysisResult
 
 
-class DominatorTree internal constructor(private val idomMap: Map<AnyBlock, AnyBlock>, marker: MutationMarker): AnalysisResult(marker) {
+class DominatorTree internal constructor(private val idomMap: Map<Block, Block>, marker: MutationMarker): AnalysisResult(marker) {
     private val cachedDominators = hashMapOf<Label, List<Label>>()
 
     override fun toString(): String = buildString {
@@ -51,8 +51,8 @@ class DominatorTree internal constructor(private val idomMap: Map<AnyBlock, AnyB
         return dom
     }
 
-    fun frontiers(): Map<AnyBlock, List<AnyBlock>> {
-        val dominanceFrontiers = hashMapOf<AnyBlock, MutableList<AnyBlock>>()
+    fun frontiers(): Map<Block, List<Block>> {
+        val dominanceFrontiers = hashMapOf<Block, MutableList<Block>>()
 
         for (bb in idomMap.keys) {
             dominanceFrontiers[bb] = arrayListOf()
@@ -65,7 +65,7 @@ class DominatorTree internal constructor(private val idomMap: Map<AnyBlock, AnyB
             }
 
             for (p in predecessors) {
-                var runner: AnyBlock = p
+                var runner: Block = p
                 while (runner != idom) {
                     dominanceFrontiers[runner]!!.add(bb)
                     val runnerIdom = idomMap[runner] ?: throw NoSuchElementException("No idom for '$runner'")
@@ -77,7 +77,7 @@ class DominatorTree internal constructor(private val idomMap: Map<AnyBlock, AnyB
         return dominanceFrontiers
     }
 
-    operator fun iterator(): Iterator<Map.Entry<AnyBlock, AnyBlock>> {
+    operator fun iterator(): Iterator<Map.Entry<Block, Block>> {
         return idomMap.iterator()
     }
 }

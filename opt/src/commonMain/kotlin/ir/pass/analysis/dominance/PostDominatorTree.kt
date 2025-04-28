@@ -2,14 +2,14 @@ package ir.pass.analysis.dominance
 
 import ir.module.MutationMarker
 import ir.module.block.Label
-import ir.module.block.AnyBlock
+import ir.module.block.Block
 import ir.pass.common.AnalysisResult
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.iterator
 
 
-class PostDominatorTree internal constructor(private val ipdomMap: Map<AnyBlock, AnyBlock>, marker: MutationMarker): AnalysisResult(marker) {
+class PostDominatorTree internal constructor(private val ipdomMap: Map<Block, Block>, marker: MutationMarker): AnalysisResult(marker) {
     private val cachedPostDominators = hashMapOf<Label, List<Label>>()
 
     override fun toString(): String = buildString {
@@ -55,7 +55,7 @@ class PostDominatorTree internal constructor(private val ipdomMap: Map<AnyBlock,
     }
 
 
-    operator fun iterator(): Iterator<Map.Entry<AnyBlock, AnyBlock>> {
+    operator fun iterator(): Iterator<Map.Entry<Block, Block>> {
         return ipdomMap.iterator()
     }
 }

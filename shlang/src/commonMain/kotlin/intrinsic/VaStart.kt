@@ -1,11 +1,11 @@
 package intrinsic
 
 import types.*
-import asm.x64.Operand
 import asm.x64.Address
 import asm.x64.Address2
 import asm.x64.GPRegister.*
 import asm.x64.Imm32
+import asm.x64.VReg
 import common.assertion
 import intrinsic.VaInit.Companion.isFPOperand
 import intrinsic.VaInit.Companion.isGPOperand
@@ -19,7 +19,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import typedesc.TypeDesc
 
 
-class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_start") {
+class VaStart(arguments: List<TypeDesc>) : IntrinsicProvider("va_start") {
     private val numberOfGPArgs = arguments.count { isGPOperand(it.cType()) }
     private val numberOfFPArgs = arguments.count { isFPOperand(it.cType()) }
 
@@ -27,7 +27,7 @@ class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_sta
         require(arguments.isNotEmpty()) { "va_start must have 2 arguments" }
     }
 
-    override fun <Masm : MacroAssembler> implement(masm: Masm, inputs: List<Operand>) {
+    override fun <Masm : MacroAssembler> implement(masm: Masm, inputs: List<VReg>) {
         assertion(inputs.size == 2) { "va_start must have 2 arguments" }
 
         val vaStart = inputs[0]

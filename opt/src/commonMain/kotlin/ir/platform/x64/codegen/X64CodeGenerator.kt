@@ -425,7 +425,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(intrinsic: Intrinsic) {
-        val values = intrinsic.operands().map { operand(it) }
+        val values = intrinsic.operands().map { vReg(it.asValue()) }
         intrinsic.implementor.implement(asm, values)
     }
 

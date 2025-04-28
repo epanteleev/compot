@@ -40,10 +40,9 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
 
     abstract fun build(): FunctionData
 
-    protected fun normalizeBlocks(): Boolean {
+    protected fun normalizeBlocks() {
         val last = fd.blocks.lastOrNull()
             ?: throw IllegalStateException("Function '${prototype.name}' does not have return instruction")
         fd.blocks.swapBlocks(last.index, fd.blocks.size() - 1)
-        return true
     }
 }

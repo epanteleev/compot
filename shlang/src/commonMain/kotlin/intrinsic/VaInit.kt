@@ -14,7 +14,7 @@ import typedesc.TypeDesc
 
 
 class VaInit(private val firstArgType: CType): IntrinsicProvider("va_init") { //TODO consume all arguments
-    override fun <Masm : MacroAssembler> implement(masm: Masm, inputs: List<Operand>) {
+    override fun <Masm : MacroAssembler> implement(masm: Masm, inputs: List<VReg>) {
         assertion(inputs.size == 1) { "va_init must have 1 arguments" }
 
         val vaInit = inputs.first()

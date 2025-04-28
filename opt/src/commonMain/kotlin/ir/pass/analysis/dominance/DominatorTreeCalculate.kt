@@ -3,7 +3,7 @@ package ir.pass.analysis.dominance
 import common.assertion
 import ir.module.FunctionData
 import ir.module.Sensitivity
-import ir.module.block.AnyBlock
+import ir.module.block.Block
 import ir.pass.analysis.traverse.BlockOrder
 import ir.pass.analysis.traverse.PostOrderFabric
 import ir.pass.common.AnalysisType
@@ -13,7 +13,7 @@ import ir.pass.common.FunctionAnalysisPassFabric
 private class DominatorTreeCalculate(private val basicBlocks: FunctionData) : DominatorCalculate<DominatorTree>() {
     private val postorder = basicBlocks.analysis(PostOrderFabric)
 
-    override fun calculateIncoming(postorder: BlockOrder, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> {
+    override fun calculateIncoming(postorder: BlockOrder, blockToIndex: Map<Block, Int>): Map<Int, List<Int>> {
         val predecessors = hashMapOf<Int, List<Int>>()
 
         for (bb in postorder) {
