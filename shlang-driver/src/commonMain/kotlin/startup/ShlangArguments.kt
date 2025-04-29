@@ -4,6 +4,11 @@ import common.Extension
 import common.ProcessedFile
 import logging.CommonLogger
 
+enum class LinkageType {
+    SHARED,
+    STATIC
+}
+
 
 class ShlangArguments {
     private val includeDirectories = hashSetOf<String>()
@@ -11,12 +16,11 @@ class ShlangArguments {
     private var preprocessOnly = false
     private var dumpDefines = false
     private var optionC = false
-    private var sharedOption = false
     private val dynamicLibraries = hashSetOf<String>()
     private val libraryDirectories = hashSetOf<String>()
     private var inputs = arrayListOf<ProcessedFile>()
     private var pic = false
-    private var static = false
+    private var linkage: LinkageType? = null
 
     private var dumpIrDirectoryOutput: String? = null
     private var optimizationLevel = 0
@@ -51,12 +55,6 @@ class ShlangArguments {
     }
 
     fun isCompile() = optionC
-
-    fun setSharedOption(flag: Boolean) {
-        sharedOption = flag
-    }
-
-    fun isSharedOption() = sharedOption
 
     fun setPreprocessOnly(preprocessOnly: Boolean) {
         this.preprocessOnly = preprocessOnly
@@ -100,12 +98,12 @@ class ShlangArguments {
         this.pic = pic
     }
 
-    fun static(): Boolean {
-        return static
+    fun linkage(): LinkageType? {
+        return linkage
     }
 
-    fun setStatic(static: Boolean) {
-        this.static = static
+    fun setLinkage(linkage: LinkageType) {
+        this.linkage = linkage
     }
 
     fun logger(): CommonLogger {

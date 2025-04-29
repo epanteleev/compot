@@ -1,7 +1,6 @@
 package startup
 
 import codegen.GenerateIR
-import common.pwd
 import common.Extension
 import common.FileUtils
 import common.GNULdRunner
@@ -93,7 +92,8 @@ class ShlangDriver(private val cli: ShlangArguments) {
         val result = GNULdRunner(out)
             .libs(SystemConfig.runtimeLibraries() + cli.getDynamicLibraries())
             .libPaths(SystemConfig.runtimePathes() + cli.getLibraryDirectories())
-            .static(cli.static())
+            .static(cli.linkage() == LinkageType.STATIC)
+            .dynamic(cli.linkage() == LinkageType.SHARED)
             .crtObjects(crtObjs)
             .objs(compiledFiles)
             .dynamicLinker(SystemConfig.dynamicLinker())
@@ -172,23 +172,13 @@ class ShlangDriver(private val cli: ShlangArguments) {
         }
 
         val out = cli.getOutputFilename()
-        when (out.extension) {
-            Extension.EXE -> {
-                if (cli.isSharedOption()) {
-                    throw IllegalStateException("Cannot create executable for shared object")
-                }
-
-                runLD(out, compiled + processedFiles, SystemConfig.crtStaticObjects())
-            }
-            Extension.SO -> {
-                if (!cli.isSharedOption()) {
-                    throw IllegalStateException("Cannot create shared object for executable")
-                }
-
-                runLD(out, compiled + processedFiles, SystemConfig.crtSharedObjects())
-            }
+        val crt = when (out.extension) {
+            Extension.EXE -> SystemConfig.crtStaticObjects()
+            Extension.SO -> SystemConfig.crtSharedObjects()
             else -> throw IllegalStateException("Invalid output file extension: $out")
         }
+
+        runLD(out, compiled + processedFiles, crt)
     }
 
     fun logDebug(message: () -> String) {

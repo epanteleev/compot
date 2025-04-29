@@ -8,6 +8,7 @@ class GNULdRunner(private val outputFileName: ProcessedFile) {
     private val libPaths = arrayListOf<String>()
     private var dynamicLinker: String? = null
     private var static = false
+    private var dynamic = false
 
     fun crtObjects(objects: List<String>): GNULdRunner {
         crtObjects.addAll(objects)
@@ -39,6 +40,11 @@ class GNULdRunner(private val outputFileName: ProcessedFile) {
         return this
     }
 
+    fun dynamic(enabled: Boolean): GNULdRunner {
+        dynamic = enabled
+        return this
+    }
+
     fun execute(): ExecutionResult {
         val gnuLdCommandLine = arrayListOf<String>()
         gnuLdCommandLine.addAll(listOf("-m", "elf_x86_64"))
@@ -52,6 +58,9 @@ class GNULdRunner(private val outputFileName: ProcessedFile) {
 
         if (static) {
             gnuLdCommandLine.add("-static")
+        }
+        if (dynamic) {
+            gnuLdCommandLine.add("-shared")
         }
 
         for (obj in objectFiles) {

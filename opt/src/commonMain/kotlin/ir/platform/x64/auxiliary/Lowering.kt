@@ -291,7 +291,6 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
             //  %lea = load PtrType, @extern
             //  %res = copy %lea
 
-
             return bb.replace(copy, Load.load(PtrType, copy.operand()))
 
         } else if (operand.isa(gAggregate())) {
@@ -303,7 +302,6 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
             //  %res = copy %lea
 
             return bb.replace(copy, Lea.lea(copy.operand()))
-
         }
 
         return copy

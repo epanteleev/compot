@@ -13,7 +13,7 @@ object ShlangCommandLineParser {
                     return null
                 }
                 "-c" -> commandLineArguments.setIsCompile(true)
-                "-shared" -> commandLineArguments.setSharedOption(true)
+                "-shared" -> commandLineArguments.setLinkage(LinkageType.SHARED)
                 "--dump-ir" -> {
                     if (cursor + 1 >= args.size) {
                         println("Expected output directory after --dump-ir")
@@ -30,7 +30,7 @@ object ShlangCommandLineParser {
                     cursor++
                     commandLineArguments.setOutputFilename(args[cursor])
                 }
-                "-static" -> commandLineArguments.setStatic(true)
+                "-static" -> commandLineArguments.setLinkage(LinkageType.STATIC)
                 "-fPIC" -> commandLineArguments.setPic(true)
                 "-E" -> commandLineArguments.setPreprocessOnly(true)
                 else -> parseOption(commandLineArguments, arg)
