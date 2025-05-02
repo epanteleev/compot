@@ -75,13 +75,14 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(binop: BinaryOp): Int? {
-        when (binop.opType) {
-            BinaryOpType.AND -> return if (binop.left.accept(this) != 0 && binop.right.accept(this) != 0) 1 else 0
-            BinaryOpType.OR  -> return if (binop.left.accept(this) != 0 || binop.right.accept(this) != 0) 1 else 0
-            else -> {}
-        }
         val left = binop.left.accept(this) ?: return null
         val right = binop.right.accept(this) ?: return null
+        when (binop.opType) {
+            BinaryOpType.AND -> return if (left != 0 && right != 0) 1 else 0
+            BinaryOpType.OR  -> return if (left != 0 || right != 0) 1 else 0
+            else -> {}
+        }
+
         return when (binop.opType) {
             BinaryOpType.ADD      -> left + right
             BinaryOpType.SUB      -> left - right
@@ -167,7 +168,8 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(varNode: VarNode): Int? {
-        return ctx.getVariable(varNode.nameIdent())
+        val ret = ctx.getVariable(varNode.nameIdent())
+        return ret
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess): Int? {
@@ -221,13 +223,14 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
     }
 
     override fun visit(binop: BinaryOp): Long? {
-        when (binop.opType) {
-            BinaryOpType.AND -> return if (binop.left.accept(this) != 0L && binop.right.accept(this) != 0L) 1 else 0
-            BinaryOpType.OR  -> return if (binop.left.accept(this) != 0L || binop.right.accept(this) != 0L) 1 else 0
-            else -> {}
-        }
         val left = binop.left.accept(this) ?: return null
         val right = binop.right.accept(this) ?: return null
+        when (binop.opType) {
+            BinaryOpType.AND -> return if (left != 0L && right != 0L) 1 else 0
+            BinaryOpType.OR  -> return if (left != 0L || right != 0L) 1 else 0
+            else -> {}
+        }
+
         return when (binop.opType) {
             BinaryOpType.ADD -> left + right
             BinaryOpType.SUB -> left - right
