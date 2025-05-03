@@ -6,6 +6,7 @@ import asm.x64.Operand
 import ir.Definitions.POINTER_SIZE
 import ir.instruction.lir.IndexedLoad
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.CallConvention.xmmTemp1
 
 
@@ -20,6 +21,15 @@ class IndexedFloatLoadCodegen(loadedType: FloatingPointType, indexType: Primitiv
     private fun handleXmm(dst: Operand, operand: Operand, index: Operand) {
         if (dst is XmmRegister && operand is GPRegister && index is GPRegister) {
             asm.movf(size, Address.from(operand, 0, index, ScaleFactor.from(size)), dst)
+
+        } else if (dst is XmmRegister && operand is Address && index is GPRegister) {
+            asm.mov(POINTER_SIZE, operand, temp1)
+            asm.movf(size, Address.from(temp1, 0, index, ScaleFactor.from(size)), dst)
+
+        } else if (dst is XmmRegister && operand is Address && index is Address) {
+            asm.mov(POINTER_SIZE, operand, temp1)
+            asm.mov(indexSize, index, temp2)
+            asm.movf(size, Address.from(temp1, 0, temp2, ScaleFactor.from(size)), dst)
 
         } else if (dst is XmmRegister && operand is GPRegister && index is Imm) {
             asm.movf(size, Address.from(operand, index.value().toInt() * size), dst)

@@ -30,7 +30,7 @@ abstract class AnyModuleBuilder {
         val removed = globals.remove(oldGlobalValue.name()) ?: throw IllegalArgumentException("global with name='${oldGlobalValue.name()}' not found")
         val global = GlobalValue.create(name, initializer, attributes)
         globals[name] = global
-        UsableValue.updateUsages(removed.asValue(), global)
+        removed.updateUsages(global)
 
         return global
     }

@@ -43,7 +43,7 @@ abstract class Instruction(protected val id: Identity, private val owner: Block,
         }
     }
 
-    internal fun update(index: Int, new: Value) = owner.df { // TODO inline class for 'index'?
+    internal fun update(index: Int, new: Value) = owner.df {
         assertion(0 <= index && index < operands.size) {
             "out of range in $this"
         }

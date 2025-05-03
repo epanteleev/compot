@@ -25,30 +25,24 @@ interface UsableValue: Value {
     }
 
     fun<V: Value> updateUsages(replacement: V): V {
-        return updateUsages(this, replacement)
+        for (user in release()) {
+            for ((idxUse, use) in user.operands().withIndex()) {
+                if (use !== this) {
+                    continue
+                }
+                // New value can use the old value
+                if (user == replacement) {
+                    continue
+                }
+
+                user.update(idxUse, replacement)
+            }
+        }
+        return replacement
     }
 
     fun name(): String
 
     override fun equals(other: Any?): Boolean
     override fun hashCode(): Int
-
-    companion object {
-        fun<V: Value> updateUsages(localValue: UsableValue, valueToReplace: V): V {
-            for (user in localValue.release()) {
-                for ((idxUse, use) in user.operands().withIndex()) {
-                    if (use !== localValue) {
-                        continue
-                    }
-                    // New value can use the old value
-                    if (user == valueToReplace) {
-                        continue
-                    }
-
-                    user.update(idxUse, valueToReplace)
-                }
-            }
-            return valueToReplace
-        }
-    }
 }
