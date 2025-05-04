@@ -274,7 +274,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 is CStructType -> {
                     val t = type.fieldByIndexOrNull(idx) ?: throw IRCodeGenError("Field '$idx' not found", init.begin())
-                    val irType = mb.toIRType<AggregateType>(typeHolder, t.cType())
+                    val irType = mb.toIRType<AggregateType>(typeHolder, type)
                     val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
                     visitInitializerList(init.list, fieldPtr, t.asType())
                 }

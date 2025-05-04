@@ -180,6 +180,12 @@ abstract class StructTests: CommonCTest() {
         assertEquals("h1: 1 2 3 4 5 6 7 8 9\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testStruct25() {
+        val result = runCTest("shlang/struct/struct25", listOf(), options())
+        assertEquals(6, result.exitCode)
+    }
 }
 
 class StructTestsO0: StructTests() {
