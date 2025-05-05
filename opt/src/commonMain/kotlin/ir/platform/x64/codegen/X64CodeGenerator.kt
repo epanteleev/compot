@@ -712,8 +712,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     override fun visit(trunc: Truncate) {
         val dst = vReg(trunc)
-        val src = operand(trunc.value())
-        TruncateCodegen(trunc.value().asType(), trunc.type(), asm)(dst, src)
+        val src = operand(trunc.operand())
+        TruncateCodegen(trunc.operand().asType(), trunc.type(), asm)(dst, src)
     }
 
     override fun visit(fptruncate: FpTruncate) {
@@ -739,7 +739,15 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val onTrue  = operand(select.onTrue())
         val onFalse = operand(select.onFalse())
 
-        SelectCodegen(select.type(), select.condition().asValue(), asm)(dst, onTrue, onFalse)
+        when (val cond = select.condition()) {
+            is CompareInstruction -> SelectCodegen(select.type(), cond, asm)(dst, onTrue, onFalse)
+            is BoolValue -> if (cond.bool) {
+                CopyIntCodegen(select.type(), asm)(dst, onTrue)
+            } else {
+                CopyIntCodegen(select.type(), asm)(dst, onFalse)
+            }
+            else -> throw CodegenException("unknown condition type, cond=${cond}")
+        }
     }
 
     override fun visit(phi: Phi) { /* nothing to do */ }

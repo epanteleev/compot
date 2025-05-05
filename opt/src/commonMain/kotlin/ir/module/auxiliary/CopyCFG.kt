@@ -291,7 +291,7 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     }
 
     override fun visit(trunc: Truncate): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(trunc.value())
+        val operand = mapUsage<Value>(trunc.operand())
         return Truncate.trunc(operand, trunc.type())
     }
 

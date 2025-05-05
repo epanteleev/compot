@@ -7,21 +7,12 @@ import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Truncate private constructor(id: Identity, owner: Block, private val toType: IntegerType, value: Value):
-    ValueInstruction(id, owner, arrayOf(value)) {
+class Truncate private constructor(id: Identity, owner: Block, toType: IntegerType, value: Value): Unary(id, owner, toType, value) {
     override fun dump(): String {
-        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
+        return "%${name()} = $NAME ${operand().type()} ${operand()} to ${type()}" //TODO code duplication!!!
     }
 
-    fun value(): Value {
-        assertion(operands.size == 1) {
-            "size should be 1 in $this instruction"
-        }
-
-        return operands[OPERAND]
-    }
-
-    override fun type(): IntegerType = toType
+    override fun type(): IntegerType = tp.asType()
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -29,7 +20,6 @@ class Truncate private constructor(id: Identity, owner: Block, private val toTyp
 
     companion object {
         const val NAME = "trunc"
-        const val OPERAND = 0
 
         fun trunc(value: Value, toType: IntegerType): InstBuilder<Truncate> = { id: Identity, owner: Block ->
             make(id, owner, toType, value)
@@ -56,7 +46,7 @@ class Truncate private constructor(id: Identity, owner: Block, private val toTyp
         }
 
         fun typeCheck(trunc: Truncate): Boolean {
-            return isAppropriateType(trunc.type(), trunc.value().type())
+            return isAppropriateType(trunc.type(), trunc.operand().type())
         }
     }
 }

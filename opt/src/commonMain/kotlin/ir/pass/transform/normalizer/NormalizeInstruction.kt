@@ -3,8 +3,12 @@ package ir.pass.transform.normalizer
 import ir.instruction.*
 import ir.instruction.lir.*
 import ir.instruction.utils.IRInstructionVisitor
+import ir.types.SignedIntType
+import ir.types.UnsignedIntType
 import ir.value.LocalValue
+import ir.value.TupleValue
 import ir.value.Value
+import ir.value.asType
 import ir.value.asValue
 import ir.value.constant.*
 
@@ -201,11 +205,32 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
 
     override fun visit(utofp: Unsigned2Float): Value = utofp
 
-    override fun visit(zext: ZeroExtend): Value = zext
+    override fun visit(zext: ZeroExtend): Value {
+        val operand = zext.operand()
+        if (operand is UnsignedIntegerConstant) {
+            return UnsignedIntegerConstant.of(zext.type(), operand.value())
+        }
 
-    override fun visit(sext: SignExtend): Value = sext
+        return zext
+    }
 
-    override fun visit(trunc: Truncate): Value = trunc
+    override fun visit(sext: SignExtend): Value {
+        val operand = sext.operand()
+        if (operand is SignedIntegerConstant) {
+            return SignedIntegerConstant.of(sext.type(), operand.value())
+        }
+
+        return sext
+    }
+
+    override fun visit(trunc: Truncate): Value {
+        val operand = trunc.operand()
+        return when (operand) {
+            is UnsignedIntegerConstant -> UnsignedIntegerConstant.of(trunc.asType(), operand.value())
+            is SignedIntegerConstant -> SignedIntegerConstant.of(trunc.asType(), operand.value())
+            else -> trunc
+        }
+    }
 
     override fun visit(fptruncate: FpTruncate): Value = fptruncate
 
@@ -231,7 +256,52 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
 
     override fun visit(gfp: GetFieldPtr): Value = gfp
 
-    override fun visit(icmp: IntCompare): Value = icmp
+    private fun constExprUIntCompare(icmp: IntCompare, lhs: UnsignedIntegerConstant, rhs: UnsignedIntegerConstant): Value {
+        val lhsValue = lhs.value().toULong()
+        val rhsValue = rhs.value().toULong()
+        val flag = when (icmp.predicate()) {
+            IntPredicate.Eq -> lhsValue == rhsValue
+            IntPredicate.Ne -> lhsValue != rhsValue
+            IntPredicate.Gt -> lhsValue > rhsValue
+            IntPredicate.Ge -> lhsValue >= rhsValue
+            IntPredicate.Lt -> lhsValue < rhsValue
+            IntPredicate.Le -> lhsValue <= rhsValue
+        }
+
+        return if (flag) TrueBoolValue else FalseBoolValue
+    }
+
+    private fun constExprSIntCompare(icmp: IntCompare, lhs: SignedIntegerConstant, rhs: SignedIntegerConstant): Value {
+        val lhsValue = lhs.value()
+        val rhsValue = rhs.value()
+        val flag = when (icmp.predicate()) {
+            IntPredicate.Eq -> lhsValue == rhsValue
+            IntPredicate.Ne -> lhsValue != rhsValue
+            IntPredicate.Gt -> lhsValue > rhsValue
+            IntPredicate.Ge -> lhsValue >= rhsValue
+            IntPredicate.Lt -> lhsValue < rhsValue
+            IntPredicate.Le -> lhsValue <= rhsValue
+        }
+
+        return if (flag) TrueBoolValue else FalseBoolValue
+    }
+
+    private fun constExprIntCompare(icmp: IntCompare): Value {
+        val rhs = icmp.rhs()
+        return when (val lhs = icmp.lhs()) {
+            is UnsignedIntegerConstant -> constExprUIntCompare(icmp, lhs, rhs.asValue())
+            is SignedIntegerConstant -> constExprSIntCompare(icmp, lhs, rhs.asValue())
+            else -> icmp
+        }
+    }
+
+    override fun visit(icmp: IntCompare): Value {
+        if (isConstexpr(icmp)) {
+            return constExprIntCompare(icmp)
+        }
+
+        return icmp
+    }
 
     override fun visit(fcmp: FloatCompare): Value = fcmp
 
@@ -255,7 +325,17 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
         TODO("Not yet implemented")
     }
 
-    override fun visit(select: Select): Value = select
+    override fun visit(select: Select): Value {
+        val cond = select.condition()
+        if (cond is BoolValue) {
+            return when (cond) {
+                TrueBoolValue -> select.onTrue()
+                FalseBoolValue -> select.onFalse()
+            }
+        }
+
+        return select
+    }
 
     override fun visit(store: Store): Value {
         TODO("Not yet implemented")
@@ -269,7 +349,14 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
         TODO("Not yet implemented")
     }
 
-    override fun visit(int2ptr: Int2Pointer): Value = int2ptr
+    override fun visit(int2ptr: Int2Pointer): Value {
+        val operand = int2ptr.operand()
+        if (operand is IntegerConstant && operand.value() == 0L) {
+            return NullValue
+        }
+
+        return int2ptr
+    }
 
     override fun visit(ptr2Int: Pointer2Int): Value = ptr2Int
 
@@ -295,7 +382,14 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
         return tupleDiv
     }
 
-    override fun visit(proj: Projection): Value = proj
+    override fun visit(proj: Projection): Value {
+        val operand = proj.tuple()
+        if (operand is TupleConstant) {
+            return operand.inner(proj.index())
+        }
+
+        return proj
+    }
 
     override fun visit(switch: Switch): Value {
         TODO("Not yet implemented")

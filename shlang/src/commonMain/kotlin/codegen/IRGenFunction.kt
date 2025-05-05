@@ -1676,7 +1676,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             val cond = forStatement.condition
 
             val condition = when (cond) {
-                is EmptyExpression -> BoolValue.TRUE
+                is EmptyExpression -> TrueBoolValue
                 else -> makeConditionFromExpression(cond)
             }
             val endBlock = loopStmtInfo.resolveExit(ir)

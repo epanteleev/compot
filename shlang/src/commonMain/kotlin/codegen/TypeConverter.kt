@@ -649,37 +649,9 @@ internal object TypeConverter {
     private fun convertConstant(value: PrimitiveConstant, type: Type): Value = when (type) {
         is PrimitiveType -> value.convertTo(type)
         is FlagType -> when (value) {
-            is I8Value -> when (value.i8.toInt()) { //TODO toInt???
-                0 -> BoolValue.FALSE
-                else -> BoolValue.TRUE
-            }
-            is U8Value -> when (value.u8.toInt()) {
-                0 -> BoolValue.FALSE
-                else -> BoolValue.TRUE
-            }
-            is I16Value -> when (value.i16.toInt()) {
-                0 -> BoolValue.FALSE
-                else -> BoolValue.TRUE
-            }
-            is U16Value -> when (value.u16.toInt()) {
-                0 -> BoolValue.FALSE
-                else -> BoolValue.TRUE
-            }
-            is I32Value -> when (value.i32) {
-                0 -> BoolValue.FALSE
-                else -> BoolValue.TRUE
-            }
-            is U32Value -> when (value.u32) {
-                0U -> BoolValue.FALSE
-                else -> BoolValue.TRUE
-            }
-            is I64Value -> when (value.i64) {
-                0L -> BoolValue.FALSE
-                else -> BoolValue.TRUE
-            }
-            is U64Value -> when (value.u64) {
-                0UL -> BoolValue.FALSE
-                else -> BoolValue.TRUE
+            is IntegerConstant -> when (value.value()) {
+                0L -> FalseBoolValue
+                else -> TrueBoolValue
             }
             else -> throw RuntimeException("Cannot convert $value to $type")
         }

@@ -4,12 +4,13 @@ import asm.x64.Operand
 import asm.x64.*
 import ir.types.*
 import ir.Definitions.POINTER_SIZE
-import ir.instruction.GetElementPtr
+import ir.instruction.GetFieldPtr
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorArithmeticBinaryOp
 
 
-internal class GetFieldPtrCodegen(val type: PtrType, private val basicType: AggregateType, val asm: Assembler):
+internal class GetFieldPtrCodegen(val type: PtrType, private val basicType: AggregateType, val asm: X64MacroAssembler):
     GPOperandsVisitorArithmeticBinaryOp {
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
@@ -33,7 +34,11 @@ internal class GetFieldPtrCodegen(val type: PtrType, private val basicType: Aggr
 
     override fun raa(dst: GPRegister, first: Address, second: Address) = default(dst, first, second)
 
-    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) = default(dst, first, second)
+    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
+        val disp = basicType.offset(second.value().toInt())
+        val offset = first.value().toInt() + disp
+        asm.copy(POINTER_SIZE, Imm64.of(offset), dst)
+    }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) = default(dst, first, second)
 
@@ -69,6 +74,6 @@ internal class GetFieldPtrCodegen(val type: PtrType, private val basicType: Aggr
     override fun aaa(dst: Address, first: Address, second: Address) = default(dst, first, second)
 
     override fun default(dst: Operand, first: Operand, second: Operand) {
-        throw RuntimeException("Internal error: '${GetElementPtr.NAME}' dst=$dst, first=$first, second=$second")
+        throw RuntimeException("Internal error: '${GetFieldPtr.NAME}' dst=$dst, first=$first, second=$second")
     }
 }

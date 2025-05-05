@@ -7,10 +7,11 @@ import ir.Definitions.POINTER_SIZE
 import ir.instruction.lir.IndexedLoad
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
+import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.*
 
 
-internal class IndexedIntLoadCodegen(private val loadedType: PrimitiveType, indexType: PrimitiveType, val asm: Assembler): GPOperandsVisitorArithmeticBinaryOp {
+internal class IndexedIntLoadCodegen(private val loadedType: PrimitiveType, indexType: PrimitiveType, val asm: X64MacroAssembler): GPOperandsVisitorArithmeticBinaryOp {
     private val size: Int = loadedType.sizeOf()
     private val indexSize: Int = indexType.sizeOf()
 
@@ -52,7 +53,10 @@ internal class IndexedIntLoadCodegen(private val loadedType: PrimitiveType, inde
         asm.mov(size, Address.from(temp2, 0, temp1, ScaleFactor.from(size)), dst)
     }
 
-    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) = default(dst, first, second)
+    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
+        asm.copy(POINTER_SIZE, first, temp1)
+        asm.mov(size, Address.from(temp1, second.value().toInt() * size), dst)
+    }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
         TODO("Not yet implemented")
