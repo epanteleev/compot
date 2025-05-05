@@ -79,7 +79,6 @@ internal class Uint2FloatCodegen(toType: FloatingPointType, val fromType: Unsign
     }
 
     override fun ri(dst: XmmRegister, src: Imm) {
-        TODO("untested")
         asm.mov(fromSize, src, temp1)
         asm.cvtint2fp(fromSize, toSize, temp1, dst)
     }

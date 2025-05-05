@@ -73,6 +73,42 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
         }
     }
 
+    private fun constExprAnd(and: And): Value {
+        val rhs = and.rhs()
+        return when (val lhs = and.lhs()) {
+            is UnsignedIntegerConstant -> lhs and rhs.asValue()
+            is SignedIntegerConstant -> lhs and rhs.asValue()
+            else -> and
+        }
+    }
+
+    private fun constExprXor(xor: Xor): Value {
+        val rhs = xor.rhs()
+        return when (val lhs = xor.lhs()) {
+            is UnsignedIntegerConstant -> lhs xor rhs.asValue()
+            is SignedIntegerConstant -> lhs xor rhs.asValue()
+            else -> xor
+        }
+    }
+
+    private fun constExprShl(shl: Shl): Value {
+        val rhs = shl.rhs()
+        return when (val lhs = shl.lhs()) {
+            is UnsignedIntegerConstant -> lhs shl rhs.asValue()
+            is SignedIntegerConstant -> lhs shl rhs.asValue()
+            else -> shl
+        }
+    }
+
+    private fun constExprShr(shr: Shr): Value {
+        val rhs = shr.rhs()
+        return when (val lhs = shr.lhs()) {
+            is UnsignedIntegerConstant -> lhs shr rhs.asValue()
+            is SignedIntegerConstant -> lhs shr rhs.asValue()
+            else -> shr
+        }
+    }
+
     override fun visit(add: Add): Value {
         if (isConstexpr(add)) {
             return constExprAdd(add)
@@ -81,7 +117,13 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
         return add
     }
 
-    override fun visit(and: And): Value = and
+    override fun visit(and: And): Value {
+        if (isConstexpr(and)) {
+            return constExprAnd(and)
+        }
+
+        return and
+    }
 
     override fun visit(sub: Sub): Value {
         if (isConstexpr(sub)) {
@@ -107,13 +149,31 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
         return or
     }
 
-    override fun visit(xor: Xor): Value = xor
+    override fun visit(xor: Xor): Value {
+        if (isConstexpr(xor)) {
+            return constExprXor(xor)
+        }
+
+        return xor
+    }
 
     override fun visit(fadd: Fxor): Value = fadd
 
-    override fun visit(shl: Shl): Value = shl
+    override fun visit(shl: Shl): Value {
+        if (isConstexpr(shl)) {
+            return constExprShl(shl)
+        }
 
-    override fun visit(shr: Shr): Value = shr
+        return shl
+    }
+
+    override fun visit(shr: Shr): Value {
+        if (isConstexpr(shr)) {
+            return constExprShr(shr)
+        }
+
+        return shr
+    }
 
     override fun visit(div: Div): Value = div
 

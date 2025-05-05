@@ -11,7 +11,11 @@ sealed interface SignedIntegerConstant: IntegerConstant {
     operator fun times(other: SignedIntegerConstant): SignedIntegerConstant
     operator fun div(other: SignedIntegerConstant): SignedIntegerConstant
     operator fun rem(other: SignedIntegerConstant): SignedIntegerConstant
-    infix fun or(other: SignedIntegerConstant): SignedIntegerConstant
+
+    infix fun shr(other: SignedIntegerConstant): SignedIntegerConstant {
+        val r = value() shr other.value().toInt()
+        return of(type().asType(), r)
+    }
 
     companion object {
         fun of(kind: SignedIntType, value: Number): SignedIntegerConstant = when (kind) {
@@ -48,11 +52,6 @@ class I8Value private constructor(val i8: Byte): SignedIntegerConstant {
         return of((i8 % other.value()).toByte())
     }
 
-    override fun or(other: SignedIntegerConstant): SignedIntegerConstant {
-        val r = i8.toInt() or other.value().toInt()
-        return of(r.toByte())
-    }
-
     companion object {
         private val table = arrayOfNulls<I8Value>(SIZE.toInt())
 
@@ -83,11 +82,6 @@ class I16Value private constructor(val i16: Short): SignedIntegerConstant {
 
     override fun rem(other: SignedIntegerConstant): SignedIntegerConstant {
         return of((i16 % other.value()).toShort())
-    }
-
-    override fun or(other: SignedIntegerConstant): SignedIntegerConstant {
-        val r = i16.toInt() or other.value().toInt()
-        return of(r.toShort())
     }
 
     companion object {
@@ -122,10 +116,6 @@ class I32Value private constructor(val i32: Int): SignedIntegerConstant {
         return of(i32 % other.value().toInt())
     }
 
-    override fun or(other: SignedIntegerConstant): SignedIntegerConstant {
-        return of(i32 or other.toInt())
-    }
-
     companion object {
         private val table = arrayOfNulls<I32Value>(SIZE.toInt())
 
@@ -157,10 +147,6 @@ class I64Value private constructor(val i64: Long): SignedIntegerConstant {
 
     override operator fun rem(other: SignedIntegerConstant): SignedIntegerConstant {
         return of(i64 % other.value())
-    }
-
-    override fun or(other: SignedIntegerConstant): SignedIntegerConstant {
-        return of(i64 or other.value())
     }
 
     companion object {

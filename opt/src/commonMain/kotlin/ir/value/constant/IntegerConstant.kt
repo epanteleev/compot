@@ -12,6 +12,26 @@ sealed interface IntegerConstant: PrimitiveConstant {
 
     fun value(): Long
 
+    infix fun or(other: IntegerConstant): IntegerConstant {
+        val r = value() or other.value()
+        return of(type().asType(),r)
+    }
+
+    infix fun and(other: IntegerConstant): IntegerConstant {
+        val r = value() and other.value()
+        return of(type().asType(), r)
+    }
+
+    infix fun xor(other: IntegerConstant): IntegerConstant {
+        val r = value() xor other.value()
+        return of(type().asType(), r)
+    }
+
+    infix fun shl(other: IntegerConstant): IntegerConstant {
+        val r = value() shl other.value().toInt()
+        return of(type().asType(), r)
+    }
+
     companion object {
         internal const val SIZE = 0xFL
         internal const val MASK = (SIZE - 1).inv()

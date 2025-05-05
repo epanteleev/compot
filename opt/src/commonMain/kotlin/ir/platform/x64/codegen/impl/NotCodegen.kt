@@ -42,7 +42,7 @@ internal data class NotCodegen(val type: IntegerType, val asm: X64MacroAssembler
     }
 
     override fun ri(dst: GPRegister, src: Imm) {
-        asm.copy(size, Imm32.of(src.value().inv()), dst)
+        asm.copy(size, Imm64.of(src.value().inv()), dst)
     }
 
     override fun ai(dst: Address, src: Imm) {

@@ -12,7 +12,11 @@ sealed interface UnsignedIntegerConstant: IntegerConstant {
     operator fun times(other: UnsignedIntegerConstant): UnsignedIntegerConstant
     operator fun div(other: UnsignedIntegerConstant): UnsignedIntegerConstant
     operator fun rem(other: UnsignedIntegerConstant): UnsignedIntegerConstant
-    infix fun or(other: UnsignedIntegerConstant): UnsignedIntegerConstant
+
+    infix fun shr(other: UnsignedIntegerConstant): UnsignedIntegerConstant {
+        val r = value() ushr other.value().toInt()
+        return of(type().asType(), r)
+    }
 
     companion object {
         fun of(kind: UnsignedIntType, value: Number): UnsignedIntegerConstant = when (kind) {
@@ -47,11 +51,6 @@ class U8Value private constructor(val u8: UByte): UnsignedIntegerConstant {
 
     override fun rem(other: UnsignedIntegerConstant): UnsignedIntegerConstant {
         return operate(u8 % other.asValue<U8Value>().u8)
-    }
-
-    override fun or(other: UnsignedIntegerConstant): UnsignedIntegerConstant {
-        val r = u8 or other.asValue<U8Value>().u8
-        return operate(r.toUInt())
     }
 
     companion object {
@@ -90,11 +89,6 @@ class U16Value private constructor(val u16: UShort): UnsignedIntegerConstant {
         return operate(u16 % other.asValue<U16Value>().u16)
     }
 
-    override fun or(other: UnsignedIntegerConstant): UnsignedIntegerConstant {
-        val r = u16 or other.asValue<U16Value>().u16
-        return operate(r.toUInt())
-    }
-
     companion object {
         private val table = arrayOfNulls<U16Value>(SIZE.toInt())
 
@@ -131,11 +125,6 @@ class U32Value private constructor(val u32: UInt): UnsignedIntegerConstant {
         return operate(u32 % other.asValue<U32Value>().u32)
     }
 
-    override fun or(other: UnsignedIntegerConstant): UnsignedIntegerConstant {
-        val r = u32 or other.asValue<U32Value>().u32
-        return operate(r)
-    }
-
     companion object {
         private val table = arrayOfNulls<U32Value>(SIZE.toInt())
 
@@ -170,11 +159,6 @@ class U64Value private constructor(val u64: ULong): UnsignedIntegerConstant {
 
     override fun rem(other: UnsignedIntegerConstant): UnsignedIntegerConstant {
         return operate(u64 % other.asValue<U64Value>().u64)
-    }
-
-    override fun or(other: UnsignedIntegerConstant): UnsignedIntegerConstant {
-        val r = u64 or other.asValue<U64Value>().u64
-        return operate(r)
     }
 
     companion object {

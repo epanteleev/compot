@@ -69,7 +69,7 @@ internal class ShrCodegen (type: ArithmeticType, val asm: X64MacroAssembler): GP
     }
 
     override fun rii(dst: GPRegister, first: Imm, second: Imm) {
-        val value = first.value() ushr second.value().toInt()
+        val value = first.value() ushr second.value().toInt() // TODO signed shift???
         asm.copy(size, Imm64.of(value), dst)
     }
 

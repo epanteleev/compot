@@ -111,7 +111,10 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
             BinaryOpType.BIT_OR   -> left or right
             BinaryOpType.BIT_XOR  -> left xor right
             BinaryOpType.SHL      -> left shl right
-            BinaryOpType.SHR      -> left ushr right
+            BinaryOpType.SHR      -> when (binop.resolveType(ctx.typeHolder())) {
+                is AnyCUnsigned -> left ushr right
+                else -> left shr right
+            }
             else -> throw ConstEvalException("Cannot evaluate binary operator ${binop.opType}")
         }
     }
@@ -259,7 +262,10 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
             BinaryOpType.BIT_OR -> left or right
             BinaryOpType.BIT_XOR -> left xor right
             BinaryOpType.SHL -> left shl right.toInt()
-            BinaryOpType.SHR -> left ushr right.toInt()
+            BinaryOpType.SHR -> when (binop.resolveType(ctx.typeHolder())) {
+                is AnyCUnsigned -> left ushr right.toInt()
+                else -> left shr right.toInt()
+            }
             else -> throw ConstEvalException("Cannot evaluate binary operator ${binop.opType}")
         }
     }

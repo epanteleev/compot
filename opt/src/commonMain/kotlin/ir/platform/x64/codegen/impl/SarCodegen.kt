@@ -74,7 +74,7 @@ internal class SarCodegen (type: ArithmeticType, val asm: X64MacroAssembler): GP
     }
 
     override fun rii(dst: GPRegister, first: Imm, second: Imm) {
-        val constant = first.value() ushr second.value().toInt()
+        val constant = first.value() ushr second.value().toInt() //TODO signed shift???
         asm.copy(size, Imm32.of(constant), dst)
     }
 
@@ -92,7 +92,7 @@ internal class SarCodegen (type: ArithmeticType, val asm: X64MacroAssembler): GP
     }
 
     override fun aii(dst: Address, first: Imm, second: Imm) {
-        val constant = first.value() ushr second.value().toInt()
+        val constant = first.value() ushr second.value().toInt() //TODO signed shift???
         if (Imm.canBeImm32(constant)) {
             asm.mov(size, Imm32.of(constant), dst)
         } else {
