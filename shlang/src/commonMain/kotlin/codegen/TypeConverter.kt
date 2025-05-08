@@ -139,6 +139,7 @@ internal object TypeConverter {
             return convertConstant(lvalue, toType)
         }
 
+        //TODO: simplify???
         return when (toType) {
             I8Type -> {
                 toType as SignedIntType
@@ -377,7 +378,10 @@ internal object TypeConverter {
             F32Type -> {
                 toType as FloatingPointType
                 when (val lType = lvalue.type()) {
-                    FlagType -> int2fp(lvalue, toType)
+                    FlagType -> {
+                        val flag2Int = flag2int(lvalue, I8Type)
+                        int2fp(flag2Int, toType)
+                    }
                     I8Type  -> int2fp(lvalue, toType)
                     I16Type -> int2fp(lvalue, toType)
                     I32Type -> int2fp(lvalue, toType)
@@ -394,7 +398,10 @@ internal object TypeConverter {
             F64Type -> {
                 toType as FloatingPointType
                 when (val lType = lvalue.type()) {
-                    FlagType -> int2fp(lvalue, toType)
+                    FlagType -> {
+                        val flag2Int = flag2int(lvalue, I8Type)
+                        int2fp(flag2Int, toType)
+                    }
                     I8Type  -> int2fp(lvalue, toType)
                     I16Type -> int2fp(lvalue, toType)
                     I32Type -> int2fp(lvalue, toType)
