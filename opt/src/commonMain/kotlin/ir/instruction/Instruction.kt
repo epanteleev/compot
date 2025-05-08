@@ -38,8 +38,7 @@ abstract class Instruction(protected val id: Identity, private val owner: Block,
 
     fun update(closure: (Value) -> Value) = owner.df {
         for ((i, v) in operands.withIndex()) {
-            val newValue = closure(v)
-            update(i, newValue)
+            update(i, closure(v))
         }
     }
 

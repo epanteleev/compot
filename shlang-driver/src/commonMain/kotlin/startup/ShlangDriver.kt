@@ -162,7 +162,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
                     val objFile = compileCFile(input) ?: continue
                     compiled.add(objFile)
                 }
-                else -> throw IllegalStateException("Invalid input file: $input")
+                else -> processedFiles.add(input)
             }
         }
 
@@ -173,7 +173,11 @@ class ShlangDriver(private val cli: ShlangArguments) {
 
         val out = cli.getOutputFilename()
         val crt = when (out.extension) {
-            Extension.EXE -> SystemConfig.crtStaticObjects()
+            Extension.EXE -> if (cli.linkage() == LinkageType.SHARED) {
+                SystemConfig.crtSharedObjects()
+            } else {
+                SystemConfig.crtStaticObjects()
+            }
             Extension.SO -> SystemConfig.crtSharedObjects()
             else -> throw IllegalStateException("Invalid output file extension: $out")
         }

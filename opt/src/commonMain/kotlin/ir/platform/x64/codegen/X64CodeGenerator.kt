@@ -451,7 +451,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         when (val compare = flag2Int.operand()) {
             is CompareInstruction -> Flag2IntCodegen(size, compare.operandsType(), compare.predicate(), asm)(dst, dst)
             is BoolValue -> {
-                val res = if (compare.bool) 1L else 0L
+                val res = when (compare) {
+                    is TrueBoolValue  -> 1L
+                    is FalseBoolValue -> 0L
+                }
                 when (dst) {
                     is Address    -> asm.mov(size, Imm32.of(res), dst)
                     is GPRegister -> asm.mov(size, Imm64.of(res), dst)
@@ -537,10 +540,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         is BoolValue -> {
             // Condition is constant - true or false.
             // Just select necessary branch and jump to it.
-            if (cond.bool) {
-                doJump(branchCond.onTrue())
-            } else {
-                doJump(branchCond.onFalse())
+            when (cond) {
+                is TrueBoolValue  -> doJump(branchCond.onTrue())
+                is FalseBoolValue -> doJump(branchCond.onFalse())
             }
         }
         is IntCompare -> {
@@ -741,10 +743,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
         when (val cond = select.condition()) {
             is CompareInstruction -> SelectCodegen(select.type(), cond, asm)(dst, onTrue, onFalse)
-            is BoolValue -> if (cond.bool) {
-                CopyIntCodegen(select.type(), asm)(dst, onTrue)
-            } else {
-                CopyIntCodegen(select.type(), asm)(dst, onFalse)
+            is BoolValue -> when (cond) {
+                is TrueBoolValue  -> CopyIntCodegen(select.type(), asm)(dst, onTrue)
+                is FalseBoolValue -> CopyIntCodegen(select.type(), asm)(dst, onFalse)
             }
             else -> throw CodegenException("unknown condition type, cond=${cond}")
         }
