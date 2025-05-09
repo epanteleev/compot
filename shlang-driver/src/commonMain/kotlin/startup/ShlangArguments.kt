@@ -21,6 +21,7 @@ class ShlangArguments {
     private var inputs = arrayListOf<ProcessedFile>()
     private var pic = false
     private var linkage: LinkageType? = null
+    private val extraLDFlags = arrayListOf<String>()
 
     private var dumpIrDirectoryOutput: String? = null
     private var optimizationLevel = 0
@@ -104,6 +105,14 @@ class ShlangArguments {
 
     fun setLinkage(linkage: LinkageType) {
         this.linkage = linkage
+    }
+
+    fun addExtraLDFlags(flags: List<String>) {
+        extraLDFlags.addAll(flags)
+    }
+
+    fun getExtraLDFlags(): List<String> {
+        return extraLDFlags
     }
 
     fun logger(): CommonLogger {

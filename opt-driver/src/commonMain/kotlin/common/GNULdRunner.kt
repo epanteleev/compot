@@ -6,12 +6,18 @@ class GNULdRunner(private val outputFileName: ProcessedFile) {
     private var crtObjects = arrayListOf<String>()
     private val libs = arrayListOf<String>()
     private val libPaths = arrayListOf<String>()
+    private val extraFlags = arrayListOf<String>()
     private var dynamicLinker: String? = null
     private var static = false
     private var dynamic = false
 
     fun crtObjects(objects: List<String>): GNULdRunner {
         crtObjects.addAll(objects)
+        return this
+    }
+
+    fun addExtraFlags(flags: List<String>): GNULdRunner {
+        extraFlags.addAll(flags)
         return this
     }
 
@@ -67,7 +73,9 @@ class GNULdRunner(private val outputFileName: ProcessedFile) {
             gnuLdCommandLine.add(obj.filename)
         }
         gnuLdCommandLine.addAll(libs)
+        gnuLdCommandLine.addAll(extraFlags)
 
+        println("Linker command: $gnuLdCommandLine")
         return runCommand("ld", gnuLdCommandLine, null)
     }
 }

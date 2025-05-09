@@ -94,6 +94,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
             .libPaths(SystemConfig.runtimePathes() + cli.getLibraryDirectories())
             .static(cli.linkage() == LinkageType.STATIC)
             .dynamic(cli.linkage() == LinkageType.SHARED)
+            .addExtraFlags(cli.getExtraLDFlags())
             .crtObjects(crtObjs)
             .objs(compiledFiles)
             .dynamicLinker(SystemConfig.dynamicLinker())

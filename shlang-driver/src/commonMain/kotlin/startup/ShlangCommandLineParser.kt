@@ -63,6 +63,10 @@ object ShlangCommandLineParser {
         } else if (arg.startsWith("-L")) {
             cli.addLibraryDirectory(arg)
 
+        } else if (arg.startsWith("-Wl,")) {
+            val linkerOption = arg.substring(4).split(",")
+            cli.addExtraLDFlags(linkerOption)
+
         } else if (isIgnoredOption(arg)) {
             ignoreOption(arg)
 
