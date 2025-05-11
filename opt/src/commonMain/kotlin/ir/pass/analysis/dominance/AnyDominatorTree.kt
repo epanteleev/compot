@@ -30,7 +30,7 @@ sealed class AnyDominatorTree(private val head: DomTreeEntry, protected val bbTo
     }
 
     /**
-     * Simple DFS traversal of dominator tree.
+     * Simple preorder traversal of dominator tree.
      */
     operator fun iterator(): Iterator<DomTreeEntry> = object : Iterator<DomTreeEntry> {
         private val stack = ArrayDeque<DomTreeEntry>(16) //TODO: magic constant
@@ -46,9 +46,7 @@ sealed class AnyDominatorTree(private val head: DomTreeEntry, protected val bbTo
             }
             val result = current!!
             current = null
-            for (child in result.dominates) {
-                stack.add(child)
-            }
+            stack.addAll(result.dominates)
             return result
         }
     }

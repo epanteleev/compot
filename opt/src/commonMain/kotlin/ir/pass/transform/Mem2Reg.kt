@@ -81,25 +81,6 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
         }
     }
 
-    // Remove unused phis
-    private fun removeRedundantPhis(bb: Block) {
-        val deadPool = hashSetOf<Instruction>()
-        fun filter(bb: Block, instruction: Instruction): Instruction? {
-            if (instruction !is Phi) {
-                return bb.last()
-            }
-
-            if (instruction.usedIn().isEmpty() || deadPool.containsAll(instruction.usedIn())) {
-                deadPool.add(instruction)
-                return instruction.die(UndefValue)
-            }
-
-            return instruction
-        }
-
-        bb.transform { filter(bb, it) }
-    }
-
     fun pass(dominatorTree: DominatorTree) {
         val uncompletedPhis = insertPhis()
         val bbToMapValues = RewritePrimitivesUtil.run(cfg, dominatorTree)
@@ -110,8 +91,5 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
         }
 
         completePhis(bbToMapValues, uncompletedPhis)
-        for (bb in cfg.analysis(PostOrderFabric)) {
-            removeRedundantPhis(bb)
-        }
     }
 }

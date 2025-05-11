@@ -21,3 +21,4 @@ See examples in `example` module.
 - [S. Muchnick. Advanced Compiler Design Implementation](https://www.amazon.com/Advanced-Compiler-Design-Implementation-Muchnick/dp/1558603204)
 - [C. Wimmer. Linear Scan Register Allocation for the Java HotSpot™ Client Compiler (2008)](https://www.researchgate.net/publication/221012814_Linear_Scan_Register_Allocation_for_the_Java_HotSpot_Client_Compiler)
 - [Design of an SSA Register Allocator](https://compilers.cs.uni-saarland.de/projects/ssara/hack_ssara_ssa09.pdf)
+- [Value Numbering](https://softlib.rice.edu/pub/CRPC-TRs/reports/CRPC-TR94517-S.pdf)

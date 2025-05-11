@@ -96,7 +96,7 @@ object CallConvention {
     )
 
     val temp1 = rax
-    val temp2 = rbx
+    val temp2 = r10
     val retReg = rax
 
     val xmmTemp1 = xmm8
