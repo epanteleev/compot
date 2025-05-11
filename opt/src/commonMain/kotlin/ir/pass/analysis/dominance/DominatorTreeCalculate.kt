@@ -39,7 +39,8 @@ private class DominatorTreeCalculate(private val basicBlocks: FunctionData) : Do
     }
 
     override fun run(): DominatorTree {
-        return DominatorTree(calculate(basicBlocks), basicBlocks.marker())
+        val domTree = calculate(basicBlocks)
+        return DominatorTree(domTree[basicBlocks.begin()]!!,domTree, basicBlocks.marker())
     }
 }
 

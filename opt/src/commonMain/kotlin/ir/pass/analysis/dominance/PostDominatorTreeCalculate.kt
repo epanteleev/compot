@@ -32,7 +32,8 @@ private class PostDominatorTreeCalculate(private val basicBlocks: FunctionData) 
     }
 
     override fun run(): PostDominatorTree {
-        return PostDominatorTree(calculate(basicBlocks), basicBlocks.marker())
+        val domTree = calculate(basicBlocks)
+        return PostDominatorTree(domTree[basicBlocks.begin()]!!, domTree, basicBlocks.marker())
     }
 }
 

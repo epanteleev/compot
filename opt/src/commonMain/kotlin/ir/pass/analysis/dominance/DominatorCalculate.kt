@@ -59,12 +59,21 @@ sealed class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
         }
     }
 
-    private fun enumerationToIdomMap(blocks: BlockOrder, indexToBlock: Map<Int, Block>, dominators: MutableMap<Int, Int>): Map<Block, Block> {
-        dominators.remove(blocks.size - 1)
+    private fun enumerationToEntryMap(blocks: BlockOrder, indexToBlock: Map<Int, Block>, dominators: MutableMap<Int, Int>): Map<Block, DomTreeEntry> {
+        val dominatorTree = intMapOf<Block, DomTreeEntryImpl>(blocks.size) { l: Label -> l.index }
+        for (key in dominators.keys) {
+            val block = indexToBlock[key]!!
+            dominatorTree[block] = DomTreeEntryImpl(null, block, hashSetOf())
+        }
 
-        val dominatorTree = intMapOf<Block, Block>(blocks.size) { l: Label -> l.index }
-        for (entry in dominators) {
-            dominatorTree[indexToBlock[entry.key]!!] = indexToBlock[entry.value]!!
+        dominators.remove(blocks.size - 1)
+        for ((key, value) in dominators) {
+            val block = indexToBlock[key]!!
+            val idom = indexToBlock[value]!!
+
+            val idomEntry = dominatorTree[idom]!!
+            dominatorTree[block]!!.iDom = idomEntry
+            idomEntry.dominates.add(dominatorTree[block]!!)
         }
 
         return dominatorTree
@@ -83,7 +92,7 @@ sealed class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
         return indexToBlock
     }
 
-    fun calculate(basicBlocks: FunctionData): Map<Block, Block> {
+    fun calculate(basicBlocks: FunctionData): Map<Block, DomTreeEntry> {
         val blocksOrder = blockOrdering(basicBlocks)
         val blockToIndex = indexBlocks(blocksOrder)
 
@@ -104,7 +113,7 @@ sealed class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
         }
 
         val indexToBlock = evalIndexToBlock(blockToIndex)
-        return enumerationToIdomMap(blocksOrder, indexToBlock, dominators)
+        return enumerationToEntryMap(blocksOrder, indexToBlock, dominators)
     }
 
     companion object {

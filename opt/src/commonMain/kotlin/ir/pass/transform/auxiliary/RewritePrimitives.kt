@@ -8,7 +8,6 @@ import ir.module.FunctionData
 import ir.types.PrimitiveType
 import ir.instruction.matching.*
 import ir.pass.analysis.dominance.DominatorTree
-import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.types.Type
 import ir.types.asType
@@ -34,14 +33,14 @@ sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree)
         return findActualValueOrNull(bb, resultType, oldValue)
     }
 
-    protected fun findActualValue(bb: Label, resultType: Type, value: Value): Value {
+    protected fun findActualValue(bb: Block, resultType: Type, value: Value): Value {
         return findActualValueOrNull(bb, resultType, value) ?: let {
             println("Warning: use uninitialized value: bb=$bb, value=$value")//TODO remove it in future
             UndefValue
         }
     }
 
-    protected fun findActualValueOrNull(bb: Label, resultType: Type, value: Value): Value? {
+    protected fun findActualValueOrNull(bb: Block, resultType: Type, value: Value): Value? {
         for (d in dominatorTree.dominators(bb)) {
             val newV = valueMap(d, value) ?: continue
             return when (newV) {
@@ -61,8 +60,8 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
     private val bbToMapValues = setupValueMap()
 
     init {
-        for (bb in cfg.analysis(PreOrderFabric)) {
-            rewriteValuesSetup(bb)
+        for (bb in dominatorTree) {
+            rewriteValuesSetup(bb.bb)
         }
 
         rewritePhis()

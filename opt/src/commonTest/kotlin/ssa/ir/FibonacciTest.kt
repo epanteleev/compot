@@ -166,11 +166,24 @@ class FibonacciTest {
             .setSuffix(".base")
 
         println(module)
+        val domTree = module.findFunction("fib").analysis(DominatorTreeFabric)
+        println("Dominators: $domTree")
+        println("Frontier: ${domTree.frontiers()}")
         val optimized = PassPipeline.opt(builder.construct()).run(module)
 
         val cfg = optimized.findFunction("fib")
         val liveInfo = cfg.analysis(LivenessAnalysisPassFabric)
 
+
+        // Frontier: {L1=[L7], L2=[L7], L3=[L3, L7], L4=[L3], L5=[L3], L6=[L7], L7=[]}
+        // Dominators: BB: 'L7' IDom: 'entry'
+        //BB: 'L6' IDom: 'L3'
+        //BB: 'L2' IDom: 'entry'
+        //BB: 'L1' IDom: 'entry'
+        //BB: 'L3' IDom: 'L2'
+        //BB: 'L4' IDom: 'L3'
+        //BB: 'L5' IDom: 'L4'
+        
         assertEquals(8, liveInfo.size)
         val entryLiveIn = liveInfo.liveIn(BlockViewer(0))
         assertTrue { entryLiveIn.containsAll(cfg.arguments()) }

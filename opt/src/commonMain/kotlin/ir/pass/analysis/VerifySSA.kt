@@ -27,7 +27,7 @@ class ValidateSSAErrorException(val functionData: FunctionData, override val mes
 
 class VerifySSA private constructor(private val functionData: FunctionData,
                                     private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit>() {
-    private val dominatorTree by lazy { functionData.analysis(DominatorTreeFabric) }
+    private val dominatorTree = functionData.analysis(DominatorTreeFabric)
     private var bb = functionData.begin()
     private var exitBlocks = 0
     private val adjustStackFrame = arrayListOf<AdjustStackFrame>()
@@ -114,7 +114,9 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
             val definedIn = use.owner()
             val isDefDominatesUse = dominatorTree.dominates(definedIn, block)
-            assert(isDefDominatesUse) { "Definition doesn't dominate to usage: value defined in '$definedIn', but used in '$block'" }
+            assert(isDefDominatesUse) {
+                "Definition doesn't dominate to usage: value defined in '$definedIn', but used in '$block'"
+            }
         }
     }
 
