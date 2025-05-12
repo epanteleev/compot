@@ -33,7 +33,7 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
         val codeGenerationFactory = CodeGenerationFactory()
             .setContext(ctx)
             .setTarget(TargetPlatform.X64)
-            .pic(false ) // (commandLineArguments.isPic())
+            .pic(commandLineArguments.isPic())
 
         val unoptimisedCode = codeGenerationFactory.build(unoptimizedIr)
         return compileAsmFile(unoptimisedCode, asmFile)

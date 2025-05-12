@@ -11,8 +11,8 @@ import ir.value.constant.UndefValue
 
 class Block private constructor(private val mc: ModificationCounter, override val index: Int): Label, Iterable<Instruction> {
     private val instructions = InstructionList()
-    private val predecessors = arrayListOf<Block>()
-    private val successors   = arrayListOf<Block>()
+    internal val predecessors = arrayListOf<Block>()
+    internal val successors   = arrayListOf<Block>()
 
     private var instructionIndex: Int = 0
 
@@ -46,25 +46,6 @@ class Block private constructor(private val mc: ModificationCounter, override va
     val size
         get(): Int = instructions.size
 
-    private fun updateSuccessor(old: Block, new: Block): Int {
-        val index = successors.indexOf(old)
-        if (index == -1) {
-            throw RuntimeException("Out of index: old=$old")
-        }
-
-        new.predecessors.add(this)
-        successors[index] = new
-        return index
-    }
-
-    private fun removePredecessors(old: Block) {
-        assertion(predecessors.contains(old)) {
-            "old=$old is not in bb=$this"
-        }
-
-        predecessors.remove(old)
-    }
-
     fun instructions(fn: (Instruction) -> Unit) {
         instructions.forEach(fn)
     }
@@ -81,22 +62,12 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return mc.cf(closure)
     }
 
-    private fun updatePhi(oldSucc: Block, newSucc: Block) {
+    internal fun updatePhi(oldSucc: Block, newSucc: Block) {
         oldSucc.phis { phi ->
             phi.incoming { oldBB, _ ->
                 if (oldBB == this) newSucc else oldBB
             }
         }
-    }
-
-    fun updateCF(currentSuccessor: Block, newSuccessor: Block) = mc.cf {
-        val index = updateSuccessor(currentSuccessor, newSuccessor)
-        currentSuccessor.removePredecessors(this)
-
-        val terminateInstruction = last()
-        terminateInstruction.updateTarget(newSuccessor, index)
-
-        updatePhi(currentSuccessor, newSuccessor)
     }
 
     fun contains(instruction: Instruction): Boolean {

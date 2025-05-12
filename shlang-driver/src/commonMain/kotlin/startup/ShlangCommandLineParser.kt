@@ -31,7 +31,10 @@ object ShlangCommandLineParser {
                     commandLineArguments.setOutputFilename(args[cursor])
                 }
                 "-static" -> commandLineArguments.setLinkage(LinkageType.STATIC)
-                "-fPIC" -> commandLineArguments.setPic(true)
+                "-fPIC" -> {
+                    println("temporarily ignore this option")
+                    //commandLineArguments.setPic(true)
+                }
                 "-E" -> commandLineArguments.setPreprocessOnly(true)
                 else -> parseOption(commandLineArguments, arg)
             }
@@ -79,7 +82,7 @@ object ShlangCommandLineParser {
         if (IGNORED_OPTIONS.contains(arg)) {
             return true
         }
-        if (arg.startsWith("-fvisibility") ||
+        if (arg.startsWith("-f") ||
             arg.startsWith("-fno-") ||
             arg.startsWith("-std=") ||
             arg.startsWith("-W") ||

@@ -105,11 +105,12 @@ internal object SystemConfig {
 
     private val crtCommonSharedObjects = listOf(
         "crti.o",
+        "crtn.o"
     )
 
     private val crtSharedObjects = listOf(
-        "crtendS.o",
         "crtbeginS.o",
+        "crtendS.o",
     )
 
     private val crtGCCObjects = listOf(

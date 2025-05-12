@@ -31,7 +31,8 @@ internal class SplitCriticalEdge private constructor(private val functionData: F
         val newBlock = functionData.blocks.createBlock()
         newBlock.put(Branch.br(bb))
 
-        p.updateCF(bb, newBlock)
+        val last = p.last()
+        last.target(newBlock, bb)
     }
 
     companion object {

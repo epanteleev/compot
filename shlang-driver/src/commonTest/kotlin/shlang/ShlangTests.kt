@@ -120,7 +120,7 @@ abstract class ShlangTests: CommonCTest() {
 
     @Test
     fun testMath1() {
-        val result = runCTest("shlang/math1", listOf("runtime/runtime.c"), options())
+        val result = runCTest("shlang/math1", listOf("runtime/runtime.c"), options() + "-fPIC")
         assertEquals(4, result.exitCode)
     }
 

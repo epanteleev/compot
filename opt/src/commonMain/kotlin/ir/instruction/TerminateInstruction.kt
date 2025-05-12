@@ -8,8 +8,15 @@ sealed class TerminateInstruction(id: Identity, owner: Block, usages: Array<Valu
     Instruction(id, owner, usages) {
     fun targets(): Array<Block> = targets
 
-    // DO NOT USE THIS METHOD DIRECTLY
-    internal fun updateTarget(newBB: Block, index: Int) {
+    fun target(newBB: Block, old: Block) = owner.cf {
+        val index = owner.successors.indexOf(old)
+        owner.successors[index] = newBB
+
+        newBB.predecessors.add(owner)
+        old.predecessors.remove(owner)
+
         targets[index] = newBB
+
+        owner.updatePhi(old, newBB)
     }
 }
