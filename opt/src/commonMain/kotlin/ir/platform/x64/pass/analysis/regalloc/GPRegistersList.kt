@@ -6,8 +6,7 @@ import ir.platform.x64.CallConvention
 
 internal class GPRegistersList(usedArgumentRegisters: List<GPRegister>) {
     private var freeRegisters = CallConvention.availableRegisters(usedArgumentRegisters).toMutableList()
-
-    private val usedCalleeSaveRegisters = hashSetOf(GPRegister.rbx) //NOTE: rbx is temporal and callee-save register
+    private val usedCalleeSaveRegisters = hashSetOf<GPRegister>()
 
     init {
         for (reg in usedArgumentRegisters) {
