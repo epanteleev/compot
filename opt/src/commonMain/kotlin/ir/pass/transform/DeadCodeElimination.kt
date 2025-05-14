@@ -5,6 +5,7 @@ import ir.instruction.Projection
 import ir.instruction.TerminateInstruction
 import ir.module.FunctionData
 import ir.module.Module
+import ir.pass.CompileContext
 import ir.pass.common.TransformPass
 import ir.pass.common.TransformPassFabric
 import ir.value.ArgumentValue
@@ -12,7 +13,7 @@ import ir.value.LocalValue
 import ir.value.constant.UndefValue
 
 
-class DeadCodeEliminationPass internal constructor(module: Module): TransformPass(module) {
+class DeadCodeEliminationPass internal constructor(module: Module, ctx: CompileContext): TransformPass(module, ctx) {
     override fun name(): String = "dce"
     override fun run(): Module {
         module.functions.values.forEach { fnData ->
@@ -24,8 +25,8 @@ class DeadCodeEliminationPass internal constructor(module: Module): TransformPas
 }
 
 object DeadCodeElimination: TransformPassFabric() {
-    override fun create(module: Module): TransformPass {
-        return DeadCodeEliminationPass(module)
+    override fun create(module: Module, ctx: CompileContext): TransformPass {
+        return DeadCodeEliminationPass(module, ctx)
     }
 }
 

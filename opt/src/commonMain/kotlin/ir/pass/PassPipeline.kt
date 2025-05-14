@@ -17,7 +17,7 @@ class PassPipeline private constructor(private val name: String, private val pas
         dumpIr(name) { current.toString() }
         for (fabric in passFabrics) {
             try {
-                val pass = fabric.create(current)
+                val pass = fabric.create(current, ctx)
                 current = pass.run()
                 VerifySSA.run(current)
                 dumpIr(pass.name()) { current.toString() }

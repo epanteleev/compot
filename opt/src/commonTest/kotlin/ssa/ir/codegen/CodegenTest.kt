@@ -2,6 +2,7 @@ package ssa.ir.codegen
 
 import asm.x64.GPRegister.*
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.CompileContext
 import ir.pass.transform.Mem2RegFabric
 import ir.platform.x64.pass.analysis.regalloc.VirtualRegistersPool
 import ir.types.Type
@@ -47,7 +48,8 @@ class CodegenTest {
         //println(LinearScan.alloc(module.findFunction(prototype)))
         //println(CodeEmitter.codegen(module))
 
-        Mem2RegFabric.create(module).run()
+        val ctx = CompileContext.empty()
+        Mem2RegFabric.create(module, ctx).run()
         //println(DumpModule.apply(module))
         //println(LinearScan.alloc(module.findFunction(prototype)))
         //println(CodeEmitter.codegen(module))

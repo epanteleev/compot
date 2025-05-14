@@ -5,6 +5,7 @@ import ir.instruction.IntPredicate
 import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.CompileContext
 import ir.pass.analysis.VerifySSA
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.transform.Mem2RegFabric
@@ -79,8 +80,9 @@ class DominatorTreeTest {
         val module = withBasicBlocks()
         module.copy()
 
-        val originalMem2Reg = VerifySSA.run(Mem2RegFabric.create(module).run())
-        val copyMem2Reg     = VerifySSA.run(Mem2RegFabric.create(module).run())
+        val ctx = CompileContext.empty()
+        val originalMem2Reg = VerifySSA.run(Mem2RegFabric.create(module, ctx).run())
+        val copyMem2Reg     = VerifySSA.run(Mem2RegFabric.create(module, ctx).run())
         //println(originalMem2Reg.toString())
         assertEquals(originalMem2Reg.toString(), copyMem2Reg.toString())
     }

@@ -3,20 +3,35 @@ package ir.pass
 import java.nio.file.Path
 
 
-class CompileContext(private val filename: String, private val suffix: String, private val outputDir: String?) {
-    fun outputFile(passName: String): Path? {
+sealed interface CompileContext{
+    fun pic(): Boolean
+    fun outputFile(passName: String): Path?
+
+    companion object {
+         fun empty(): CompileContext {
+             return CompileContextImpl("", "", null, false)
+         }
+    }
+}
+
+class CompileContextImpl(private val filename: String, private val suffix: String, private val outputDir: String?, val picEnabled: Boolean): CompileContext {
+    override fun outputFile(passName: String): Path? {
         if (outputDir == null) {
             return null
         }
 
         return Path.of("${outputDir}/$filename/${passName}${suffix}.ir")
     }
-}
 
+    override fun pic(): Boolean {
+        return picEnabled
+    }
+}
 
 class CompileContextBuilder(private val filename: String) {
     private var suffix: String? = null
     private var dumpIr: String? = null
+    private var picEnabled: Boolean = false
 
     fun setSuffix(name: String): CompileContextBuilder {
         suffix = name
@@ -28,7 +43,12 @@ class CompileContextBuilder(private val filename: String) {
         return this
     }
 
+    fun setPic(picEnabled: Boolean): CompileContextBuilder {
+        this.picEnabled = picEnabled
+        return this
+    }
+
     fun construct(): CompileContext {
-        return CompileContext(filename, suffix ?: "", dumpIr) //TODO: fix this
+        return CompileContextImpl(filename, suffix ?: "", dumpIr, picEnabled) //TODO: fix this
     }
 }

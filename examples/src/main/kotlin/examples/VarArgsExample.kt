@@ -3,6 +3,7 @@ package examples
 import ir.global.StringLiteralGlobalConstant
 import ir.types.*
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.CompileContext
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
@@ -22,9 +23,11 @@ fun main() {
 
     val module = builder.build()
     println(module.toString())
+
+    val ctx = CompileContext.empty()
     val asm = CodeGenerationFactory()
         .setTarget(TargetPlatform.X64)
-        .build(SSADestructionFabric.create(module).run())
+        .build(SSADestructionFabric.create(module, ctx).run())
 
     println(asm.toString())
 }

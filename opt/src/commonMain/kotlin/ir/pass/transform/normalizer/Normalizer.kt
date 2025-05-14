@@ -5,13 +5,14 @@ import ir.instruction.Instruction
 import ir.instruction.TupleDiv
 import ir.module.FunctionData
 import ir.module.Module
+import ir.pass.CompileContext
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.common.TransformPass
 import ir.pass.common.TransformPassFabric
 import ir.value.constant.UndefValue
 
 
-class NormalizerPass internal constructor(module: Module): TransformPass(module) {
+class NormalizerPass internal constructor(module: Module, ctx: CompileContext): TransformPass(module, ctx) {
     override fun name(): String = "normalizer"
     override fun run(): Module {
         module.functions.values.forEach { fnData ->
@@ -23,8 +24,8 @@ class NormalizerPass internal constructor(module: Module): TransformPass(module)
 }
 
 object Normalizer: TransformPassFabric() {
-    override fun create(module: Module): TransformPass {
-        return NormalizerPass(module.copy())
+    override fun create(module: Module, ctx: CompileContext): TransformPass {
+        return NormalizerPass(module.copy(), ctx)
     }
 }
 

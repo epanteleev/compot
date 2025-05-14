@@ -23,6 +23,7 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
     private fun runCompiler(suffix: String, asmFile: String, module: Module, pipeline: (CompileContext) -> PassPipeline): ExecutionResult {
         val builder = CompileContextBuilder(inputBasename())
             .setSuffix(suffix)
+            .setPic(commandLineArguments.isPic())
 
         if (commandLineArguments.isDumpIr()) {
             builder.withDumpIr(commandLineArguments.getDumpIrDirectory())

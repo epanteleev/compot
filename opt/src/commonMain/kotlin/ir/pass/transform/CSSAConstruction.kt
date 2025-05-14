@@ -2,13 +2,14 @@ package ir.pass.transform
 
 import ir.module.Module
 import ir.module.SSAModule
+import ir.pass.CompileContext
 import ir.pass.common.TransformPassFabric
 import ir.pass.common.TransformPass
 import ir.pass.transform.auxiliary.CopyInsertion
 import ir.pass.transform.auxiliary.SplitCriticalEdge
 
 
-class CSSAConstruction internal constructor(module: Module): TransformPass(module) {
+class CSSAConstruction internal constructor(module: Module, ctx: CompileContext): TransformPass(module, ctx) {
     override fun name(): String = "cssa-construction"
 
     override fun run(): Module {
@@ -18,7 +19,7 @@ class CSSAConstruction internal constructor(module: Module): TransformPass(modul
 }
 
 object CSSAConstructionFabric: TransformPassFabric() {
-    override fun create(module: Module): TransformPass {
-        return CSSAConstruction(module.copy())
+    override fun create(module: Module, ctx: CompileContext): TransformPass {
+        return CSSAConstruction(module.copy(), ctx)
     }
 }

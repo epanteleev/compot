@@ -6,6 +6,7 @@ import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.block.Label
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.CompileContext
 import ir.pass.analysis.VerifySSA
 import ir.pass.transform.Mem2RegFabric
 import ir.pass.CompileContextBuilder
@@ -140,8 +141,9 @@ class FibonacciTest {
         val copyModule2String = copy.toString()
         assertEquals(copy.toString(), copyModule2String)
 
-        val originalMem2Reg = VerifySSA.run(Mem2RegFabric.create(module).run())
-        val copyMem2Reg     = VerifySSA.run(Mem2RegFabric.create(module).run())
+        val ctx = CompileContext.empty()
+        val originalMem2Reg = VerifySSA.run(Mem2RegFabric.create(module, ctx).run())
+        val copyMem2Reg     = VerifySSA.run(Mem2RegFabric.create(module, ctx).run())
 
         assertEquals(originalMem2Reg.toString(), copyMem2Reg.toString())
         assertEquals(copy.toString(), copyModule2String)

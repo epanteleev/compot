@@ -30,10 +30,10 @@ import ir.instruction.lir.Lea
 import ir.module.block.Label
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
+import ir.pass.CompileContext
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.platform.common.AnyCodeGenerator
-import ir.platform.common.CompilationContext
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
 import ir.platform.x64.CallConvention.retReg
@@ -45,13 +45,13 @@ import ir.value.constant.*
 
 internal data class CodegenException(override val message: String): Exception(message)
 
-internal class X64CodeGenerator(val module: LModule, private val ctx: CompilationContext): AnyCodeGenerator {
+internal class X64CodeGenerator(val module: LModule, private val ctx: CompileContext): AnyCodeGenerator {
     override fun emit(): CompiledModule {
         return CodeEmitter.codegen(module, ctx)
     }
 }
 
-private class CodeEmitter(private val data: FunctionData, private val unit: CompilationUnit, private val ctx: CompilationContext): IRInstructionVisitor<Unit>() {
+private class CodeEmitter(private val data: FunctionData, private val unit: CompilationUnit, private val ctx: CompileContext): IRInstructionVisitor<Unit>() {
     private val registerAllocation by lazy { data.analysis(LinearScanFabric) }
     private val liveness by lazy { data.analysis(LivenessAnalysisPassFabric) }
     private val asm = unit.function(data.prototype.name)
@@ -80,7 +80,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         is I64Value -> Imm64.of(value.i64)
         is U64Value -> Imm64.of(value.u64.toLong())
         is GlobalConstant -> Address.internal(value.name())
-        is FunctionPrototype -> if (ctx.picEnabled) {
+        is FunctionPrototype -> if (ctx.pic()) {
             Address.external(value.name())
         } else {
             Address.internal(value.name())
@@ -98,7 +98,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     private fun callFunction(call: Callable, prototype: DirectFunctionPrototype) {
         val sym = when (prototype) {
-            is FunctionPrototype -> if (ctx.picEnabled) {
+            is FunctionPrototype -> if (ctx.pic()) {
                 ExternalFunSymbol(prototype.name())
             } else {
                 InternalFunSymbol(prototype.name())
@@ -804,7 +804,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val temp1 = CallConvention.temp1
         val fpRet = CallConvention.fpRet
 
-        fun codegen(module: LModule, ctx: CompilationContext): CompilationUnit {
+        fun codegen(module: LModule, ctx: CompileContext): CompilationUnit {
             val unit = CompilationUnit()
             for (data in module.functions()) {
                 if (data.prototype.attributes.contains(GlobalValueAttribute.INTERNAL)) {

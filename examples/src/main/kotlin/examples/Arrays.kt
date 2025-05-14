@@ -2,6 +2,7 @@ package examples
 
 import ir.types.*
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.CompileContext
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.analysis.VerifySSA
 import ir.pass.transform.Mem2RegFabric
@@ -43,7 +44,8 @@ fun main() {
     val data = module.findFunction("main")
 
     println(data.analysis(LivenessAnalysisPassFabric))
-    val newModule = Mem2RegFabric.create(module).run()
+    val ctx = CompileContext.empty()
+    val newModule = Mem2RegFabric.create(module, ctx).run()
     println(newModule.toString())
 
     VerifySSA.run(newModule)

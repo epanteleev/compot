@@ -7,6 +7,7 @@ import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
+import ir.pass.CompileContext
 import ir.pass.common.TransformPassFabric
 import ir.pass.common.TransformPass
 import ir.pass.analysis.JoinPointSetPassFabric
@@ -22,7 +23,7 @@ import ir.value.Value
 import ir.value.constant.UndefValue
 
 
-class Mem2Reg internal constructor(module: Module): TransformPass(module) {
+class Mem2Reg internal constructor(module: Module, ctx: CompileContext): TransformPass(module, ctx) {
     override fun name(): String = "mem2reg"
     override fun run(): Module {
         module.functions.values.forEach { fnData ->
@@ -34,8 +35,8 @@ class Mem2Reg internal constructor(module: Module): TransformPass(module) {
 }
 
 object Mem2RegFabric: TransformPassFabric() {
-    override fun create(module: Module): TransformPass {
-        return Mem2Reg(module.copy())
+    override fun create(module: Module, ctx: CompileContext): TransformPass {
+        return Mem2Reg(module.copy(), ctx)
     }
 }
 

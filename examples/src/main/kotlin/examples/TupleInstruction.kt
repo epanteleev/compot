@@ -1,5 +1,7 @@
 package examples
 
+import ir.pass.CompileContext
+import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
 import ir.types.I32Type
@@ -16,9 +18,11 @@ fun main() {
 
     val module = builder.build()
     println(module.toString())
+
+    val ctx = CompileContext.empty()
     val asm = CodeGenerationFactory()
         .setTarget(TargetPlatform.X64)
-        .build(ir.pass.transform.SSADestructionFabric.create(module).run())
+        .build(SSADestructionFabric.create(module, ctx).run())
 
     println(asm.toString())
 }
