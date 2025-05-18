@@ -724,3 +724,7 @@ class FunTestsO0: FunTests() {
 class FunTestsO1: FunTests() {
     override fun options(): List<String> = listOf("-O1")
 }
+
+class FunTestsO1fPIC: FunTests() {
+    override fun options(): List<String> = listOf("-O1", "-fPIC")
+}

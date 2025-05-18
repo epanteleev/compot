@@ -31,10 +31,7 @@ object ShlangCommandLineParser {
                     commandLineArguments.setOutputFilename(args[cursor])
                 }
                 "-static" -> commandLineArguments.setLinkage(LinkageType.STATIC)
-                "-fPIC" -> {
-                    println("temporarily ignore this option")
-                    //commandLineArguments.setPic(true)
-                }
+                "-fPIC" -> commandLineArguments.setPic(true)
                 "-E" -> commandLineArguments.setPreprocessOnly(true)
                 else -> parseOption(commandLineArguments, arg)
             }

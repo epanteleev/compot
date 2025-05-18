@@ -6,15 +6,18 @@ import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.Generate
 import ir.instruction.lir.Lea
+import ir.instruction.matching.anytype
+import ir.instruction.matching.gVisible
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
+import ir.pass.CompileContext
 import ir.value.*
 import ir.value.constant.U64Value
 
 
-internal class FunctionsIsolation private constructor(private val cfg: FunctionData) {
+internal class FunctionsIsolation private constructor(private val cfg: FunctionData, private val ctx: CompileContext) {
     private fun mustBeIsolated(arg: ArgumentValue): Boolean {
         // Argument is in overflow area
         return arg.attributes.find { it is ByValue } == null
@@ -59,10 +62,15 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                     call.arg(i, copy)
                 }
                 is PtrType -> {
-                    val copyOrLea = if (arg is GlobalValue) {
-                        bb.putBefore(call, Lea.lea(arg))
-                    } else {
+                    val copyOrLea = if (ctx.pic() && arg.isa(gVisible())) {
                         bb.putBefore(call, Copy.copy(arg))
+
+                    } else {
+                        if (arg is GlobalValue) {
+                            bb.putBefore(call, Lea.lea(arg))
+                        } else {
+                            bb.putBefore(call, Copy.copy(arg))
+                        }
                     }
                     call.arg(i, copyOrLea)
                 }
@@ -101,8 +109,8 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     companion object {
-        fun run(module: Module): Module {
-            module.functions().forEach { FunctionsIsolation(it).pass() }
+        fun run(module: Module, ctx: CompileContext): Module {
+            module.functions().forEach { FunctionsIsolation(it, ctx).pass() }
             return SSAModule(module.functions, module.functionDeclarations, module.constantPool, module.globals, module.types)
         }
     }

@@ -333,3 +333,7 @@ class AlgoTestsO0: AlgoTests() {
 class AgoTestsO1: AlgoTests() {
     override fun options(): List<String> = listOf("-O1")
 }
+
+class AlgoTestO1fPIC: AlgoTests() {
+    override fun options(): List<String> = listOf("-O1", "-fPIC")
+}

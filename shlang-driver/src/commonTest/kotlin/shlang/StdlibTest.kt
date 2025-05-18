@@ -110,3 +110,7 @@ class StdlibTestO0: StdlibTest() {
 class StdlibTestO1: StdlibTest() {
     override fun options(): List<String> = listOf("-O1")
 }
+
+class StdlibTestO1fPIC: StdlibTest() {
+    override fun options(): List<String> = listOf("-O1", "-fPIC")
+}

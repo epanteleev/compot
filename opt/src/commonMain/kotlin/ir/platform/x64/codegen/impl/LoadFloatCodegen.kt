@@ -1,7 +1,9 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
+import ir.Definitions.POINTER_SIZE
 import ir.instruction.Load
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorUnaryOp
 import ir.types.FloatingPointType
 
@@ -18,10 +20,8 @@ internal class LoadFloatCodegen(type: FloatingPointType, val asm: Assembler): Xm
     }
 
     override fun ra(dst: XmmRegister, src: Address) {
-        when (src) {
-            is AddressLiteral -> asm.movf(size, src, dst) // TODO: should be removed after implementing the correct handling of AddressLiteral
-            else -> TODO()
-        }
+        asm.mov(POINTER_SIZE, src, temp1)
+        asm.movf(size, Address.from(temp1, 0), dst)
     }
 
     override fun ar(dst: Address, src: XmmRegister) {

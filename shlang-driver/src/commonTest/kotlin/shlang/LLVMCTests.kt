@@ -582,3 +582,7 @@ class LLVMCTestsO0: LLVMCTests() {
 class LLVMCTestsO1: LLVMCTests() {
     override fun options(): List<String> = listOf("-O1")
 }
+
+class LLVMCTestsO1fPIC: LLVMCTests() {
+    override fun options(): List<String> = listOf("-O1", "-fPIC")
+}

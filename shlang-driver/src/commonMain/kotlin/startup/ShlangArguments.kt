@@ -95,6 +95,7 @@ class ShlangArguments {
     fun pic(): Boolean {
         return pic
     }
+
     fun setPic(pic: Boolean) {
         this.pic = pic
     }

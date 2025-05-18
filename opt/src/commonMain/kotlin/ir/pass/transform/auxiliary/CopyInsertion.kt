@@ -8,10 +8,11 @@ import ir.module.SSAModule
 import ir.module.block.Block
 import ir.module.FunctionData
 import ir.instruction.matching.*
+import ir.pass.CompileContext
 import ir.value.isa
 
 
-internal class CopyInsertion private constructor(private val cfg: FunctionData) {
+internal class CopyInsertion private constructor(private val cfg: FunctionData, val ctx: CompileContext) {
     private fun isolatePhis(bb: Block, phi: Phi): Instruction {
         phi.zipWithIndex { incoming, operand, idx ->
             assertion(!bb.hasCriticalEdgeFrom(incoming)) {
@@ -19,8 +20,12 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
             }
 
             val last = incoming.last()
-            val copy = if (operand.isa(gValue(anytype()))) {
+            val copy = if (ctx.pic() && operand.isa(gVisible())) {
+                incoming.putBefore(last, Copy.copy(operand))
+
+            } else if (operand.isa(gValue(anytype()))) {
                 incoming.putBefore(last, Lea.lea(operand))
+
             } else {
                 incoming.putBefore(last, Copy.copy(operand))
             }
@@ -42,8 +47,8 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
     }
 
     companion object {
-        fun run(module: Module): Module {
-            module.functions().forEach { CopyInsertion(it).pass() }
+        fun run(module: Module, ctx: CompileContext): Module {
+            module.functions().forEach { CopyInsertion(it, ctx).pass() }
             return SSAModule(module.functions, module.functionDeclarations, module.constantPool, module.globals, module.types)
         }
     }

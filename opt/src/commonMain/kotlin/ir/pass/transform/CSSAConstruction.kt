@@ -13,7 +13,7 @@ class CSSAConstruction internal constructor(module: Module, ctx: CompileContext)
     override fun name(): String = "cssa-construction"
 
     override fun run(): Module {
-        val transformed = CopyInsertion.run(SplitCriticalEdge.run(module))
+        val transformed = CopyInsertion.run(SplitCriticalEdge.run(module), ctx)
         return SSAModule(transformed.functions, transformed.functionDeclarations, transformed.constantPool, transformed.globals, transformed.types)
     }
 }

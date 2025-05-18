@@ -195,3 +195,7 @@ class StructTestsO0: StructTests() {
 class StructTestsO1: StructTests() {
     override fun options(): List<String> = listOf("-O1")
 }
+
+class StructTestO1fPIC: StructTests() {
+    override fun options(): List<String> = listOf("-O1", "-fPIC")
+}

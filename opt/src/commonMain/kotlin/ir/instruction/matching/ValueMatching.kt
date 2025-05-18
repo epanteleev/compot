@@ -4,10 +4,12 @@ import ir.types.*
 import ir.value.Value
 import ir.instruction.*
 import ir.attributes.ByValue
+import ir.attributes.GlobalValueAttribute
 import ir.global.ExternValue
 import ir.global.GlobalConstant
 import ir.global.GlobalValue
 import ir.instruction.lir.Generate
+import ir.module.FunctionPrototype
 import ir.value.ArgumentValue
 import ir.value.LocalValue
 import ir.value.constant.Constant
@@ -153,6 +155,14 @@ inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()
 
 inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
     it is GlobalValue && type(it.contentType())
+}
+
+fun gVisible(): ValueMatcher = {
+    it is GlobalValue && it.attribute() == GlobalValueAttribute.DEFAULT
+}
+
+fun fVisible(): ValueMatcher = {
+    it is FunctionPrototype && it.attributes.contains(GlobalValueAttribute.DEFAULT)
 }
 
 inline fun gConstant(crossinline type: TypeMatcher): ValueMatcher = {

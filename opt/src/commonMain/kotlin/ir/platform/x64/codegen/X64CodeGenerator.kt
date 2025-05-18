@@ -27,6 +27,9 @@ import ir.instruction.Sub
 import ir.instruction.Xor
 import ir.instruction.lir.*
 import ir.instruction.lir.Lea
+import ir.instruction.matching.anytype
+import ir.instruction.matching.fVisible
+import ir.instruction.matching.gVisible
 import ir.module.block.Label
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
@@ -80,14 +83,18 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         is I64Value -> Imm64.of(value.i64)
         is U64Value -> Imm64.of(value.u64.toLong())
         is GlobalConstant -> Address.internal(value.name())
-        is FunctionPrototype -> if (ctx.pic()) {
+        is FunctionPrototype -> if (ctx.pic() && value.isa(fVisible())) {
             Address.external(value.name())
         } else {
             Address.internal(value.name())
         }
         is ExternFunction -> Address.external(value.name())
         is ExternValue -> Address.external(value.name())
-        is GlobalValue -> Address.internal(value.name())
+        is GlobalValue -> if (ctx.pic() && value.isa(gVisible())) {
+            Address.external(value.name())
+        } else {
+            Address.internal(value.name())
+        }
         is NullValue -> Imm64.of(0)
         else -> null
     }
@@ -98,7 +105,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     private fun callFunction(call: Callable, prototype: DirectFunctionPrototype) {
         val sym = when (prototype) {
-            is FunctionPrototype -> if (ctx.pic()) {
+            is FunctionPrototype -> if (ctx.pic() && prototype.isa(fVisible())) {
                 ExternalFunSymbol(prototype.name())
             } else {
                 InternalFunSymbol(prototype.name())

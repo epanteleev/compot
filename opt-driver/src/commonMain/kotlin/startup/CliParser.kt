@@ -43,6 +43,7 @@ object CliParser {
                     val outputFilename = ProcessedFile.fromFilename(args[cursor])
                     commandLineArguments.setOutputFilename(outputFilename)
                 }
+                "-fPIC" -> commandLineArguments.setPic(true)
                 "-h", "--help" -> {
                     printHelp()
                     return null
