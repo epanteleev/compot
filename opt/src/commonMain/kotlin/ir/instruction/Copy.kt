@@ -7,6 +7,7 @@ import ir.module.block.Block
 import ir.types.PrimitiveType
 import ir.value.constant.UndefValue
 import ir.instruction.utils.IRInstructionVisitor
+import ir.value.asType
 
 
 class Copy private constructor(id: Identity, owner: Block, private val type: PrimitiveType, origin: Value):
@@ -26,11 +27,14 @@ class Copy private constructor(id: Identity, owner: Block, private val type: Pri
         const val NAME = "copy"
 
         fun copy(origin: Value): InstBuilder<Copy> = { id: Identity, owner: Block ->
-            make(id, owner, origin)
+            make(id, owner, origin.asType(), origin)
         }
 
-        private fun make(id: Identity, owner: Block, origin: Value): Copy {
-            val originType = origin.type()
+        fun copy(ty: PrimitiveType, origin: Value): InstBuilder<Copy> = { id: Identity, owner: Block ->
+            make(id, owner, ty, origin)
+        }
+
+        private fun make(id: Identity, owner: Block, originType: PrimitiveType, origin: Value): Copy {
             require(isAppropriateType(originType, origin)) {
                 "should not be $originType, but origin=$origin:$originType"
             }
@@ -48,7 +52,7 @@ class Copy private constructor(id: Identity, owner: Block, private val type: Pri
                 return true
             }
             
-            return originType is PrimitiveType && origin.type() == originType
+            return originType is PrimitiveType
         }
     }
 }

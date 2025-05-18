@@ -22,13 +22,8 @@ internal class LoadIntCodegen(val type: PrimitiveType, val asm: Assembler): GPOp
     }
 
     override fun ra(dst: GPRegister, src: Address) {
-        when (src) {
-            is AddressLiteral -> asm.mov(size, src, dst) // TODO: should be removed after implementing the correct handling of AddressLiteral
-            else -> {
-                asm.mov(POINTER_SIZE, src, temp1)
-                asm.mov(size, Address.from(temp1, 0), dst)
-            }
-        }
+        asm.mov(POINTER_SIZE, src, temp1)
+        asm.mov(size, Address.from(temp1, 0), dst)
     }
 
     override fun ar(dst: Address, src: GPRegister) {
@@ -37,12 +32,6 @@ internal class LoadIntCodegen(val type: PrimitiveType, val asm: Assembler): GPOp
     }
 
     override fun aa(dst: Address, src: Address) {
-        if (src is AddressLiteral) {
-            // TODO should be removed after implementing the correct handling of AddressLiteral
-            asm.mov(size, src, temp1)
-            asm.mov(size, temp1, dst)
-            return
-        }
         asm.mov(POINTER_SIZE, src, temp1)
         asm.mov(size, Address.from(temp1, 0), temp1)
         asm.mov(size, temp1, dst)
@@ -57,10 +46,6 @@ internal class LoadIntCodegen(val type: PrimitiveType, val asm: Assembler): GPOp
     }
 
     override fun default(dst: Operand, src: Operand) {
-        if (dst is XmmRegister && src is GPRegister) { //TODO: add support for other cases
-            asm.movf(size, Address.from(src, 0), dst)
-            return
-        }
         throw RuntimeException("Internal error: '${Load.NAME}' dst=$dst, pointer=$src")
     }
 }
