@@ -16,6 +16,8 @@ data class ParserException(val info: ProgramMessage) : Exception(info.toString()
 // https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
 //
 class CProgramParser private constructor(filename: String, iterator: TokenList): AbstractCParser(filename, iterator) {
+    private val fabric = NodeFabric()
+
     // translation_unit
     //	: external_declaration
     //	| translation_unit external_declaration
@@ -90,7 +92,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             if (check(";")) {
                 eat()
-                return@rule labelResolver().addGoto(GotoStatement(ident))
+                return@rule labelResolver().addGoto(fabric.newGotoStatement(ident))
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -98,7 +100,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             val contKeyWord = eat() as Keyword
             if (check(";")) {
                 eat()
-                return@rule ContinueStatement(contKeyWord)
+                return@rule fabric.newContinueStatement(contKeyWord)
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -106,7 +108,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             val breakKeyword = eat().asToken<Keyword>()
             if (check(";")) {
                 eat()
-                return@rule BreakStatement(breakKeyword)
+                return@rule fabric.newBreakStatement(breakKeyword)
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -115,7 +117,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             val expr = expression()
             if (check(";")) {
                 val tok = eat()
-                return@rule ReturnStatement(retKeyword.asToken(), expr ?: EmptyExpression(tok.position()))
+                return@rule fabric.newReturnStatement(retKeyword.asToken(), expr ?: EmptyExpression(tok.position()))
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -136,7 +138,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule labelResolver().addLabel(LabeledStatement(ident, stmt))
+            return@rule labelResolver().addLabel(fabric.newLabeledStatement(ident, stmt))
         }
         if (check("case")) {
             val caseKeyword = eat()
@@ -146,7 +148,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule CaseStatement(caseKeyword.asToken(), expr, stmt)
+            return@rule fabric.newCaseStatement(caseKeyword.asToken(), expr, stmt)
         }
         if (check("default")) {
             val defaultKeyword = eat()
@@ -155,7 +157,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule DefaultStatement(defaultKeyword.asToken(), stmt)
+            return@rule fabric.newDefaultStatement(defaultKeyword.asToken(), stmt)
         }
         return@rule null
     }
@@ -166,12 +168,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     fun expression_statement(): Statement? = rule {
         if (check(";")) {
             val tok = eat()
-            return@rule EmptyStatement(tok.position())
+            return@rule fabric.newEmptyStatement(tok.position())
         }
         val expr = expression() ?: return@rule null
         if (check(";")) {
             eat()
-            return@rule ExprStatement(expr)
+            return@rule fabric.newExprStatement(expr)
         }
         throw ParserException(InvalidToken("Expected ';'", peak()))
     }
@@ -193,11 +195,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val then = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
             if (!check("else")) {
-                return@rule IfStatement(ifKeyword.asToken(), expr, then)
+                return@rule fabric.newIfStatement(ifKeyword.asToken(), expr, then)
             }
             eat()
             val els = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule IfElseStatement(ifKeyword.asToken(), expr, then, els)
+            return@rule fabric.newIfElseStatement(ifKeyword.asToken(), expr, then, els)
         }
         if (check("switch")) {
             val switchKeyword = eat()
@@ -236,7 +238,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val body = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return WhileStatement(whileKeyword.asToken(), condition, body)
+            return fabric.newWhileStatement(whileKeyword.asToken(), condition, body)
         }
         if (check("do")) {
             val doKeyword = eat()
@@ -259,7 +261,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 throw ParserException(InvalidToken("Expected ';'", peak()))
             }
             eat()
-            return DoWhileStatement(doKeyword.asToken(), body, condition)
+            return fabric.newDoWhileStatement(doKeyword.asToken(), body, condition)
         }
         if (check("for")) {
             val forKeyword = eat()
@@ -288,7 +290,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val body = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule ForStatement(forKeyword.asToken(), forInit, condition, update, body)
+            return@rule fabric.newForStatement(forKeyword.asToken(), forInit, condition, update, body)
         }
         return@rule null
     }
@@ -337,7 +339,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         eat()
         if (check("}")) {
             val tok = eat()
-            return@rule EmptyStatement(tok.position())
+            return@rule fabric.newEmptyStatement(tok.position())
         }
         val statements = mutableListOf<CompoundStmtItem>()
         while (!check("}")) {
@@ -354,7 +356,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             throw ParserException(InvalidToken("Expected declaration or statement", peak()))
         }
         eat()
-        return@rule CompoundStatement(statements)
+        return@rule fabric.newCompoundStatement(statements)
     }
 
     // expression
@@ -368,7 +370,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         eat()
         val expr = expression()?: throw ParserException(InvalidToken("Expected expression", peak()))
-        return@rule BinaryOp(assign, expr, BinaryOpType.COMMA)
+        return@rule fabric.newBinaryOp(assign, expr, BinaryOpType.COMMA)
     }
 
     // assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^="
@@ -427,7 +429,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val cond = conditional_expression()?: return@rule null
         val op = assign_op() ?: return@rule cond
         val assign = assignment_expression()?: throw ParserException(InvalidToken("Expected assignment expression", peak()))
-        return@rule BinaryOp(cond, assign, op)
+        return@rule fabric.newBinaryOp(cond, assign, op)
     }
 
     // storage_class_specifier
@@ -1213,7 +1215,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val bitor = logical_and_expression()?: throw ParserException(InvalidToken("Expected or expression", peak()))
-            logand = BinaryOp(logand, bitor, BinaryOpType.OR)
+            logand = fabric.newBinaryOp(logand, bitor, BinaryOpType.OR)
         }
         return@rule logand
     }
@@ -1230,7 +1232,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val bitand = inclusive_or_expression()?: throw ParserException(InvalidToken("Expected and expression", peak()))
-            bitor = BinaryOp(bitor, bitand, BinaryOpType.AND)
+            bitor = fabric.newBinaryOp(bitor, bitand, BinaryOpType.AND)
         }
         return@rule bitor
     }
@@ -1247,7 +1249,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val bitor = exclusive_or_expression()?: throw ParserException(InvalidToken("Expected inclusive expression", peak()))
-            bitxor = BinaryOp(bitxor, bitor, BinaryOpType.BIT_OR)
+            bitxor = fabric.newBinaryOp(bitxor, bitor, BinaryOpType.BIT_OR)
         }
         return@rule bitxor
     }
@@ -1264,7 +1266,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val xor = and_expression()?: throw ParserException(InvalidToken("Expected exclusive expression", peak()))
-            bitand = BinaryOp(bitand, xor, BinaryOpType.BIT_XOR)
+            bitand = fabric.newBinaryOp(bitand, xor, BinaryOpType.BIT_XOR)
         }
         return@rule bitand
     }
@@ -1281,7 +1283,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val bitand = equality_expression()?: throw ParserException(InvalidToken("Expected and expression", peak()))
-            equality = BinaryOp(equality, bitand, BinaryOpType.BIT_AND)
+            equality = fabric.newBinaryOp(equality, bitand, BinaryOpType.BIT_AND)
         }
         return@rule equality
     }
@@ -1297,13 +1299,13 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             if (check("==")) {
                 eat()
                 val equal = relational_expression()?: throw ParserException(InvalidToken("Expected relational expression", peak()))
-                relational = BinaryOp(relational, equal, BinaryOpType.EQ)
+                relational = fabric.newBinaryOp(relational, equal, BinaryOpType.EQ)
                 continue
             }
             if (check("!=")) {
                 eat()
                 val notEqual = relational_expression()?: throw ParserException(InvalidToken("Expected relational expression", peak()))
-                relational = BinaryOp(relational, notEqual, BinaryOpType.NE)
+                relational = fabric.newBinaryOp(relational, notEqual, BinaryOpType.NE)
                 continue
             }
             break
@@ -1324,25 +1326,25 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             if (check("<")) {
                 eat()
                 val less = shift_expression()?: throw ParserException(InvalidToken("Expected shift expression", peak()))
-                shift = BinaryOp(shift, less, BinaryOpType.LT)
+                shift = fabric.newBinaryOp(shift, less, BinaryOpType.LT)
                 continue
             }
             if (check(">")) {
                 eat()
                 val greater = shift_expression()?: throw ParserException(InvalidToken("Expected shift expression", peak()))
-                shift = BinaryOp(shift, greater, BinaryOpType.GT)
+                shift = fabric.newBinaryOp(shift, greater, BinaryOpType.GT)
                 continue
             }
             if (check("<=")) {
                 eat()
                 val lessEq = shift_expression()?: throw ParserException(InvalidToken("Expected shift expression", peak()))
-                shift = BinaryOp(shift, lessEq, BinaryOpType.LE)
+                shift = fabric.newBinaryOp(shift, lessEq, BinaryOpType.LE)
                 continue
             }
             if (check(">=")) {
                 eat()
                 val greaterEq = shift_expression()?: throw ParserException(InvalidToken("Expected shift expression", peak()))
-                shift = BinaryOp(shift, greaterEq, BinaryOpType.GE)
+                shift = fabric.newBinaryOp(shift, greaterEq, BinaryOpType.GE)
                 continue
             }
             break
@@ -1361,13 +1363,13 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             if (check("<<")) {
                 eat()
                 val shift = additive_expression()?: throw ParserException(InvalidToken("Expected shift expression", peak()))
-                additive = BinaryOp(additive, shift, BinaryOpType.SHL)
+                additive = fabric.newBinaryOp(additive, shift, BinaryOpType.SHL)
                 continue
             }
             if (check(">>")) {
                 eat()
                 val shift = additive_expression()?: throw ParserException(InvalidToken("Expected shift expression", peak()))
-                additive = BinaryOp(additive, shift, BinaryOpType.SHR)
+                additive = fabric.newBinaryOp(additive, shift, BinaryOpType.SHR)
                 continue
             }
             break
@@ -1386,13 +1388,13 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             if (check("+")) {
                 eat()
                 val add = multiplicative_expression()?: throw ParserException(InvalidToken("Expected additive expression", peak()))
-                mult = BinaryOp(mult, add, BinaryOpType.ADD)
+                mult = fabric.newBinaryOp(mult, add, BinaryOpType.ADD)
                 continue
             }
             if (check("-")) {
                 eat()
                 val add = multiplicative_expression()?: throw ParserException(InvalidToken("Expected additive expression", peak()))
-                mult = BinaryOp(mult, add, BinaryOpType.SUB)
+                mult = fabric.newBinaryOp(mult, add, BinaryOpType.SUB)
                 continue
             }
             break
@@ -1412,19 +1414,19 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             if (check("*")) {
                 eat()
                 val mul = cast_expression() ?: throw ParserException(InvalidToken("Expected multiplicative expression", peak()))
-                cast = BinaryOp(cast, mul, BinaryOpType.MUL)
+                cast = fabric.newBinaryOp(cast, mul, BinaryOpType.MUL)
                 continue
             }
             if (check("/")) {
                 eat()
                 val mul = cast_expression() ?: throw ParserException(InvalidToken("Expected multiplicative expression", peak()))
-                cast = BinaryOp(cast, mul, BinaryOpType.DIV)
+                cast = fabric.newBinaryOp(cast, mul, BinaryOpType.DIV)
                 continue
             }
             if (check("%")) {
                 eat()
                 val mul = cast_expression() ?: throw ParserException(InvalidToken("Expected multiplicative expression", peak()))
-                cast = BinaryOp(cast, mul, BinaryOpType.MOD)
+                cast = fabric.newBinaryOp(cast, mul, BinaryOpType.MOD)
                 continue
             }
             break
