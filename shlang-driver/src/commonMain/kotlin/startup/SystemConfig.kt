@@ -30,6 +30,11 @@ internal object SystemConfig {
             objects.add("$crtPath/$crtObject")
         }
 
+        val crtObjectPathRh = Path.of(CRT_OBJECT_PATH_RH)
+        if (crtObjectPathRh.exists()) {
+            return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_PATH_RH$it" }
+        }
+
         val crtObjectGNUPath = Path.of(CRT_OBJECT_GNU_LINUX_PATH)
         if (crtObjectGNUPath.exists()) {
             return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
@@ -51,6 +56,11 @@ internal object SystemConfig {
             objects.add("$crtPath/$crtObject")
         }
 
+        val crtObjectPathRh = Path.of(CRT_OBJECT_PATH_RH)
+        if (crtObjectPathRh.exists()) {
+            return crtCommonSharedObjects.mapTo(objects) { "$CRT_OBJECT_PATH_RH$it" }
+        }
+
         val crtObjectGNUPath = Path.of(CRT_OBJECT_GNU_LINUX_PATH)
         if (crtObjectGNUPath.exists()) {
             return crtCommonSharedObjects.mapTo(objects) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
@@ -65,6 +75,15 @@ internal object SystemConfig {
     }
 
     private fun crtPath(): String {
+        val crtPathGccRh = Path.of(CRT_OBJECT_GCC_RH)
+        if (crtPathGccRh.exists()) {
+            val crtPath = crtPathGccRh
+                .listDirectoryEntries()
+                .first()
+
+            return crtPath.toString()
+        }
+
         val crtPathGccPc = Path.of(CRT_OBJECT_PC_GCC)
         if (crtPathGccPc.exists()) {
             val crtPath = crtPathGccPc
@@ -127,4 +146,8 @@ internal object SystemConfig {
     private const val USR_INCLUDE_GNU_LINUX_PATH = "/usr/include/x86_64-linux-gnu/"
     private const val CRT_OBJECT_GNU_LINUX_PATH = "/usr/lib/x86_64-linux-gnu/"
     private const val CRT_OBJECT_GCC = "/usr/lib/gcc/x86_64-linux-gnu/"
+
+    // Red Hat
+    private const val CRT_OBJECT_PATH_RH = "/usr/lib64/"
+    private const val CRT_OBJECT_GCC_RH = "/usr/lib/gcc/x86_64-redhat-linux/"
 }
