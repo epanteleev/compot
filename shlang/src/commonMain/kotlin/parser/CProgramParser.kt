@@ -3,6 +3,7 @@ package parser
 import tokenizer.*
 import parser.nodes.*
 import common.assertion
+import sema.SemanticAnalysis
 import tokenizer.tokens.*
 
 
@@ -51,7 +52,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val declarator = declarator()?: return@rule null
 
         val declSpec = declspec.specifyType(globalTypeHolder)
-        val varDesc = declarator.declareVar(declSpec, globalTypeHolder)
+        val varDesc = SemanticAnalysis(globalTypeHolder).declareVar(declarator, declSpec)
         return@rule funcRule(varDesc) {
             val declarations = mutableListOf<Declaration>() //TODO just skip it temporarily
             while (true) {
@@ -478,7 +479,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         eat()
         val initializer = initializer()?: throw ParserException(InvalidToken("Expected initializer", peak()))
-        return@rule InitDeclarator(declarator, initializer)
+        return@rule fabric.newInitDeclarator(declarator, initializer)
     }
 
     // init_declarator_list
@@ -1108,10 +1109,10 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val pointers = pointer()
         if (pointers != null) {
             val directDeclarator = direct_declarator()?: return@rule null
-            return@rule Declarator(directDeclarator, pointers)
+            return@rule fabric.newDeclarator(directDeclarator, pointers)
         }
         val directDeclarator = direct_declarator()?: return@rule null
-        return@rule Declarator(directDeclarator, listOf())
+        return@rule fabric.newDeclarator(directDeclarator, listOf())
     }
 
     // direct_abstract_declarator

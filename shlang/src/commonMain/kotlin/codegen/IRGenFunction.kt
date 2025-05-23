@@ -33,6 +33,7 @@ import ir.value.constant.*
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
+import sema.SemanticAnalysis
 import tokenizer.Position
 import typedesc.*
 
@@ -2002,7 +2003,7 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
         val fnType = varDesc.cType()
             .asType<CFunctionType>(functionNode.begin())
 
-        val parameters = functionNode.parameterTypeList().params(typeHolder)
+        val parameters = SemanticAnalysis(typeHolder).resolveParameterList(functionNode.parameterTypeList())
         val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder, varDesc.storageClass).build()
 
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)

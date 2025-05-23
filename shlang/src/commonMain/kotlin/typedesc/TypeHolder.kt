@@ -5,6 +5,8 @@ import codegen.VarStack
 import parser.nodes.VarNode
 
 
+class Typedef(val name: String, val typeDesc: TypeDesc)
+
 class TypeHolder private constructor(private val valueMap: VarStack<VarDescriptor>,
                                      private val enumTypeMap: VarStack<CType>,
                                      private val structTypeMap: VarStack<CType>,
@@ -86,9 +88,9 @@ class TypeHolder private constructor(private val valueMap: VarStack<VarDescripto
         }
     }
 
-    fun addTypedef(name: String, type: TypeDesc): TypeDesc {
-        typedefs[name] = type
-        return type
+    fun addTypedef(typedef: Typedef): TypeDesc {
+        typedefs[typedef.name] = typedef.typeDesc
+        return typedef.typeDesc
     }
 
     fun addVar(varDesc: VarDescriptor): VarDescriptor {

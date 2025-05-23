@@ -1,4 +1,0 @@
-package typedesc
-
-class AnyTypeHolder {
-}

@@ -3,6 +3,7 @@ package parser.nodes
 import typedesc.TypeDesc
 import typedesc.TypeHolder
 import parser.nodes.visitors.*
+import sema.SemanticAnalysis
 import tokenizer.Position
 import tokenizer.tokens.Punctuator
 import typedesc.DeclSpec
@@ -30,7 +31,7 @@ class ParamAbstractDeclarator(val abstractDeclarator: AbstractDeclarator) : AnyP
 
 class ParamDeclarator(val declarator: Declarator) : AnyParamDeclarator() {
     override fun resolveType(declSpec: DeclSpec, typeHolder: TypeHolder): TypeDesc {
-        val varDesc = declarator.declareVar(declSpec, typeHolder)
+        val varDesc = SemanticAnalysis(typeHolder).declareVar(declarator, declSpec)
             ?: throw IllegalStateException("Typedef is not supported in function parameters")
 
         return varDesc.toTypeDesc()
@@ -41,23 +42,12 @@ data class Parameter(val declspec: DeclarationSpecifier, val paramDeclarator: An
     override fun begin(): Position = declspec.begin()
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
 
-    private fun name(): String? {
+    fun name(): String? {
         if (paramDeclarator !is ParamDeclarator) {
             return null
         }
 
         return paramDeclarator.declarator.directDeclarator.decl.name()
-    }
-
-    fun resolveType(typeHolder: TypeHolder): TypeDesc {
-        val type = declspec.specifyType(typeHolder)
-        return paramDeclarator.resolveType(type, typeHolder)
-    }
-
-    fun resolveVarDesc(typeHolder: TypeHolder): VarDescriptor? {
-        val type = resolveType(typeHolder)
-        val name = name() ?: return null
-        return VarDescriptor(name, type.asType(begin()), type.qualifiers(), null)
     }
 }
 

@@ -4,6 +4,7 @@ import parser.nodes.*
 import ir.module.Module
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
+import sema.SemanticAnalysis
 import tokenizer.Position
 import typedesc.StorageClass
 import typedesc.TypeHolder
@@ -39,7 +40,7 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
         }
 
         for (declarator in node.declarators()) {
-            val varDesc = declarator.declareVar(declSpec, typeHolder)
+            val varDesc = SemanticAnalysis(typeHolder).declareVar(declarator, declSpec)
                 ?: throw IRCodeGenError("Typedef is not supported in global declarations", node.begin())
 
             when (declarator) {

@@ -1,5 +1,6 @@
 package parser.nodes
 
+import sema.SemanticAnalysis
 import tokenizer.Position
 import typedesc.StorageClass
 import typedesc.TypeHolder
@@ -21,7 +22,7 @@ class Declaration private constructor(val declspec: DeclarationSpecifier, privat
         val varDescs = arrayListOf<VarDescriptor>()
         val declSpec = declspec.specifyType(typeHolder)
         for (declarator in declarators) {
-            val varDesc = declarator.declareVar(declSpec, typeHolder) ?: continue
+            val varDesc = SemanticAnalysis(typeHolder).declareVar(declarator, declSpec) ?: continue
             varDescs.add(varDesc)
         }
 
@@ -40,7 +41,10 @@ class Declaration private constructor(val declspec: DeclarationSpecifier, privat
                     continue
                 }
 
-                declarator.resolveTypedef(declSpec, typeHolder)
+                val typedef = SemanticAnalysis(typeHolder).resolveTypedef(declarator, declSpec)
+                if (typedef != null) {
+                    typeHolder.addTypedef(typedef)
+                }
             }
             return Declaration(declspec, declarators, true)
         }

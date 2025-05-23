@@ -1,5 +1,6 @@
 package parser.nodes
 
+import sema.SemanticAnalysis
 import tokenizer.Position
 import typedesc.TypeHolder
 import typedesc.DeclSpec
@@ -14,7 +15,7 @@ class StructDeclaratorItem(val expr: Declarator): AnyStructDeclaratorItem() {
     override fun begin(): Position = expr.begin()
 
     override fun declareType(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
-        return expr.declareVar(declSpec, typeHolder)
+        return SemanticAnalysis(typeHolder).declareVar(expr, declSpec)
             ?: throw IllegalStateException("Typedef is not supported in struct fields")
     }
 }

@@ -4,6 +4,7 @@ import types.*
 import typedesc.*
 import codegen.consteval.*
 import parser.nodes.visitors.DirectDeclaratorParamVisitor
+import sema.SemanticAnalysis
 import tokenizer.Position
 
 sealed interface DirectDeclaratorParam {
@@ -81,23 +82,6 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
         return TypeDesc.from(AbstractCFunction(typeDesc, params, isVarArg()), arrayListOf())
     }
 
-    fun params(typeHolder: TypeHolder): List<VarDescriptor>? {
-        if (params.isEmpty()) {
-            return emptyList()
-        }
-        val varDescs = arrayListOf<VarDescriptor>()
-        for (param in params) {
-            if (param !is Parameter) {
-                continue
-            }
-
-            val varDesc = param.resolveVarDesc(typeHolder) ?: return null
-            varDescs.add(varDesc)
-        }
-
-        return varDescs
-    }
-
     private fun isVarArg(): Boolean {
         return params.any { it is ParameterVarArg }
     }
@@ -108,7 +92,7 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
             if (first !is Parameter) {
                 return emptyList()
             }
-            val type = first.resolveType(typeHolder)
+            val type =  SemanticAnalysis(typeHolder).resolveParameterType(first)
             // Special case for void
             // Pattern: 'void f(void)' can be found in the C program.
             return if (type.cType() == VOID) {
@@ -122,7 +106,7 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
         for (param in params) {
             when (param) {
                 is Parameter -> {
-                    val type = param.resolveType(typeHolder)
+                    val type = SemanticAnalysis(typeHolder).resolveParameterType(param)
                     paramTypes.add(type)
                 }
                 is ParameterVarArg -> {}
