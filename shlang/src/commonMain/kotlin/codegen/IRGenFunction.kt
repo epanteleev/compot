@@ -34,6 +34,7 @@ import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
 import sema.SemanticAnalysis
+import sema.StatementAnalysis
 import tokenizer.Position
 import typedesc.*
 
@@ -44,12 +45,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     sema: SemanticAnalysis,
                     varStack: VarStack<Value>,
                     nameGenerator: NameGenerator,
+                    private val functionNode: FunctionNode,
                     private val parameters: List<VarDescriptor>?,
                     private val ir: FunctionDataBuilder,
                     private val functionType: CFunctionType) :
     AbstractIRGenerator(moduleBuilder, sema, varStack, nameGenerator),
     StatementVisitor<Unit>,
     DeclaratorVisitor<Value> {
+    private val stmAnalysis = StatementAnalysis.analyze(functionNode)
     private var stringToLabel = mutableMapOf<String, Label>()
     private val stmtStack = StmtStack()
 
@@ -1386,7 +1389,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         visitParameters(parameters, ir.arguments(), retType, functionNode.begin())
     }
 
-    fun visitFun(functionNode: FunctionNode): Value = scoped {
+    fun visitFun(): Value = scoped {
         stmtStack.scoped(FunctionStmtInfo()) { stmt ->
             visitParameters(functionNode)
             visitReturnType(stmt, functionType.retType(), ir.arguments(), functionNode.begin())
@@ -1664,7 +1667,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(forStatement: ForStatement) = scoped {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(forStatement)) {
             return@scoped
         }
         val bodyBlock = ir.createLabel()
@@ -1682,13 +1685,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             val endBlock = loopStmtInfo.resolveExit(ir)
             ir.branchCond(condition, bodyBlock, endBlock)
-
-            if (ir.last() !is TerminateInstruction) {
-                ir.branch(conditionBlock)
-            }
             ir.switchLabel(bodyBlock)
+
             visitStatement(forStatement.body)
-            if (ir.last() !is TerminateInstruction) {
+            if (stmAnalysis.isReachable(forStatement.body)) {
                 if (forStatement.update is EmptyExpression) {
                     ir.branch(conditionBlock)
                 } else {
@@ -1707,7 +1707,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(switchStatement: SwitchStatement) = scoped {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(switchStatement)) {
             return@scoped
         }
         val condition = visitExpression(switchStatement.condition, true)
@@ -2007,8 +2007,8 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
         val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, sema.typeHolder, varDesc.storageClass).build()
 
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
-        val funGen = IrGenFunction(mb, sema, vregStack, nameGenerator, parameters, currentFunction, fnType)
+        val funGen = IrGenFunction(mb, sema, vregStack, nameGenerator, functionNode, parameters, currentFunction, fnType)
 
-        funGen.visitFun(functionNode)
+        funGen.visitFun()
     }
 }

@@ -11,6 +11,7 @@ class NodeFabric {
     private var declCounter = 0
     private var expressionCounter = 0
     private var typeSpecCounter = 0
+    private var statementCounter = 0
 
     private fun incExpressionCounter(): Int {
         val current = expressionCounter
@@ -21,6 +22,12 @@ class NodeFabric {
     private fun incTypeSpecCounter(): Int {
         val current = typeSpecCounter
         typeSpecCounter++
+        return current
+    }
+
+    private fun incStatementCounter(): Int {
+        val current = statementCounter
+        statementCounter++
         return current
     }
 
@@ -116,63 +123,67 @@ class NodeFabric {
 
     // Statement factories
     fun newEmptyStatement(position: Position): EmptyStatement {
-        return EmptyStatement(position)
+        return EmptyStatement(incStatementCounter(), position)
     }
 
     fun newGotoStatement(id: Identifier): GotoStatement {
-        return GotoStatement(id)
+        return GotoStatement(incStatementCounter(), id)
     }
 
     fun newLabeledStatement(label: Identifier, stmt: Statement): LabeledStatement {
-        return LabeledStatement(label, stmt)
+        return LabeledStatement(incStatementCounter(), label, stmt)
     }
 
     fun newContinueStatement(continueKeyword: Keyword): ContinueStatement {
-        return ContinueStatement(continueKeyword)
+        return ContinueStatement(incStatementCounter(), continueKeyword)
     }
 
     fun newBreakStatement(breakKeyword: Keyword): BreakStatement {
-        return BreakStatement(breakKeyword)
+        return BreakStatement(incStatementCounter(), breakKeyword)
     }
 
     fun newDefaultStatement(defaultKeyword: Keyword, stmt: Statement): DefaultStatement {
-        return DefaultStatement(defaultKeyword, stmt)
+        return DefaultStatement(incStatementCounter(), defaultKeyword, stmt)
     }
 
     fun newReturnStatement(retKeyword: Keyword, expr: Expression): ReturnStatement {
-        return ReturnStatement(retKeyword, expr)
+        return ReturnStatement(incStatementCounter(), retKeyword, expr)
     }
 
     fun newCaseStatement(caseKeyword: Keyword, constExpression: Expression, stmt: Statement): CaseStatement {
-        return CaseStatement(caseKeyword, constExpression, stmt)
+        return CaseStatement(incStatementCounter(), caseKeyword, constExpression, stmt)
     }
 
     fun newCompoundStatement(statements: List<CompoundStmtItem>): CompoundStatement {
-        return CompoundStatement(statements)
+        return CompoundStatement(incStatementCounter(), statements)
     }
 
     fun newExprStatement(expr: Expression): ExprStatement {
-        return ExprStatement(expr)
+        return ExprStatement(incStatementCounter(), expr)
     }
 
     fun newIfStatement(ifKeyword: Keyword, condition: Expression, thenStmt: Statement): IfStatement {
-        return IfStatement(ifKeyword, condition, thenStmt)
+        return IfStatement(incStatementCounter(), ifKeyword, condition, thenStmt)
     }
 
     fun newIfElseStatement(ifKeyword: Keyword, condition: Expression, thenStmt: Statement, elseStmt: Statement): IfElseStatement {
-        return IfElseStatement(ifKeyword, condition, thenStmt, elseStmt)
+        return IfElseStatement(incStatementCounter(), ifKeyword, condition, thenStmt, elseStmt)
     }
 
     fun newWhileStatement(whileKeyword: Keyword, condition: Expression, stmt: Statement): WhileStatement {
-        return WhileStatement(whileKeyword, condition, stmt)
+        return WhileStatement(incStatementCounter(), whileKeyword, condition, stmt)
     }
 
     fun newDoWhileStatement(doKeyword: Keyword, stmt: Statement, condition: Expression): DoWhileStatement {
-        return DoWhileStatement(doKeyword, stmt,  condition)
+        return DoWhileStatement(incStatementCounter(), doKeyword, stmt,  condition)
     }
 
     fun newForStatement(forKeyword: Keyword, init: ForInit, condition: Expression, increment: Expression, body: Statement): ForStatement {
-        return ForStatement(forKeyword, init, condition, increment, body)
+        return ForStatement(incStatementCounter(), forKeyword, init, condition, increment, body)
+    }
+
+    fun newSwitchStatement(switchKeyword: Keyword, condition: Expression, body: Statement): SwitchStatement {
+        return SwitchStatement(incStatementCounter(), switchKeyword, condition, body)
     }
 
     // TypeSpecifier factories

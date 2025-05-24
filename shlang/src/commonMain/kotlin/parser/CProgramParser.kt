@@ -216,7 +216,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule SwitchStatement(switchKeyword.asToken(), expr, stmt)
+            return@rule fabric.newSwitchStatement(switchKeyword.asToken(), expr, stmt)
         }
         return@rule null
     }
