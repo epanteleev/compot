@@ -4,57 +4,37 @@ import common.assertion
 import parser.nodes.visitors.TypeSpecifierVisitor
 import sema.SemanticAnalysis
 import tokenizer.Position
-import typedesc.CTypeBuilder
+import sema.CTypeBuilder
 import typedesc.TypeHolder
 import typedesc.DeclSpec
 
 
-sealed class TypeSpecifier {
-    private var cachedType: DeclSpec? = null
-
+sealed class TypeSpecifier(private val id: Int) {
     abstract fun begin(): Position
     abstract fun<T> accept(visitor: TypeSpecifierVisitor<T>): T
-    abstract fun specifyType(typeHolder: TypeHolder): DeclSpec
 
-    protected fun memoizeType(type: () -> DeclSpec): DeclSpec {
-        if (cachedType == null) {
-            cachedType = type()
-        }
+    final override fun hashCode(): Int = id
+    final override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
 
-        return cachedType!!
+        other as TypeSpecifier
+
+        return id == other.id
     }
 }
 
-class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier() {
+class DeclarationSpecifier internal constructor(id: Int, val specifiers: List<AnyTypeNode>) : TypeSpecifier(id) {
     init {
         assertion(specifiers.isNotEmpty()) { "DeclarationSpecifier should have at least one specifier" }
     }
 
     override fun begin(): Position = specifiers.first().begin()
 
-    override fun specifyType(typeHolder: TypeHolder): DeclSpec = memoizeType {
-        val typeBuilder = CTypeBuilder(begin())
-        for (specifier in specifiers) {
-            specifier.typeResolve(typeHolder, typeBuilder)
-        }
-
-        return@memoizeType typeBuilder.build()
-    }
-
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 }
 
-class TypeName(val specifiers: DeclarationSpecifier, val abstractDeclarator: AbstractDeclarator?) : TypeSpecifier() {
+class TypeName internal constructor(id: Int, val specifiers: DeclarationSpecifier, val abstractDeclarator: AbstractDeclarator?) : TypeSpecifier(id) {
     override fun begin(): Position = specifiers.begin()
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
-
-    override fun specifyType(typeHolder: TypeHolder): DeclSpec {
-        val specifierType = specifiers.specifyType(typeHolder)
-        if (abstractDeclarator == null) {
-            return specifierType
-        }
-
-        val typeDesc = SemanticAnalysis(typeHolder).resolveAbstractDeclaratorType(abstractDeclarator, specifierType.typeDesc)
-        return DeclSpec(typeDesc, specifierType.storageClass)
-    }
 }

@@ -34,7 +34,7 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
     }
 
     private fun generateDeclaration(node: Declaration) {
-        val declSpec = node.declspec.specifyType(sema.typeHolder)
+        val declSpec = node.declspec.accept(sema)
         if (declSpec.storageClass == StorageClass.TYPEDEF) {
             return
         }

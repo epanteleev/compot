@@ -118,13 +118,13 @@ class ArrayAccess internal constructor(id: Int, val primary: Expression, val exp
 
 sealed class SizeOfParam {
     abstract fun begin(): Position
-    abstract fun constEval(typeHolder: TypeHolder): Int
+    abstract fun constEval(sema: SemanticAnalysis): Int
 }
 
 class SizeOfType(val typeName: TypeName) : SizeOfParam() {
     override fun begin(): Position = typeName.begin()
-    override fun constEval(typeHolder: TypeHolder): Int {
-        val resolved = typeName.specifyType(typeHolder).typeDesc.cType()
+    override fun constEval(sema: SemanticAnalysis): Int {
+        val resolved = typeName.accept(sema).typeDesc.cType()
         if (resolved !is CompletedType) {
             throw TypeResolutionException("sizeof on uncompleted type: $resolved", begin())
         }
@@ -135,14 +135,14 @@ class SizeOfType(val typeName: TypeName) : SizeOfParam() {
 
 class SizeOfExpr(val expr: Expression) : SizeOfParam() {
     override fun begin(): Position = expr.begin()
-    override fun constEval(typeHolder: TypeHolder): Int = expr.accept(SemanticAnalysis(typeHolder)).size()
+    override fun constEval(sema: SemanticAnalysis): Int = expr.accept(sema).size()
 }
 
 class SizeOf internal constructor(id: Int, val expr: SizeOfParam) : Expression(id) {
     override fun begin(): Position = expr.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    fun constEval(typeHolder: TypeHolder): Int = expr.constEval(typeHolder)
+    fun constEval(sema: SemanticAnalysis): Int = expr.constEval(sema)
 }
 
 class Cast internal constructor(id: Int, val typeName: TypeName, val cast: Expression) : Expression(id) {

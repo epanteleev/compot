@@ -51,8 +51,9 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val declspec = declaration_specifiers()?: return@rule null
         val declarator = declarator()?: return@rule null
 
-        val declSpec = declspec.specifyType(globalTypeHolder)
-        val varDesc = SemanticAnalysis(globalTypeHolder).declareVar(declarator, declSpec)
+        val sema = SemanticAnalysis(globalTypeHolder)
+        val declSpec = declspec.accept(sema)
+        val varDesc = sema.declareVar(declarator, declSpec)
         return@rule funcRule(varDesc) {
             val declarations = mutableListOf<Declaration>() //TODO just skip it temporarily
             while (true) {
@@ -935,7 +936,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         return@rule if (specifiers.isEmpty()) {
             null
         } else {
-            DeclarationSpecifier(specifiers)
+            fabric.newDeclarationSpecifier(specifiers)
         }
     }
 
@@ -1465,7 +1466,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     fun type_name(): TypeName? = rule {
         val specifierQualifierList = specifier_qualifier_list()?: return@rule null
         val abstractDeclarator = abstract_declarator()
-        return@rule TypeName(specifierQualifierList, abstractDeclarator)
+        return@rule fabric.newTypeName(specifierQualifierList, abstractDeclarator)
     }
 
     // specifier_qualifier_list
@@ -1492,7 +1493,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         return@rule if (specifiers.isEmpty()) {
             null
         } else {
-            DeclarationSpecifier(specifiers)
+            fabric.newDeclarationSpecifier(specifiers)
         }
     }
 

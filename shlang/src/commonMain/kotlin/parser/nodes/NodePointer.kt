@@ -7,6 +7,6 @@ class NodePointer(val begin: Position, val qualifiers: List<TypeQualifierNode>) 
     fun begin(): Position = begin
 
     fun property(): Set<TypeQualifier> {
-        return qualifiers.mapTo(hashSetOf()) { it.qualifier() }
+        return qualifiers.mapTo(hashSetOf()) { it.qualifier() } //TODO: alloc
     }
 }

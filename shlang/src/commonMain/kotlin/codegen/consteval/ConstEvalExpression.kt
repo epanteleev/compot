@@ -154,12 +154,12 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(sizeOf: SizeOf): Int {
-        return sizeOf.constEval(ctx.typeHolder())
+        return sizeOf.constEval(ctx.semanticAnalysis())
     }
 
     override fun visit(cast: Cast): Int? {
         val expression = eval(cast.cast, ctx.semanticAnalysis()) ?: return null
-        val type = cast.typeName.specifyType(ctx.typeHolder()).typeDesc
+        val type = cast.typeName.accept(ctx.semanticAnalysis()).typeDesc
         return when (type.cType()) {
             is AnyCInteger -> expression.toInt()
             else -> null
@@ -301,12 +301,12 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
     }
 
     override fun visit(sizeOf: SizeOf): Long {
-        return sizeOf.constEval(ctx.typeHolder()).toLong()
+        return sizeOf.constEval(ctx.semanticAnalysis()).toLong()
     }
 
     override fun visit(cast: Cast): Long? {
         val expression = eval(cast.cast, ctx.semanticAnalysis()) ?: return null
-        val type = cast.typeName.specifyType(ctx.typeHolder()).typeDesc
+        val type = cast.typeName.accept(ctx.semanticAnalysis()).typeDesc
         return when (type.cType()) {
             is AnyCInteger -> expression.toLong()
             else -> null
@@ -420,7 +420,7 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
     }
 
     override fun visit(sizeOf: SizeOf): Float {
-        return sizeOf.constEval(ctx.typeHolder()).toFloat()
+        return sizeOf.constEval(ctx.semanticAnalysis()).toFloat()
     }
 
     override fun visit(cast: Cast): Float {
@@ -551,7 +551,7 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
     }
 
     override fun visit(sizeOf: SizeOf): Double {
-        return sizeOf.constEval(ctx.typeHolder()).toDouble()
+        return sizeOf.constEval(ctx.semanticAnalysis()).toDouble()
     }
 
     override fun visit(cast: Cast): Double {

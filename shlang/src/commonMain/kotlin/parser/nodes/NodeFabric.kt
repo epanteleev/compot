@@ -10,10 +10,17 @@ import tokenizer.tokens.StringLiteral
 class NodeFabric {
     private var declCounter = 0
     private var expressionCounter = 0
+    private var typeSpecCounter = 0
 
     private fun incExpressionCounter(): Int {
         val current = expressionCounter
         expressionCounter++
+        return current
+    }
+
+    private fun incTypeSpecCounter(): Int {
+        val current = typeSpecCounter
+        typeSpecCounter++
         return current
     }
 
@@ -166,5 +173,15 @@ class NodeFabric {
 
     fun newForStatement(forKeyword: Keyword, init: ForInit, condition: Expression, increment: Expression, body: Statement): ForStatement {
         return ForStatement(forKeyword, init, condition, increment, body)
+    }
+
+    // TypeSpecifier factories
+
+    fun newDeclarationSpecifier(specifiers: List<AnyTypeNode>): DeclarationSpecifier {
+        return DeclarationSpecifier(incTypeSpecCounter(), specifiers)
+    }
+
+    fun newTypeName(specifiers: DeclarationSpecifier, abstractDeclarator: AbstractDeclarator?): TypeName {
+        return TypeName(incTypeSpecCounter(), specifiers, abstractDeclarator)
     }
 }

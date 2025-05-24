@@ -20,9 +20,10 @@ class Declaration private constructor(val declspec: DeclarationSpecifier, privat
         }
 
         val varDescs = arrayListOf<VarDescriptor>()
-        val declSpec = declspec.specifyType(typeHolder)
+        val declSpec = declspec.accept(SemanticAnalysis(typeHolder))
+        val sema = SemanticAnalysis(typeHolder)
         for (declarator in declarators) {
-            val varDesc = SemanticAnalysis(typeHolder).declareVar(declarator, declSpec) ?: continue
+            val varDesc = sema.declareVar(declarator, declSpec) ?: continue
             varDescs.add(varDesc)
         }
 
@@ -31,17 +32,18 @@ class Declaration private constructor(val declspec: DeclarationSpecifier, privat
 
     companion object {
         fun create(typeHolder: TypeHolder, declspec: DeclarationSpecifier, declarators: List<AnyDeclarator>): Declaration {
-            val declSpec = declspec.specifyType(typeHolder)
+            val declSpec = declspec.accept(SemanticAnalysis(typeHolder))
             if (declSpec.storageClass != StorageClass.TYPEDEF) {
                 return Declaration(declspec, declarators, false)
             }
 
+            val sema = SemanticAnalysis(typeHolder)
             for (declarator in declarators) {
                 if (declarator !is Declarator) {
                     continue
                 }
 
-                val typedef = SemanticAnalysis(typeHolder).resolveTypedef(declarator, declSpec)
+                val typedef = sema.resolveTypedef(declarator, declSpec)
                 if (typedef != null) {
                     typeHolder.addTypedef(typedef)
                 }

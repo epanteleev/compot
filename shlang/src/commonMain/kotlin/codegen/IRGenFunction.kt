@@ -479,7 +479,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         return ir.load(memberIRType, gep)
     }
 
-    private fun visitSizeOf(sizeOf: SizeOf): Value = I64Value.of(sizeOf.constEval(sema.typeHolder))
+    private fun visitSizeOf(sizeOf: SizeOf): Value = I64Value.of(sizeOf.constEval(sema))
 
     private fun visitStringNode(stringNode: StringNode): Value {
         val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(I8Type, stringNode.length()), stringNode.data())

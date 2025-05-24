@@ -26,8 +26,6 @@ class ConditionEvaluationContext(private val preprocessorContext: PreprocessorCo
         throw PreprocessorException("Unknown function '${name.str()}' in \"${name.position().filename()}\" at ${name.line()}:${name.pos()}")
     }
 
-    override fun typeHolder(): TypeHolder = defaultTypes
-
     override fun semanticAnalysis(): SemanticAnalysis {
         return SemanticAnalysis(defaultTypes)
     }

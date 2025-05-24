@@ -9,7 +9,7 @@ import typedesc.TypeHolder
 
 class CommonConstEvalContext<T: Number>(val semanticAnalysis: SemanticAnalysis, val enumerationValues: Map<String, Int> = hashMapOf()): ConstEvalContext<T> {
     override fun getVariable(name: CToken): T? {
-        val value = enumerationValues[name.str()] ?: typeHolder().findEnumByEnumerator(name.str())
+        val value = enumerationValues[name.str()] ?: semanticAnalysis.typeHolder.findEnumByEnumerator(name.str())
         if (value != null) {
             @Suppress("UNCHECKED_CAST")
             return value as T //TODO
@@ -21,10 +21,6 @@ class CommonConstEvalContext<T: Number>(val semanticAnalysis: SemanticAnalysis, 
         return null
     }
 
-    override fun typeHolder(): TypeHolder {
-        return semanticAnalysis.typeHolder
-    }
-
     override fun semanticAnalysis(): SemanticAnalysis {
         return semanticAnalysis
     }
@@ -32,7 +28,7 @@ class CommonConstEvalContext<T: Number>(val semanticAnalysis: SemanticAnalysis, 
 
 class ArraySizeConstEvalContext(val semanticAnalysis: SemanticAnalysis): ConstEvalContext<Long> {
     override fun getVariable(name: CToken): Long? {
-        val value = typeHolder().findEnumByEnumerator(name.str())
+        val value = semanticAnalysis.typeHolder.findEnumByEnumerator(name.str())
         if (value != null) {
             return value.toLong()
         }
@@ -42,10 +38,6 @@ class ArraySizeConstEvalContext(val semanticAnalysis: SemanticAnalysis): ConstEv
     override fun callFunction(name: CToken, args: List<Long>): Long {
         val error = InvalidToken("Cannot consteval expression: found function", name)
         throw ParserException(error)
-    }
-
-    override fun typeHolder(): TypeHolder {
-        return semanticAnalysis.typeHolder
     }
 
     override fun semanticAnalysis(): SemanticAnalysis {

@@ -10,11 +10,14 @@ import parser.nodes.BinaryOpType.COMMA
 import parser.nodes.BinaryOpType.OR
 
 import parser.nodes.visitors.ExpressionVisitor
+import parser.nodes.visitors.TypeSpecifierVisitor
 import typedesc.*
 import types.*
 
-class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): ExpressionVisitor<CompletedType> {
+
+class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): ExpressionVisitor<CompletedType>, TypeSpecifierVisitor<DeclSpec> {
     private val cachedExpressionTypes = hashMapOf<Expression, CompletedType>()
+    private val cachedTypeSpecs = hashMapOf<TypeSpecifier, DeclSpec>()
 
     private inline fun<reified T: CompletedType> memoize(expression: Expression, closure: () -> T): T {
         val cachedType = cachedExpressionTypes[expression]
@@ -24,6 +27,17 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
 
         val type = closure()
         cachedExpressionTypes[expression] = type
+        return type
+    }
+
+    private inline fun memoizeType(typeSpecifier: TypeSpecifier, closure: () -> DeclSpec): DeclSpec {
+        val cachedType = cachedTypeSpecs[typeSpecifier]
+        if (cachedType != null) {
+            return cachedType
+        }
+
+        val type = closure()
+        cachedTypeSpecs[typeSpecifier] = type
         return type
     }
 
@@ -183,11 +197,11 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
     }
 
     private fun resolveParameterType(parameter: Parameter): TypeDesc {
-        val declSpec = parameter.declspec.specifyType(typeHolder)
+        val declSpec = parameter.declspec.accept(this)
         return resolveParameterDeclaratorType(parameter.paramDeclarator, declSpec)
     }
 
-    fun resolveAbstractDeclaratorType(abstractDeclarator: AbstractDeclarator, typeDesc: TypeDesc): TypeDesc {
+    private fun resolveAbstractDeclaratorType(abstractDeclarator: AbstractDeclarator, typeDesc: TypeDesc): TypeDesc {
         val pointerType = wrapPointers(typeDesc.cType(), abstractDeclarator.pointers)
         var newTypeDesc = TypeDesc.from(pointerType)
         if (abstractDeclarator.directAbstractDeclarators == null) {
@@ -256,7 +270,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
      */
 
     private fun typeDescOfCompoundLiteral(compoundLiteral: CompoundLiteral): TypeDesc {
-        val type = compoundLiteral.typeName.specifyType(typeHolder).typeDesc
+        val type = compoundLiteral.typeName.accept(this).typeDesc
         val ctype = type.cType()
         if (ctype is CUncompletedArrayType) {
             return TypeDesc.from(CArrayType(ctype.element(), compoundLiteral.initializerList.length().toLong()))
@@ -442,7 +456,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
     override fun visit(sizeOf: SizeOf): CompletedType = LONG
 
     private fun typeDefSpecifyCompleteType(typeName: TypeName): CompletedType {
-        val cType = typeName.specifyType(typeHolder).typeDesc.cType()
+        val cType = typeName.accept(this).typeDesc.cType()
         if (cType !is CompletedType) {
             throw TypeResolutionException("Uncompleted type: $cType", typeName.begin())
         }
@@ -536,6 +550,27 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
             baseTypes[0] //TODO is it needed?
         } else {
             InitializerType(baseTypes)
+        }
+    }
+
+    override fun visit(specifierType: DeclarationSpecifier): DeclSpec = memoizeType(specifierType) {
+        val typeBuilder = CTypeBuilder(specifierType.begin(), this)
+        return@memoizeType typeBuilder.build(specifierType.specifiers)
+    }
+
+    override fun visit(typeName: TypeName): DeclSpec = memoizeType(typeName) {
+        val specifierType = typeName.specifiers.accept(this)
+        if (typeName.abstractDeclarator == null) {
+            return specifierType
+        }
+
+        val typeDesc = resolveAbstractDeclaratorType(typeName.abstractDeclarator, specifierType.typeDesc)
+        return DeclSpec(typeDesc, specifierType.storageClass)
+    }
+
+    companion object {
+        fun default(): SemanticAnalysis {
+            return SemanticAnalysis(TypeHolder.default())
         }
     }
 }
