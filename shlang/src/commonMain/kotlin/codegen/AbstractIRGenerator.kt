@@ -15,10 +15,11 @@ import ir.module.DirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.value.constant.*
 import parser.LineAgnosticAstPrinter
+import sema.SemanticAnalysis
 
 
 internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
-                                          protected val typeHolder: TypeHolder,
+                                          protected val sema: SemanticAnalysis,
                                           protected val vregStack: VarStack<Value>,
                                           protected val nameGenerator: NameGenerator) {
 
@@ -35,7 +36,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     private fun constEvalInitializerList(lValueType: CType, expr: Expression, getAddress: Boolean = false): NonTrivialConstant? = when (expr) {
         is UnaryOp -> {
             if (expr.opType == PrefixUnaryOpType.ADDRESS) {
-                val nonTrivialType = expr.primary.resolveType(typeHolder)
+                val nonTrivialType = expr.primary.accept(sema)
 
                 staticAddressOf(expr.primary) ?: constEvalInitializerList(nonTrivialType, expr.primary, true)
                     ?: throw IRCodeGenError("cannon evaluate", expr.primary.begin())
@@ -59,19 +60,19 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             else -> throw IRCodeGenError("Unsupported type $lValueType", expr.begin())
         }
         is Cast -> {
-            val type = expr.resolveType(typeHolder)
+            val type = expr.accept(sema)
             if (type is CPointer) {
                 constEvalInitializerList(lValueType, expr.cast) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
             } else {
                 defaultContEval(lValueType, expr)
             }
         }
-        is VarNode -> when (expr.resolveType(typeHolder)) {
+        is VarNode -> when (expr.accept(sema)) {
             is CAggregateType, is AnyCFunctionType -> staticAddressOf(expr) ?: throw RuntimeException("internal error")
             else -> defaultContEval(lValueType, expr)
         }
         is CompoundLiteral -> {
-            val varDesc = expr.typeName.specifyType(typeHolder)
+            val varDesc = expr.typeName.specifyType(sema.typeHolder)
             val cType = varDesc.typeDesc.cType()
             val constant = constEvalInitializerList(cType, expr.initializerList) as InitializerListValue
             val gConstant = when (cType) {
@@ -83,7 +84,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         is ArrayAccess -> {
             val index = constEvalExpression0(expr.expr) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
-            val primaryCType = expr.primary.resolveType(typeHolder)
+            val primaryCType = expr.primary.accept(sema)
             when (val array = constEvalInitializerList(primaryCType, expr.primary)) {
                 is PointerLiteral -> {
                     val gConstant = array.gConstant as GlobalValue
@@ -115,7 +116,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             return global
         }
 
-        val enumValue = typeHolder.findEnumByEnumerator(name)
+        val enumValue = sema.typeHolder.findEnumByEnumerator(name)
         if (enumValue != null) {
             return I32Value.of(enumValue)
         }
@@ -134,7 +135,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     private fun defaultContEval(lValueCType: CType, expr: Expression): NonTrivialConstant? {
         val result = constEvalExpression0(expr) ?: return null
-        val lValueType = mb.toIRLVType<NonTrivialType>(typeHolder, lValueCType)
+        val lValueType = mb.toIRLVType<NonTrivialType>(sema.typeHolder, lValueCType)
         return NonTrivialConstant.of(lValueType, result)
     }
 
@@ -179,7 +180,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     private fun generateName(declarator: AnyDeclarator): String {
-        val varDesc = typeHolder.getVarTypeOrNull(declarator.name())
+        val varDesc = sema.typeHolder.getVarTypeOrNull(declarator.name())
             ?: throw IRCodeGenError("Variable '${declarator.name()}' not found", declarator.begin())
 
         return if (varDesc.storageClass == StorageClass.STATIC) {
@@ -195,7 +196,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             if (existed !is ExternValue) {
                 throw IRCodeGenError("Variable '${declarator.name()}' already exists", declarator.begin())
             }
-            val type = typeHolder.getVarTypeOrNull(declarator.name())
+            val type = sema.typeHolder.getVarTypeOrNull(declarator.name())
                 ?: throw IRCodeGenError("Variable '${declarator.name()}' not found", declarator.begin())
 
             if (type.storageClass != StorageClass.EXTERN) {
@@ -208,7 +209,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             return existed
         }
 
-        val irType = mb.toIRLVType<NonTrivialType>(typeHolder, cType)
+        val irType = mb.toIRLVType<NonTrivialType>(sema.typeHolder, cType)
         val externValue = mb.addExternValue(generateName(declarator), irType) ?:
             throw IRCodeGenError("Variable '${declarator.name()}' already exists", declarator.begin())
 
@@ -234,7 +235,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     protected fun generateExternDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value =
         when (val cType = varDesc.cType()) {
             is CFunctionType -> {
-                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass)
+                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, sema.typeHolder, varDesc.storageClass)
                     .build()
                 getExternFunction(declarator.name(), cPrototype)
             }
@@ -243,24 +244,24 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     protected fun generateGlobalDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value = when (val cType = varDesc.cType()) {
         is CFunctionType -> {
-            val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass).build()
+            val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, sema.typeHolder, varDesc.storageClass).build()
             createFunctionPrototype(declarator, cPrototype)
         }
         is CPrimitive -> {
-            val irType = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
+            val irType = mb.toIRLVType<PrimitiveType>(sema.typeHolder, cType)
             val attr = toIrAttribute(varDesc.storageClass)
             val constant = PrimitiveConstant.of(irType, 0)
             registerGlobal(declarator, constant, attr)
         }
         is CArrayType -> {
-            val irType = mb.toIRType<ArrayType>(typeHolder, cType)
+            val irType = mb.toIRType<ArrayType>(sema.typeHolder, cType)
             val attr = toIrAttribute(varDesc.storageClass)
             val zero = NonTrivialConstant.of(irType.elementType(), 0)
             val elements = generateSequence { zero }.take(irType.length).toList()
             registerGlobal(declarator, InitializerListValue(irType, elements), attr)
         }
         is AnyCStructType -> {
-            val irType = mb.toIRType<StructType>(typeHolder, cType)
+            val irType = mb.toIRType<StructType>(sema.typeHolder, cType)
             val elements = arrayListOf<NonTrivialConstant>()
             for (field in irType.fields) {
                 elements.add(NonTrivialConstant.of(field, 0))
@@ -270,7 +271,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         is CUncompletedArrayType -> {
             // Important: gcc & clang allow to declare array with 0 element
-            val irType = ArrayType(mb.toIRType<NonTrivialType>(typeHolder, cType.element().cType()), 1)
+            val irType = ArrayType(mb.toIRType<NonTrivialType>(sema.typeHolder, cType.element().cType()), 1)
             val attr = toIrAttribute(varDesc.storageClass)
             val zero = NonTrivialConstant.of(irType.elementType(), 0)
             val elements = arrayListOf(zero)
@@ -280,10 +281,10 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         is CStringLiteral -> TODO()
     }
 
-    protected fun constEvalExpression0(expr: Expression): Number? = ConstEvalExpression.eval(expr, typeHolder)
+    protected fun constEvalExpression0(expr: Expression): Number? = ConstEvalExpression.eval(expr, sema)
 
     private fun initialConstants(lValueCType: CAggregateType, initializerList: InitializerList): MutableList<NonTrivialConstant> {
-        val lValueType = mb.toIRType<AggregateType>(typeHolder, lValueCType)
+        val lValueType = mb.toIRType<AggregateType>(sema.typeHolder, lValueCType)
         val elements = arrayListOf<NonTrivialConstant>()
         when (lValueCType) {
             is AnyCArrayType -> {
@@ -315,7 +316,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 throw IRCodeGenError("Unsupported type $lValueCType, expr=${LineAgnosticAstPrinter.print(expr)}", expr.begin())
         }
 
-        val lValueType = mb.toIRType<AggregateType>(typeHolder, lValueCType)
+        val lValueType = mb.toIRType<AggregateType>(sema.typeHolder, lValueCType)
         val elements = initialConstants(lValueCType, expr)
 
         for ((index, initializer) in expr.initializers.withIndex()) {

@@ -5,7 +5,7 @@ import common.assertion
 import tokenizer.Position
 
 
-class CTypeBuilder(private val where: Position) {
+class CTypeBuilder internal constructor(private val where: Position) {
     private val typeProperties = mutableListOf<TypeQualifier>()
     private val baseTypes = mutableListOf<CType>()
     private var storageClass: StorageClass? = null

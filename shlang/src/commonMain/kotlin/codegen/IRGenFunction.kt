@@ -41,24 +41,24 @@ import typedesc.*
 private data class FunctionArgInfo(val args: List<Value>, val attributes: Set<FunctionAttribute>)
 
 private class IrGenFunction(moduleBuilder: ModuleBuilder,
-                    typeHolder: TypeHolder,
+                    sema: SemanticAnalysis,
                     varStack: VarStack<Value>,
                     nameGenerator: NameGenerator,
                     private val parameters: List<VarDescriptor>?,
                     private val ir: FunctionDataBuilder,
                     private val functionType: CFunctionType) :
-    AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator),
+    AbstractIRGenerator(moduleBuilder, sema, varStack, nameGenerator),
     StatementVisitor<Unit>,
     DeclaratorVisitor<Value> {
     private var stringToLabel = mutableMapOf<String, Label>()
     private val stmtStack = StmtStack()
 
     private val vaListIrType by lazy {
-        mb.toIRType<StructType>(typeHolder, VaStart.vaList)
+        mb.toIRType<StructType>(sema.typeHolder, VaStart.vaList)
     }
 
     private inline fun<reified T> scoped(noinline block: () -> T): T {
-        return typeHolder.scoped { vregStack.scoped(block) }
+        return sema.typeHolder.scoped { vregStack.scoped(block) }
     }
 
     private fun seekOrAddLabel(name: String): Label {
@@ -73,9 +73,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (declaration.isTypedef) {
             return
         }
-        val varDescriptors = declaration.declareVars(typeHolder)
+        val varDescriptors = declaration.declareVars(sema.typeHolder)
         for (varDesc in varDescriptors) {
-            typeHolder.addVar(varDesc)
+            sema.typeHolder.addVar(varDesc)
         }
         for (declarator in declaration.declarators()) {
             declarator.accept(this)
@@ -101,8 +101,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitCompoundLiteral(compoundLiteral: CompoundLiteral): Value {
-        val type   = compoundLiteral.resolveType(typeHolder)
-        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+        val type   = compoundLiteral.accept(sema)
+        val irType = mb.toIRType<AggregateType>(sema.typeHolder, type)
         val adr    = ir.alloc(irType)
         visitInitializerList(compoundLiteral.initializerList, adr, type.asType(compoundLiteral.begin()))
         return adr
@@ -132,16 +132,16 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitBuiltInVaCopy(builtinVaCopy: BuiltinVaCopy): Value {
         val dest = visitExpression(builtinVaCopy.dest, true)
-        val dstType = builtinVaCopy.dest.resolveType(typeHolder)
+        val dstType = builtinVaCopy.dest.accept(sema)
         if (dstType !== VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $dstType", builtinVaCopy.begin())
         }
         val src = visitExpression(builtinVaCopy.src, true)
-        val srcType = builtinVaCopy.src.resolveType(typeHolder)
+        val srcType = builtinVaCopy.src.accept(sema)
         if (srcType !== VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $srcType", builtinVaCopy.begin())
         }
-        val irType = mb.toIRType<StructType>(typeHolder, srcType)
+        val irType = mb.toIRType<StructType>(sema.typeHolder, srcType)
         val destPtr = ir.gep(dest, irType, I64Value.of(0))
         val srcPtr = ir.gep(src, irType, I64Value.of(0))
         ir.memcpy(destPtr, srcPtr, U64Value.of(irType.sizeOf().toLong()))
@@ -149,7 +149,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitBuiltInVaEnd(builtinVaEnd: BuiltinVaEnd): Value {
-        val vaListType = builtinVaEnd.vaList.resolveType(typeHolder)
+        val vaListType = builtinVaEnd.vaList.accept(sema)
         if (vaListType !== VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType", builtinVaEnd.begin())
         }
@@ -159,7 +159,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitBuiltInVaStart(builtinVaStart: BuiltinVaStart): Value {
         val vaList = visitExpression(builtinVaStart.vaList, true)
-        val vaListType = builtinVaStart.vaList.resolveType(typeHolder)
+        val vaListType = builtinVaStart.vaList.accept(sema)
         if (vaListType !== VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType", builtinVaStart.begin())
         }
@@ -173,23 +173,23 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitBuiltInVaArg(builtinVaArg: BuiltinVaArg): Value {
-        val vaListType = builtinVaArg.assign.resolveType(typeHolder)
+        val vaListType = builtinVaArg.assign.accept(sema)
         if (vaListType !== VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType", builtinVaArg.begin())
         }
 
         val vaList = visitExpression(builtinVaArg.assign, true)
-        return when (val argCType = builtinVaArg.resolveType(typeHolder)) {
+        return when (val argCType = builtinVaArg.accept(sema)) {
             is AnyCInteger, is CPointer, is BOOL -> { //TODO add test for function pointer
-                val argType = mb.toIRType<PrimitiveType>(typeHolder, argCType)
+                val argType = mb.toIRType<PrimitiveType>(sema.typeHolder, argCType)
                 emitBuiltInVaArg(vaList, argType, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
             }
             is AnyCFloat -> {
-                val argType = mb.toIRType<PrimitiveType>(typeHolder, argCType)
+                val argType = mb.toIRType<PrimitiveType>(sema.typeHolder, argCType)
                 emitBuiltInVaArg(vaList, argType, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
             }
             is CStructType -> { //TODO add test for union
-                val irType = mb.toIRType<StructType>(typeHolder, argCType)
+                val irType = mb.toIRType<StructType>(sema.typeHolder, argCType)
                 val alloc = ir.alloc(irType)
                 if (!argCType.isSmall()) {
                     emitBuiltInVarArgLargeStruct(vaList, alloc, irType)
@@ -269,13 +269,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is InitializerListInitializer -> when (type) {
                 is CArrayType -> {
                     val t = type.element()
-                    val irType = mb.toIRType<AggregateType>(typeHolder, t.cType())
+                    val irType = mb.toIRType<AggregateType>(sema.typeHolder, t.cType())
                     val fieldPtr = ir.gep(lvalueAdr, irType, I64Value.of(idx))
                     visitInitializerList(init.list, fieldPtr, t.asType())
                 }
                 is CStructType -> {
                     val t = type.fieldByIndexOrNull(idx) ?: throw IRCodeGenError("Field '$idx' not found", init.begin())
-                    val irType = mb.toIRType<AggregateType>(typeHolder, type)
+                    val irType = mb.toIRType<AggregateType>(sema.typeHolder, type)
                     val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
                     visitInitializerList(init.list, fieldPtr, t.asType())
                 }
@@ -309,7 +309,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 else -> when (type) {
                     is AnyCArrayType -> {
                         val rvalue = visitExpression(expr, true)
-                        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+                        val irType = mb.toIRType<AggregateType>(sema.typeHolder, type)
 
                         val field = when (val irFieldType = irType.field(idx)) {
                             is PrimitiveType -> irFieldType
@@ -322,7 +322,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     }
                     is AnyCStructType -> {
                         val rvalue = visitExpression(expr, true)
-                        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+                        val irType = mb.toIRType<AggregateType>(sema.typeHolder, type)
                         val irFieldType = irType.field(idx)
                         val converted = ir.convertLVToType(rvalue, irFieldType)
                         val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
@@ -381,7 +381,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitConditional(conditional: Conditional): Value =
-        when (val cType = conditional.resolveType(typeHolder)) {
+        when (val cType = conditional.accept(sema)) {
             is VOID -> {
                 val condition = makeConditionFromExpression(conditional.cond)
                 val thenBlock = ir.createLabel()
@@ -401,11 +401,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 UndefValue
             }
             is AnyCInteger, is CEnumType -> {
-                val commonType = mb.toIRType<IntegerType>(typeHolder, cType)
+                val commonType = mb.toIRType<IntegerType>(sema.typeHolder, cType)
                 generateSelectPattern(conditional, commonType)
             }
             is AnyCFloat, is CPointer -> {
-                val commonType = mb.toIRType<PrimitiveType>(typeHolder, cType)
+                val commonType = mb.toIRType<PrimitiveType>(sema.typeHolder, cType)
                 generateIfElsePattern(commonType, conditional)
             }
             is BOOL -> generateSelectPattern(conditional, I8Type)
@@ -416,12 +416,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
         val struct   = visitExpression(arrowMemberAccess.primary, true)
-        val cPointer = when (val ty = arrowMemberAccess.primary.resolveType(typeHolder)) {
+        val cPointer = when (val ty = arrowMemberAccess.primary.accept(sema)) {
             is AnyCArrayType -> ty.asPointer()
             is CPointer      -> ty
             else -> throw IRCodeGenError("Pointer type expected, but got $ty", arrowMemberAccess.begin())
         }
-        val cStructType = cPointer.dereference(arrowMemberAccess.begin(), typeHolder)
+        val cStructType = cPointer.dereference(arrowMemberAccess.begin(), sema.typeHolder)
 
         if (cStructType !is AnyCStructType) {
             throw IRCodeGenError("Struct type expected, but got '$cStructType'", arrowMemberAccess.begin())
@@ -431,7 +431,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Field not found: $fieldName", arrowMemberAccess.begin())
         }
 
-        val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
+        val structIRType = mb.toIRType<StructType>(sema.typeHolder, cStructType)
         if (structIRType.fields().size <= member.index) {
             return ir.gep(struct, I8Type, I64Value.of(cStructType.size()))
         }
@@ -445,13 +445,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (memberType is CAggregateType || memberType is AnyCFunctionType) {
             return gep
         }
-        val memberIRType = mb.toIRLVType<PrimitiveType>(typeHolder, memberType)
+        val memberIRType = mb.toIRLVType<PrimitiveType>(sema.typeHolder, memberType)
         return ir.load(memberIRType, gep)
     }
 
     private fun visitMemberAccess(memberAccess: MemberAccess, isRvalue: Boolean): Value {
         val struct = visitExpression(memberAccess.primary, false) //TODO isRvalue???
-        val structType = memberAccess.primary.resolveType(typeHolder)
+        val structType = memberAccess.primary.accept(sema)
         if (structType !is AnyCStructType) {
             throw IRCodeGenError("Struct type expected, but got '$structType'", memberAccess.begin())
         }
@@ -460,7 +460,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val member = structType.fieldByNameOrNull(fieldName) ?:
             throw IRCodeGenError("Field not found: '$fieldName'", memberAccess.begin())
 
-        val structIRType = mb.toIRType<StructType>(typeHolder, structType)
+        val structIRType = mb.toIRType<StructType>(sema.typeHolder, structType)
         if (structIRType.fields().size <= member.index) {
             return ir.gep(struct, I8Type, I64Value.of(structType.size()))
         }
@@ -475,11 +475,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return gep
         }
 
-        val memberIRType = mb.toIRLVType<PrimitiveType>(typeHolder, memberType)
+        val memberIRType = mb.toIRLVType<PrimitiveType>(sema.typeHolder, memberType)
         return ir.load(memberIRType, gep)
     }
 
-    private fun visitSizeOf(sizeOf: SizeOf): Value = I64Value.of(sizeOf.constEval(typeHolder))
+    private fun visitSizeOf(sizeOf: SizeOf): Value = I64Value.of(sizeOf.constEval(sema.typeHolder))
 
     private fun visitStringNode(stringNode: StringNode): Value {
         val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(I8Type, stringNode.length()), stringNode.data())
@@ -491,10 +491,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val convertedIndex = ir.convertLVToType(index, I64Type)
 
         val array = visitExpression(arrayAccess.primary, true)
-        val arrayType = arrayAccess.resolveType(typeHolder)
-        val elementType = mb.toIRLVType<NonTrivialType>(typeHolder, arrayType)
+        val arrayType = arrayAccess.accept(sema)
+        val elementType = mb.toIRLVType<NonTrivialType>(sema.typeHolder, arrayType)
 
-        val adr = when (val primaryType = arrayAccess.primary.resolveType(typeHolder)) {
+        val adr = when (val primaryType = arrayAccess.primary.accept(sema)) {
             is AnyCArrayType, is CPointer -> ir.gep(array, elementType, convertedIndex)
             is CPrimitive -> {
                 val arrValue = ir.convertLVToType(array, I64Type)
@@ -538,13 +538,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         var offset = evaluateFirstArgIdx(returnType)
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
-            when (val argCType = argValue.resolveType(typeHolder)) {
+            when (val argCType = argValue.accept(sema)) {
                 is CPrimitive, is AnyCFunctionType, is CUncompletedArrayType, is CStringLiteral -> {
                     val convertedArg = convertArg(function, idx + offset, expr)
                     convertedArgs.add(convertedArg)
                 }
                 is CArrayType -> {
-                    val type = mb.toIRType<ArrayType>(typeHolder, argCType)
+                    val type = mb.toIRType<ArrayType>(sema.typeHolder, argCType)
                     val convertedArg = ir.gep(expr, type.elementType(), I64Value.of(0))
                     convertedArgs.add(convertedArg)
                 }
@@ -554,7 +554,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         continue
                     }
                     if (!argCType.isSmall()) {
-                        val irType = mb.toIRType<StructType>(typeHolder, argCType)
+                        val irType = mb.toIRType<StructType>(sema.typeHolder, argCType)
                         attributes.add(ByValue(idx + offset, irType))
                     }
                     val argValues = ir.loadCoerceArguments(argCType, expr)
@@ -568,17 +568,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitCast(cast: Cast): Value {
         val value = visitExpression(cast.cast, true)
-        return when (val castToType = cast.resolveType(typeHolder)) {
+        return when (val castToType = cast.accept(sema)) {
             is VOID -> value
             is BOOL -> ir.convertLVToType(value, FlagType)
             is CPointer  -> {
-                val baseAddr = when (val fromType = cast.cast.resolveType(typeHolder)) {
+                val baseAddr = when (val fromType = cast.cast.accept(sema)) {
                     is CArrayType -> {
-                        val irType = mb.toIRType<ArrayType>(typeHolder, fromType)
+                        val irType = mb.toIRType<ArrayType>(sema.typeHolder, fromType)
                         ir.gep(value, irType.elementType(), I64Value.of(0))
                     }
                     is AnyCStructType -> {
-                        val irType = mb.toIRType<StructType>(typeHolder, fromType)
+                        val irType = mb.toIRType<StructType>(sema.typeHolder, fromType)
                         ir.gfp(value, irType, I64Value.of(0))
                     }
                     is CPrimitive,
@@ -589,7 +589,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.convertLVToType(baseAddr, PtrType)
             }
             is CPrimitive -> {
-                val toType = mb.toIRType<PrimitiveType>(typeHolder, castToType)
+                val toType = mb.toIRType<PrimitiveType>(sema.typeHolder, castToType)
                 ir.convertLVToType(value, toType)
             }
             else -> throw IRCodeGenError("Unknown type $castToType", cast.begin())
@@ -602,7 +602,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is PrimitiveType -> {
                 val ret = ir.icall(loadedFunctionPtr, function, argInfo.args, argInfo.attributes, cont)
                 ir.switchLabel(cont)
-                val structType = mb.toIRType<StructType>(typeHolder, returnType)
+                val structType = mb.toIRType<StructType>(sema.typeHolder, returnType)
                 val gep = ir.gfp(retValue, structType, I64Value.of(0L))
                 ir.store(gep, ret)
             }
@@ -620,10 +620,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitFunPointerCall(funcPointerCall: FunctionCall): Value {
-        val functionType = funcPointerCall.functionType(typeHolder)
+        val functionType = sema.functionType(funcPointerCall)
         val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true)
 
-        val cPrototype = CFunctionPrototypeBuilder(funcPointerCall.begin(), functionType, mb, typeHolder, StorageClass.AUTO).build()
+        val cPrototype = CFunctionPrototypeBuilder(funcPointerCall.begin(), functionType, mb, sema.typeHolder, StorageClass.AUTO).build()
 
         val prototype = IndirectFunctionPrototype(cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
         val argInfo = convertFunctionArgs(prototype, functionType.retType().cType(), funcPointerCall.args)
@@ -642,7 +642,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ret
             }
             is CStructType -> {
-                val retType = mb.toIRType<NonTrivialType>(typeHolder, functionReturnType)
+                val retType = mb.toIRType<NonTrivialType>(sema.typeHolder, functionReturnType)
                 val retValue = ir.alloc(retType)
                 icallFunctionForStructType(retValue, loadedFunctionPtr, functionReturnType, prototype, argInfo)
                 retValue
@@ -681,7 +681,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val function = mb.findFunction(primary.name()) ?: return visitFunPointerCall(functionCall)
         val argInfo = convertFunctionArgs(function, functionType.retType().cType(), functionCall.args)
 
-        return when (val functionType = functionCall.resolveType(typeHolder)) {
+        return when (val functionType = functionCall.accept(sema)) {
             VOID -> {
                 val cont = ir.createLabel()
                 ir.vcall(function, argInfo.args, argInfo.attributes, cont)
@@ -695,7 +695,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 call
             }
             is CStructType -> {
-                val retType = mb.toIRType<NonTrivialType>(typeHolder, functionType)
+                val retType = mb.toIRType<NonTrivialType>(sema.typeHolder, functionType)
                 val retValue = ir.alloc(retType)
                 callFunctionForStructType(retValue, functionType, function, argInfo)
                 retValue
@@ -715,10 +715,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitFunPointerForStructType(lvalueAdr: Value, returnType: AnyCStructType, funcPointerCall: FunctionCall) {
-        val functionType = funcPointerCall.functionType(typeHolder)
+        val functionType = sema.functionType(funcPointerCall)
         val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true)
 
-        val cPrototype = CFunctionPrototypeBuilder(funcPointerCall.begin(), functionType, mb, typeHolder, StorageClass.AUTO).build()
+        val cPrototype = CFunctionPrototypeBuilder(funcPointerCall.begin(), functionType, mb, sema.typeHolder, StorageClass.AUTO).build()
 
         val prototype = IndirectFunctionPrototype(cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
         val argInfo = convertFunctionArgs(prototype, functionType.retType().cType(), funcPointerCall.args)
@@ -781,11 +781,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun evaluateAddress(expr: Expression, addressCType: CPointer): Value {
         val rvalue = visitExpression(expr, true)
-        return when (val exprType = expr.resolveType(typeHolder)) {
+        return when (val exprType = expr.accept(sema)) {
             is AnyCArrayType, is CPointer -> ir.convertLVToType(rvalue, I64Type)
             is CPrimitive -> {
                 val convertedLValue = ir.convertLVToType(rvalue, I64Type)
-                val dereferenced = addressCType.dereference(expr.begin(), typeHolder)
+                val dereferenced = addressCType.dereference(expr.begin(), sema.typeHolder)
                 ir.mul(convertedLValue, I64Value.of(dereferenced.size()))
             }
 
@@ -793,15 +793,15 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun makeSubBinary(binOp: BinaryOp): Value = when (val cType = binOp.resolveType(typeHolder)) {
+    private fun makeSubBinary(binOp: BinaryOp): Value = when (val cType = binOp.accept(sema)) {
         is CPointer -> {
             val lAddress = evaluateAddress(binOp.left, cType)
             val rAddress = evaluateAddress(binOp.right, cType)
             val result = ir.sub(lAddress, rAddress)
-            val rType = binOp.right.resolveType(typeHolder)
-            val lType = binOp.left.resolveType(typeHolder)
+            val rType = binOp.right.accept(sema)
+            val lType = binOp.left.accept(sema)
             val divided = if (rType is CPointer && lType is CPointer) {
-                val vType = cType.dereference(binOp.begin(), typeHolder)
+                val vType = cType.dereference(binOp.begin(), sema.typeHolder)
                     .asType<CompletedType>(binOp.begin())
                 divide(result, I64Value.of(vType.size()))
             } else {
@@ -811,7 +811,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.convertRVToType(divided, PtrType)
         }
         is AnyCFloat -> { //TODO code duplication with makeAlgebraicBinary
-            val commonType = mb.toIRType<FloatingPointType>(typeHolder, cType)
+            val commonType = mb.toIRType<FloatingPointType>(sema.typeHolder, cType)
             val left = visitExpression(binOp.left, true)
             val leftConverted = ir.convertRVToType(left, commonType)
 
@@ -821,7 +821,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.sub(leftConverted, rightConverted)
         }
         is AnyCInteger, is CEnumType -> { //TODO code duplication with makeAlgebraicBinary
-            val cvtType = when (val commonType = mb.toIRType<IntegerType>(typeHolder, cType)) {
+            val cvtType = when (val commonType = mb.toIRType<IntegerType>(sema.typeHolder, cType)) {
                 is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) I32Type else commonType
                 is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) U32Type else commonType
             }
@@ -836,7 +836,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw IRCodeGenError("Unexpected type: $cType", binOp.begin())
     }
 
-    private fun makeAlgebraicBinary(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value = when (val cType = binOp.resolveType(typeHolder)) {
+    private fun makeAlgebraicBinary(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value = when (val cType = binOp.accept(sema)) {
         is CPointer -> {
             val lAddress = evaluateAddress(binOp.left, cType)
             val rAddress = evaluateAddress(binOp.right, cType)
@@ -844,7 +844,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.convertRVToType(result, PtrType)
         }
         is AnyCFloat -> {
-            val commonType = mb.toIRType<FloatingPointType>(typeHolder, cType)
+            val commonType = mb.toIRType<FloatingPointType>(sema.typeHolder, cType)
             val left = visitExpression(binOp.left, true)
             val leftConverted = ir.convertRVToType(left, commonType)
 
@@ -854,7 +854,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             op(leftConverted, rightConverted)
         }
         is AnyCInteger, is CEnumType -> {
-            val cvtType = when (val commonType = mb.toIRType<IntegerType>(typeHolder, cType)) {
+            val cvtType = when (val commonType = mb.toIRType<IntegerType>(sema.typeHolder, cType)) {
                 is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) I32Type else commonType
                 is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) U32Type else commonType
             }
@@ -879,17 +879,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun makeAlgebraicBinaryWithAssignment(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
-        when (val commonType = mb.toIRType<NonTrivialType>(typeHolder, binOp.resolveType(typeHolder))) {
+        when (val commonType = mb.toIRType<NonTrivialType>(sema.typeHolder, binOp.accept(sema))) {
             is PtrType -> {
                 val rvalue     = visitExpression(binOp.right, true)
-                val rValueType = binOp.right.resolveType(typeHolder)
+                val rValueType = binOp.right.accept(sema)
                 if (rValueType !is CPrimitive) {
                     throw IRCodeGenError("Primitive type expected, but got $rValueType", binOp.begin())
                 }
                 val convertedRValue = ir.convertLVToType(rvalue, I64Type)
 
                 val lvalueAddress = visitExpression(binOp.left, false)
-                val lValueType    = binOp.resolveType(typeHolder)
+                val lValueType    = binOp.accept(sema)
                 val lvalue        = ir.load(PtrType, lvalueAddress)
                 val ptr2intLValue = ir.ptr2int(lvalue, I64Type)
 
@@ -898,7 +898,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 val convertedLValue = ir.convertLVToType(ptr2intLValue, I64Type)
 
-                val dereferenced = lValueType.dereference(binOp.begin(), typeHolder)
+                val dereferenced = lValueType.dereference(binOp.begin(), sema.typeHolder)
                 val mul = ir.mul(convertedRValue, I64Value.of(dereferenced.size()))
 
                 val result = op(convertedLValue, mul)
@@ -908,8 +908,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             is FloatingPointType -> {
                 val right = visitExpression(binOp.right, true)
-                val leftType = binOp.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
+                val leftType = binOp.left.accept(sema)
+                val leftIrType = mb.toIRType<PrimitiveType>(sema.typeHolder, leftType)
                 val rightConverted = ir.convertLVToType(right, leftIrType)
 
                 val left = visitExpression(binOp.left, false)
@@ -921,8 +921,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             is IntegerType -> {
                 val right = visitExpression(binOp.right, true)
-                val leftType = binOp.left.resolveType(typeHolder)
-                val originalIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
+                val leftType = binOp.left.accept(sema)
+                val originalIrType = mb.toIRType<IntegerType>(sema.typeHolder, leftType)
                 val leftIrType = when (originalIrType) {
                     is SignedIntType -> if (originalIrType.sizeOf() < WORD_SIZE) I32Type else originalIrType
                     is UnsignedIntType -> if (originalIrType.sizeOf() < WORD_SIZE) U32Type else originalIrType
@@ -943,7 +943,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun makeCompareBinary(binOp: BinaryOp, predicate: (PrimitiveType) -> AnyPredicateType, isRvalue: Boolean): Value {
-        val commonType = mb.toIRType<Type>(typeHolder, binOp.resolveType(typeHolder))
+        val commonType = mb.toIRType<Type>(sema.typeHolder, binOp.accept(sema))
         val left = visitExpression(binOp.left, true)
         val leftConverted = ir.convertRVToType(left, commonType)
 
@@ -964,7 +964,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitAssignBinary(binop: BinaryOp): Value {
-        val leftType = binop.left.resolveType(typeHolder)
+        val leftType = binop.left.accept(sema)
         if (leftType is AnyCStructType && binop.right is FunctionCall) {
             val lvalueAdr = visitExpression(binop.left, false)
             visitFuncCallForStructType(lvalueAdr, leftType, binop.right)
@@ -973,14 +973,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val right = visitExpression(binop.right, true)
         if (leftType !is AnyCStructType) {
-            val leftIrType = mb.toIRType<Type>(typeHolder, leftType)
+            val leftIrType = mb.toIRType<Type>(sema.typeHolder, leftType)
             val rightCvt = ir.convertRVToType(right, leftIrType)
 
             val left = visitExpression(binop.left, false)
             ir.store(left, rightCvt)
             return rightCvt
         }
-        val rightType = binop.right.resolveType(typeHolder)
+        val rightType = binop.right.accept(sema)
         val left = visitExpression(binop.left, true)
         ir.memcpy(left, right, U64Value.of(rightType.size().toLong()))
         return right
@@ -1089,14 +1089,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             "Unknown operation, op=${unaryOp.opType}"
         }
 
-        val ctype = unaryOp.resolveType(typeHolder)
+        val ctype = unaryOp.accept(sema)
         val addr = visitExpression(unaryOp.primary, false)
-        val type = mb.toIRType<PrimitiveType>(typeHolder, ctype)
+        val type = mb.toIRType<PrimitiveType>(sema.typeHolder, ctype)
         val loaded = ir.load(type, addr)
         when (ctype) {
             is CPointer -> {
                 val converted = ir.convertLVToType(loaded, I64Type)
-                val dereferenced = ctype.dereference(unaryOp.begin(), typeHolder)
+                val dereferenced = ctype.dereference(unaryOp.begin(), sema.typeHolder)
                 val inc = op(converted, I64Value.of(dereferenced.size()))
                 ir.store(addr, ir.convertLVToType(inc, type))
             }
@@ -1115,18 +1115,18 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val address = visitExpression(unaryOp.primary, false)
-        when (val cType = unaryOp.resolveType(typeHolder)) {
+        when (val cType = unaryOp.accept(sema)) {
             is CPointer -> {
                 val loaded    = ir.load(PtrType, address)
                 val converted = ir.convertLVToType(loaded, I64Type)
-                val dereferenced = cType.dereference(unaryOp.begin(), typeHolder)
+                val dereferenced = cType.dereference(unaryOp.begin(), sema.typeHolder)
                 val inc       = op(converted, I64Value.of(dereferenced.size()))
                 val incPtr    = ir.convertLVToType(inc, PtrType)
                 ir.store(address, incPtr)
                 return incPtr
             }
             is CPrimitive -> {
-                val type   = mb.toIRType<PrimitiveType>(typeHolder, cType)
+                val type   = mb.toIRType<PrimitiveType>(sema.typeHolder, cType)
                 val loaded = ir.load(type, address)
                 val inc    = op(loaded, PrimitiveConstant.of(loaded.type(), 1))
                 ir.store(address, ir.convertLVToType(inc, type))
@@ -1144,13 +1144,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 if (!isRvalue) {
                     return addr
                 }
-                val type = unaryOp.resolveType(typeHolder)
+                val type = unaryOp.accept(sema)
                 if (type is CAggregateType || type is AnyCFunctionType) {
                     return addr
                 }
 
-                val loadedType = mb.toIRLVType<PrimitiveType>(typeHolder, type)
-                val cvtAddr = when (unaryOp.primary.resolveType(typeHolder)) {
+                val loadedType = mb.toIRLVType<PrimitiveType>(sema.typeHolder, type)
+                val cvtAddr = when (unaryOp.primary.accept(sema)) {
                     is AnyCArrayType -> ir.gep(addr, loadedType, I64Value.of(0))
                     else -> addr
                 }
@@ -1163,15 +1163,15 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             PrefixUnaryOpType.DEC  -> visitPrefixIncOrDec(unaryOp, ir::sub)
             PrefixUnaryOpType.NEG  -> {
                 val value = visitExpression(unaryOp.primary, true)
-                val type = unaryOp.resolveType(typeHolder)
-                val valueType = mb.toIRType<NonTrivialType>(typeHolder, type)
+                val type = unaryOp.accept(sema)
+                val valueType = mb.toIRType<NonTrivialType>(sema.typeHolder, type)
                 val converted = ir.convertLVToType(value, valueType)
                 ir.neg(converted)
             }
             PrefixUnaryOpType.NOT -> {
                 val value = visitExpression(unaryOp.primary, true)
-                val type = unaryOp.resolveType(typeHolder)
-                val commonType = mb.toIRType<Type>(typeHolder, type)
+                val type = unaryOp.accept(sema)
+                val commonType = mb.toIRType<Type>(sema.typeHolder, type)
                 val converted = ir.convertRVToType(value, commonType) //TODO do we need this?
 
                 val eqType = when (commonType) {
@@ -1184,8 +1184,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             PrefixUnaryOpType.BIT_NOT -> {
                 val value = visitExpression(unaryOp.primary, true)
-                val type = unaryOp.resolveType(typeHolder)
-                val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
+                val type = unaryOp.accept(sema)
+                val commonType = mb.toIRType<NonTrivialType>(sema.typeHolder, type)
                 val converted = ir.convertLVToType(value, commonType)
                 ir.not(converted)
             }
@@ -1213,7 +1213,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (!isRvalue) {
             return rvalueAddr
         }
-        when (val type = varNode.resolveType(typeHolder)) {
+        when (val type = varNode.accept(sema)) {
             is AnyCStructType, is AnyCFunctionType -> {
                 return rvalueAddr
             }
@@ -1225,7 +1225,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
             }
             is CPrimitive -> {
-                val converted = mb.toIRLVType<PrimitiveType>(typeHolder, type)
+                val converted = mb.toIRLVType<PrimitiveType>(sema.typeHolder, type)
                 return ir.load(converted, rvalueAddr)
             }
         }
@@ -1242,7 +1242,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return global
         }
 
-        val enumValue = typeHolder.findEnumByEnumerator(name)
+        val enumValue = sema.typeHolder.findEnumByEnumerator(name)
         if (enumValue != null) {
             return I32Value.of(enumValue)
         }
@@ -1258,7 +1258,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 vregStack[param.name] = rvalueAdr
             }
             is CPrimitive, is AnyCFunctionType -> {
-                val irType = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
+                val irType = mb.toIRLVType<PrimitiveType>(sema.typeHolder, cType)
                 val rvalueAdr = ir.alloc(irType)
                 ir.store(rvalueAdr, ir.convertLVToType(arg, irType))
                 vregStack[param.name] = rvalueAdr
@@ -1278,7 +1278,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw RuntimeException("internal error")
         }
 
-        val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
+        val irType    = mb.toIRType<NonTrivialType>(sema.typeHolder, cType)
         val rvalueAdr = ir.alloc(irType)
         ir.storeCoerceArguments(cType, rvalueAdr, args)
         vregStack[param] = rvalueAdr
@@ -1324,7 +1324,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.ret(I8Type, arrayOf(ret))
             }
             is CPrimitive, is AnyCFunctionType -> {
-                val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType.cType())
+                val retType = mb.toIRLVType<PrimitiveType>(sema.typeHolder, retCType.cType())
                 val returnValueAdr = fnStmt.resolveReturnValueAdr { ir.alloc(retType) }
                 ir.switchLabel(exitBlock)
                 val ret = ir.load(retType, returnValueAdr)
@@ -1333,7 +1333,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is AnyCStructType -> when (val irRetType = ir.prototype().returnType()) {
                 is PrimitiveType -> {
                     val returnValueAdr = fnStmt.resolveReturnValueAdr {
-                        ir.alloc(mb.toIRType<StructType>(typeHolder, cType))
+                        ir.alloc(mb.toIRType<StructType>(sema.typeHolder, cType))
                     }
                     ir.switchLabel(exitBlock)
 
@@ -1341,7 +1341,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 is TupleType -> {
                     val returnValueAdr = fnStmt.resolveReturnValueAdr {
-                        ir.alloc(mb.toIRType<StructType>(typeHolder, cType))
+                        ir.alloc(mb.toIRType<StructType>(sema.typeHolder, cType))
                     }
                     ir.switchLabel(exitBlock)
 
@@ -1365,7 +1365,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (!fnType.variadic()) {
             return
         }
-        val vaInitType = mb.toIRType<StructType>(typeHolder, VaInit.vaInit)
+        val vaInitType = mb.toIRType<StructType>(sema.typeHolder, VaInit.vaInit)
         val vaInitInstance = ir.alloc(vaInitType)
         fnStmt.vaInit = vaInitInstance
         val cont = ir.createLabel()
@@ -1379,7 +1379,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         for (param in parameters) {
-            typeHolder.addVar(param)
+            sema.typeHolder.addVar(param)
         }
 
         val retType = functionNode.cFunctionType().retType().cType()
@@ -1476,7 +1476,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     override fun visit(caseStatement: CaseStatement) {
         val switchInfo = stmtStack.top() as SwitchStmtInfo
 
-        val ctx = CommonConstEvalContext<Int>(typeHolder)
+        val ctx = CommonConstEvalContext<Int>(sema)
         val constant = ConstEvalExpression.eval(caseStatement.constExpression, TryConstEvalExpressionInt(ctx))
             ?: throw IRCodeGenError("Case statement with non-constant expression: ${LineAgnosticAstPrinter.print(caseStatement.constExpression)}", caseStatement.begin())
 
@@ -1511,7 +1511,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val value = visitExpression(expr, true)
-        when (val type = returnStatement.expr.resolveType(typeHolder)) {
+        when (val type = returnStatement.expr.accept(sema)) {
             is CPrimitive, is CStringLiteral, is AnyCFunctionType -> when (functionType.retType().cType()) {
                 is BOOL -> {
                     val returnType = ir.prototype().returnType().asType<PrimitiveType>()
@@ -1741,7 +1741,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(declarator: Declarator): Value {
-        val varDesc = typeHolder.getVarTypeOrNull(declarator.name())
+        val varDesc = sema.typeHolder.getVarTypeOrNull(declarator.name())
             ?: throw IRCodeGenError("Variable not found: '${declarator.name()}'", declarator.begin())
         if (varDesc.storageClass == StorageClass.STATIC) {
             return generateGlobalDeclarator(varDesc, declarator)
@@ -1749,7 +1749,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val irType = when (val cType = varDesc.cType()) {
             is BOOL                          -> I8Type
-            is CAggregateType, is CPrimitive -> mb.toIRType<NonTrivialType>(typeHolder, cType)
+            is CAggregateType, is CPrimitive -> mb.toIRType<NonTrivialType>(sema.typeHolder, cType)
             else -> throw IRCodeGenError("Unknown type, type=$cType", declarator.begin())
         }
 
@@ -1848,11 +1848,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitInitializerList(initializerList: InitializerList, lvalueAdr: Value, type: CAggregateType) {
         val filledPositions = visitInitializers(initializerList, lvalueAdr, type)
-        if (initializerList.resolveType(typeHolder) is CStringLiteral) {
+        if (sema.resolveInitializerList(initializerList) is CStringLiteral) {
             return
         }
 
-        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+        val irType = mb.toIRType<AggregateType>(sema.typeHolder, type)
         zeroingGaps(lvalueAdr, irType, filledPositions)
     }
 
@@ -1867,8 +1867,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         throw IRCodeGenError("Unknown type, type=$innerType", designationInitializer.begin())
                     }
 
-                    val fieldType = mb.toIRType<ArrayType>(typeHolder, innerType)
-                    val index = designator.constEval(typeHolder).toInt()
+                    val fieldType = mb.toIRType<ArrayType>(sema.typeHolder, innerType)
+                    val index = designator.constEval(sema).toInt()
 
                     innerType = innerType.element().asType()
                     address = ir.gfp(address, fieldType, I64Value.of(index))
@@ -1878,7 +1878,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         throw IRCodeGenError("Unknown type, type=$innerType", designationInitializer.begin())
                     }
 
-                    val fieldType = mb.toIRType<StructType>(typeHolder, innerType)
+                    val fieldType = mb.toIRType<StructType>(sema.typeHolder, innerType)
                     val member = innerType.fieldByNameOrNull(designator.name()) ?:
                         throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
 
@@ -1893,14 +1893,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is InitializerListInitializer -> visitInitializerList(initializer.list, address, innerType.asType(initializer.begin()))
             is ExpressionInitializer -> {
                 val expression = visitExpression(initializer.expr, true)
-                val converted = mb.toIRType<Type>(typeHolder, innerType)
+                val converted = mb.toIRType<Type>(sema.typeHolder, innerType)
                 val convertedRvalue = ir.convertRVToType(expression, converted)
                 ir.store(address, convertedRvalue)
             }
         }
 
         return when (val designator = designationInitializer.designation.designators.first()) {
-            is ArrayDesignator -> designator.constEval(typeHolder).toInt()
+            is ArrayDesignator -> designator.constEval(sema).toInt()
             is MemberDesignator -> {
                 if (type !is AnyCStructType) {
                     throw IRCodeGenError("Unknown type, type=$type", designationInitializer.begin())
@@ -1930,7 +1930,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(initDeclarator: InitDeclarator): Value {
-        val varDesc = typeHolder.getVarTypeOrNull(initDeclarator.declarator.name())
+        val varDesc = sema.typeHolder.getVarTypeOrNull(initDeclarator.declarator.name())
             ?: throw IRCodeGenError("Variable '${initDeclarator.declarator.name()}' not found", initDeclarator.declarator.begin())
 
         if (varDesc.storageClass == StorageClass.STATIC) {
@@ -1939,7 +1939,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val type = varDesc.cType()
         if (type is CPrimitive) {
             val rvalue = generateInitDeclaratorExpressionForPrimitive(initDeclarator.rvalue)
-            val commonType      = mb.toIRType<Type>(typeHolder, type)
+            val commonType      = mb.toIRType<Type>(sema.typeHolder, type)
             val convertedRvalue = ir.convertRVToType(rvalue, commonType)
 
             val lvalueAdr = visit(initDeclarator.declarator)
@@ -1952,7 +1952,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is InitializerListInitializer -> visitInitializerList(rvalue.list, lvalueAdr, varDesc.cType().asType(rvalue.begin()))
             is ExpressionInitializer -> when (val expr = rvalue.expr) {
                 is FunctionCall -> {
-                    val rValueType = expr.resolveType(typeHolder)
+                    val rValueType = expr.accept(sema)
                     if (rValueType !is AnyCStructType) {
                         throw IRCodeGenError("Unknown function type, type=$rValueType", rvalue.begin())
                     }
@@ -1962,8 +1962,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is StringNode -> {
                     // TODO impl special case for 'zero' string
                     val rvalueResult = visitStringNode(expr)
-                    val rvalueType = expr.resolveType(typeHolder)
-                    val irRvalueType = mb.toIRType<AggregateType>(typeHolder, rvalueType)
+                    val rvalueType = expr.accept(sema)
+                    val irRvalueType = mb.toIRType<AggregateType>(sema.typeHolder, rvalueType)
                     ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(irRvalueType.sizeOf().toLong()))
 
                     if (rvalueType.size() < type.size()) {
@@ -1973,8 +1973,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 else -> {
                     val rvalueResult = visitExpression(expr, true)
-                    val rvalueType = expr.resolveType(typeHolder)
-                    val irRvalueType = mb.toIRType<AggregateType>(typeHolder, rvalueType)
+                    val rvalueType = expr.accept(sema)
+                    val irRvalueType = mb.toIRType<AggregateType>(sema.typeHolder, rvalueType)
                     ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(irRvalueType.sizeOf().toLong()))
                 }
             }
@@ -1997,17 +1997,17 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
                                  private val functionNode: FunctionNode,
                                  varStack: VarStack<Value>,
                                  nameGenerator: NameGenerator) :
-    AbstractIRGenerator(moduleBuilder, functionNode.typeHolder, varStack, nameGenerator) {
+    AbstractIRGenerator(moduleBuilder, SemanticAnalysis(functionNode.typeHolder), varStack, nameGenerator) {
     fun generate() {
-        val varDesc = typeHolder.addVar(functionNode.varDescriptor)
+        val varDesc = sema.typeHolder.addVar(functionNode.varDescriptor)
         val fnType = varDesc.cType()
             .asType<CFunctionType>(functionNode.begin())
 
-        val parameters = SemanticAnalysis(typeHolder).resolveParameterList(functionNode.parameterTypeList())
-        val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder, varDesc.storageClass).build()
+        val parameters = sema.resolveParameterList(functionNode.parameterTypeList())
+        val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, sema.typeHolder, varDesc.storageClass).build()
 
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
-        val funGen = IrGenFunction(mb, typeHolder, vregStack, nameGenerator, parameters, currentFunction, fnType)
+        val funGen = IrGenFunction(mb, sema, vregStack, nameGenerator, parameters, currentFunction, fnType)
 
         funGen.visitFun(functionNode)
     }

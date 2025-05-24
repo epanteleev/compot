@@ -2,6 +2,7 @@ package preprocess
 
 import codegen.consteval.ConstEvalContext
 import parser.nodes.VarNode
+import sema.SemanticAnalysis
 import tokenizer.tokens.CToken
 import typedesc.TypeHolder
 import types.CompletedType
@@ -26,6 +27,10 @@ class ConditionEvaluationContext(private val preprocessorContext: PreprocessorCo
     }
 
     override fun typeHolder(): TypeHolder = defaultTypes
+
+    override fun semanticAnalysis(): SemanticAnalysis {
+        return SemanticAnalysis(defaultTypes)
+    }
 
     companion object {
         private fun handleUndefinedVar(varNode: VarNode): CompletedType {

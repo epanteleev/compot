@@ -1,6 +1,7 @@
 package parser.nodes
 
 import codegen.consteval.*
+import sema.SemanticAnalysis
 import typedesc.TypeHolder
 import tokenizer.tokens.Identifier
 import tokenizer.Position
@@ -17,8 +18,8 @@ sealed class Designator {
 class ArrayDesignator(val constExpression: Expression): Designator() {
     override fun begin(): Position = constExpression.begin()
 
-    fun constEval(typeHolder: TypeHolder): Long {
-        val ctx = ArraySizeConstEvalContext(typeHolder)
+    fun constEval(sema: SemanticAnalysis): Long {
+        val ctx = ArraySizeConstEvalContext(sema)
         return ConstEvalExpression.eval(constExpression, TryConstEvalExpressionLong(ctx))
             ?: throw Exception("Cannot evaluate array designator")
     }

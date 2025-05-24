@@ -2,13 +2,14 @@ package codegen.consteval
 
 import parser.InvalidToken
 import parser.ParserException
+import sema.SemanticAnalysis
 import tokenizer.tokens.CToken
 import typedesc.TypeHolder
 
 
-class CommonConstEvalContext<T: Number>(val typeHolder: TypeHolder, val enumerationValues: Map<String, Int> = hashMapOf()): ConstEvalContext<T> {
+class CommonConstEvalContext<T: Number>(val semanticAnalysis: SemanticAnalysis, val enumerationValues: Map<String, Int> = hashMapOf()): ConstEvalContext<T> {
     override fun getVariable(name: CToken): T? {
-        val value = enumerationValues[name.str()] ?: typeHolder.findEnumByEnumerator(name.str())
+        val value = enumerationValues[name.str()] ?: typeHolder().findEnumByEnumerator(name.str())
         if (value != null) {
             @Suppress("UNCHECKED_CAST")
             return value as T //TODO
@@ -21,13 +22,17 @@ class CommonConstEvalContext<T: Number>(val typeHolder: TypeHolder, val enumerat
     }
 
     override fun typeHolder(): TypeHolder {
-        return typeHolder
+        return semanticAnalysis.typeHolder
+    }
+
+    override fun semanticAnalysis(): SemanticAnalysis {
+        return semanticAnalysis
     }
 }
 
-class ArraySizeConstEvalContext(val typeHolder: TypeHolder): ConstEvalContext<Long> {
+class ArraySizeConstEvalContext(val semanticAnalysis: SemanticAnalysis): ConstEvalContext<Long> {
     override fun getVariable(name: CToken): Long? {
-        val value = typeHolder.findEnumByEnumerator(name.str())
+        val value = typeHolder().findEnumByEnumerator(name.str())
         if (value != null) {
             return value.toLong()
         }
@@ -40,6 +45,10 @@ class ArraySizeConstEvalContext(val typeHolder: TypeHolder): ConstEvalContext<Lo
     }
 
     override fun typeHolder(): TypeHolder {
-        return typeHolder
+        return semanticAnalysis.typeHolder
+    }
+
+    override fun semanticAnalysis(): SemanticAnalysis {
+        return semanticAnalysis
     }
 }

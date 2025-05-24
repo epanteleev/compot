@@ -4,50 +4,23 @@ import types.*
 import typedesc.*
 import tokenizer.tokens.*
 import common.assertion
-import parser.LineAgnosticAstPrinter
-import parser.nodes.BinaryOpType.AND
-import parser.nodes.BinaryOpType.OR
-import parser.nodes.BinaryOpType.COMMA
 import parser.nodes.visitors.*
+import sema.SemanticAnalysis
 import tokenizer.Position
 
 
 sealed class Expression(private val id: Int) {
-    protected var type: CType? = null
-
     abstract fun begin(): Position
     abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
-    abstract fun resolveType(typeHolder: TypeHolder): CompletedType
 
-    override fun hashCode(): Int = id
-    override fun equals(other: Any?): Boolean {
+    final override fun hashCode(): Int = id
+    final override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
 
         other as Expression
 
         return id == other.id
-    }
-
-    protected fun convertToPrimitive(type: CompletedType): CPrimitive? = when (type) {
-        is CPrimitive -> type
-        is AnyCArrayType -> type.asPointer()
-        is AnyCFunctionType -> type.asPointer()
-        else -> null
-    }
-
-    protected fun convertToPointer(type: CompletedType): CPointer? = when (type) {
-        is CPointer -> type
-        is AnyCArrayType -> type.asPointer()
-        else -> null
-    }
-
-    protected inline fun<reified T: CType> memoize(closure: () -> T): T {
-        if (type != null) {
-            return type as T
-        }
-        type = closure()
-        return type as T
     }
 }
 
@@ -56,149 +29,26 @@ sealed class Expression(private val id: Int) {
 class CompoundLiteral internal constructor(id: Int, val typeName: TypeName, val initializerList: InitializerList) : Expression(id) {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
     override fun begin(): Position = typeName.begin()
-
-    private fun typeDesc(typeHolder: TypeHolder): TypeDesc {
-        val type = typeName.specifyType(typeHolder).typeDesc
-        val ctype = type.cType()
-        if (ctype is CUncompletedArrayType) {
-            return TypeDesc.from(CArrayType(ctype.element(), initializerList.length().toLong()))
-        }
-
-        return type
-    }
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
-        val cType = typeDesc(typeHolder).cType()
-        if (cType !is CompletedType) {
-            throw TypeResolutionException("Compound literal on uncompleted type: $cType", begin())
-        }
-
-        return@memoize cType
-    }
 }
 
 class BinaryOp internal constructor(id: Int, val left: Expression, val right: Expression, val opType: BinaryOpType) : Expression(id) {
     override fun begin(): Position = left.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
-        when (opType) {
-            OR, AND -> return@memoize BOOL
-            COMMA -> return@memoize right.resolveType(typeHolder)
-            BinaryOpType.SHL,
-            BinaryOpType.SHR -> return@memoize left.resolveType(typeHolder)
-            else -> {}
-        }
-        val l = left.resolveType(typeHolder)
-        val r = right.resolveType(typeHolder)
-        if (l == r) {
-            return@memoize l
-        }
-
-        val leftType = convertToPrimitive(l)
-            ?: throw TypeResolutionException("Binary operation on non-primitive type '$l': '${LineAgnosticAstPrinter.print(left)}'", begin())
-
-        val rightType = convertToPrimitive(r)
-            ?: throw TypeResolutionException("Binary operation on non-primitive type '$r': '${LineAgnosticAstPrinter.print(right)}'", begin())
-
-        val resultType = leftType.interfere(rightType) ?:
-            throw TypeResolutionException("Binary operation '$opType' on incompatible types: $leftType and $rightType in ${left.begin()}'", begin())
-        return@memoize resultType
-    }
 }
 
 class EmptyExpression internal constructor(id: Int, private val where: Position) : Expression(id) {
     override fun begin(): Position = where
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): VOID = VOID
 }
 
 class Conditional internal constructor(id: Int, val cond: Expression, val eTrue: Expression, val eFalse: Expression) : Expression(id) {
     override fun begin(): Position = cond.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
-        val typeTrue  = eTrue.resolveType(typeHolder)
-        val typeFalse = eFalse.resolveType(typeHolder)
-
-        if (typeTrue is VOID || typeFalse is VOID) {
-            return@memoize VOID
-        }
-
-        if (typeTrue is AnyCStructType && typeFalse is AnyCStructType && typeTrue == typeFalse) {
-            return@memoize typeTrue
-        }
-
-        val cvtTypeTrue  = convertToPrimitive(typeTrue)
-            ?: throw TypeResolutionException("Conditional with non-primitive types: $typeTrue and $typeFalse", begin())
-        val cvtTypeFalse = convertToPrimitive(typeFalse)
-            ?: throw TypeResolutionException("Conditional with non-primitive types: $typeTrue and $typeFalse", begin())
-
-        if (cvtTypeTrue == cvtTypeFalse) {
-            return@memoize cvtTypeTrue
-        }
-
-        return@memoize cvtTypeTrue.interfere(cvtTypeFalse) ?:
-            throw TypeResolutionException("Conditional with incompatible types: $cvtTypeTrue and $cvtTypeFalse: '${LineAgnosticAstPrinter.print(this)}'", begin())
-    }
 }
 
 class FunctionCall internal constructor(id: Int, val primary: Expression, val args: List<Expression>) : Expression(id) {
     override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    private fun resolveParams(typeHolder: TypeHolder) {
-        val params = args.map { it.resolveType(typeHolder) }
-        if (params.size != args.size) {
-            throw TypeResolutionException("Function call of '${LineAgnosticAstPrinter.print(primary)}' with unresolved types", begin())
-        }
-
-        for (i in args.indices) {
-            val argType = args[i].resolveType(typeHolder)
-            if (argType == params[i]) {
-                continue
-            }
-            throw TypeResolutionException("Function call of '${LineAgnosticAstPrinter.print(primary)}' with wrong argument types", begin())
-        }
-    }
-
-    private fun resolveFunctionType0(typeHolder: TypeHolder): CPointer {
-        val functionType = primary.resolveType(typeHolder)
-        if (functionType is AbstractCFunction) {
-            return CPointer(functionType, setOf())
-        }
-        if (functionType !is CPointer) {
-            throw TypeResolutionException("Function call with non-function type: $functionType", begin())
-        }
-        return functionType
-    }
-
-    fun functionType(typeHolder: TypeHolder): AnyCFunctionType {
-        resolveParams(typeHolder)
-        val functionType = if (primary !is VarNode) {
-            resolveFunctionType0(typeHolder)
-        } else {
-            typeHolder.getFunctionType(primary.name()).cType()
-        }
-        if (functionType is CPointer) {
-            return functionType.dereference(begin(), typeHolder) as AbstractCFunction
-        }
-        if (functionType !is CFunctionType) {
-            throw TypeResolutionException("Function call of '' with non-function type", begin())
-        }
-
-        return functionType
-    }
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType {
-        val cType = functionType(typeHolder).retType().cType()
-        if (cType !is CompletedType) {
-            throw TypeResolutionException("Function call with uncompleted return type: $cType", begin())
-        }
-
-        return cType
-    }
 }
 
 class MemberAccess internal constructor(id: Int, val primary: Expression, val fieldName: Identifier) : Expression(id) {
@@ -206,51 +56,12 @@ class MemberAccess internal constructor(id: Int, val primary: Expression, val fi
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     fun memberName(): String = fieldName.str()
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
-        val structType = primary.resolveType(typeHolder)
-        if (structType !is AnyCStructType) {
-            throw TypeResolutionException("Member access on non-struct type, but got $structType", begin())
-        }
-
-        val fieldDesc = structType.fieldByNameOrNull(memberName())
-            ?: throw TypeResolutionException("Field $fieldName not found in struct $structType", begin())
-
-        val cType = fieldDesc.cType()
-        if (cType !is CompletedType) {
-            throw TypeResolutionException("Member access on uncompleted type: $cType", begin())
-        }
-
-        return@memoize cType
-    }
 }
 
 class ArrowMemberAccess internal constructor(id: Int, val primary: Expression, private val ident: Identifier) : Expression(id) {
     override fun begin(): Position = primary.begin()
     fun fieldName(): String = ident.str()
-
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
-        val ty = primary.resolveType(typeHolder)
-        val structType = convertToPointer(ty)
-            ?: throw TypeResolutionException("Arrow member access on non-pointer type, but got $ty", begin())
-
-        val baseType = structType.dereference(begin(), typeHolder)
-        if (baseType !is AnyCStructType) {
-            throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType", begin())
-        }
-
-        val fieldDesc = baseType.fieldByNameOrNull(fieldName())
-            ?: throw TypeResolutionException("Field $ident not found in struct $baseType", begin())
-
-        val cType = fieldDesc.cType()
-        if (cType !is CompletedType) {
-            throw TypeResolutionException("Arrow member access on uncompleted type: $cType", begin())
-        }
-
-        return@memoize cType
-    }
 }
 
 class VarNode internal constructor(id: Int, private val str: Identifier) : Expression(id) {
@@ -258,18 +69,7 @@ class VarNode internal constructor(id: Int, private val str: Identifier) : Expre
     fun name(): String = str.str()
     fun nameIdent(): Identifier = str
 
-    fun position(): Position = str.position()
-
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
-        val varType = typeHolder.getVarTypeOrNull(str.str())
-        if (varType != null) {
-            return@memoize varType.cType()
-        }
-
-        return@memoize typeHolder.findEnum(str.str()) ?: typeHolder.handleMissingVar(this)
-    }
 }
 
 class StringNode internal constructor(id: Int, val literals: List<StringLiteral>) : Expression(id) {
@@ -289,14 +89,6 @@ class StringNode internal constructor(id: Int, val literals: List<StringLiteral>
 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CStringLiteral = memoize {
-        if (data.isEmpty()) {
-            return@memoize CStringLiteral(TypeDesc.from(CHAR), 1)
-        }
-
-        return@memoize CStringLiteral(TypeDesc.from(CHAR), length().toLong())
-    }
-
     fun length(): Int = data.length + 1
     fun isNotEmpty(): Boolean = data.isNotEmpty()
     fun data(): String = data
@@ -305,7 +97,6 @@ class StringNode internal constructor(id: Int, val literals: List<StringLiteral>
 class CharNode internal constructor(id: Int, val char: CharLiteral) : Expression(id) {
     override fun begin(): Position = char.position()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-    override fun resolveType(typeHolder: TypeHolder): CHAR = CHAR
 
     fun toByte(): Byte = char.code()
 }
@@ -313,57 +104,16 @@ class CharNode internal constructor(id: Int, val char: CharLiteral) : Expression
 class NumNode internal constructor(id: Int, val number: PPNumber) : Expression(id) {
     override fun begin(): Position = number.position()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-    override fun resolveType(typeHolder: TypeHolder): CPrimitive = number.type
 }
 
 class UnaryOp internal constructor(id: Int, val primary: Expression, val opType: UnaryOpType) : Expression(id) {
     override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
-        val primaryType = primary.resolveType(typeHolder)
-        if (opType !is PrefixUnaryOpType) {
-            return@memoize convertToPrimitive(primaryType)
-                ?: throw TypeResolutionException("Unary operation '${opType}' on non-primitive type: $primaryType", begin())
-        }
-
-        return@memoize when (opType) {
-            PrefixUnaryOpType.DEREF -> when (primaryType) {
-                is CPointer      -> primaryType.dereference(begin(), typeHolder)
-                is AnyCArrayType -> primaryType.completedType()
-                    ?: throw TypeResolutionException("Array access on uncompleted type: $primaryType", begin())
-                else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType", begin())
-            }
-            PrefixUnaryOpType.ADDRESS -> CPointer(primaryType)
-            PrefixUnaryOpType.NOT -> INT
-            PrefixUnaryOpType.NEG,
-            PrefixUnaryOpType.INC,
-            PrefixUnaryOpType.DEC,
-            PrefixUnaryOpType.PLUS,
-            PrefixUnaryOpType.BIT_NOT -> convertToPrimitive(primaryType)
-                ?: throw TypeResolutionException("Unary operation '${opType}' on non-primitive type: $primaryType", begin())
-        }
-    }
 }
 
 class ArrayAccess internal constructor(id: Int, val primary: Expression, val expr: Expression) : Expression(id) {
     override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
-        return@memoize when (val primaryType = primary.resolveType(typeHolder)) {
-            is AnyCArrayType -> primaryType.completedType()
-                ?: throw TypeResolutionException("Array access on uncompleted type: $primaryType", begin())
-            is CPointer -> primaryType.dereference(begin(), typeHolder)
-            is CPrimitive -> {
-                val expressionType = expr.resolveType(typeHolder)
-                val exprPointer = convertToPointer(expressionType)
-                    ?: throw TypeResolutionException("Array access with non-pointer type: $expressionType", begin())
-                exprPointer.dereference(begin(), typeHolder)
-            }
-            else -> throw TypeResolutionException("Array access on non-array type: $primaryType", begin())
-        }
-    }
 }
 
 sealed class SizeOfParam {
@@ -385,13 +135,12 @@ class SizeOfType(val typeName: TypeName) : SizeOfParam() {
 
 class SizeOfExpr(val expr: Expression) : SizeOfParam() {
     override fun begin(): Position = expr.begin()
-    override fun constEval(typeHolder: TypeHolder): Int = expr.resolveType(typeHolder).size()
+    override fun constEval(typeHolder: TypeHolder): Int = expr.accept(SemanticAnalysis(typeHolder)).size()
 }
 
 class SizeOf internal constructor(id: Int, val expr: SizeOfParam) : Expression(id) {
     override fun begin(): Position = expr.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-    override fun resolveType(typeHolder: TypeHolder): LONG = LONG
 
     fun constEval(typeHolder: TypeHolder): Int = expr.constEval(typeHolder)
 }
@@ -399,48 +148,24 @@ class SizeOf internal constructor(id: Int, val expr: SizeOfParam) : Expression(i
 class Cast internal constructor(id: Int, val typeName: TypeName, val cast: Expression) : Expression(id) {
     override fun begin(): Position = typeName.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
-        val cType = typeName.specifyType(typeHolder).typeDesc.cType()
-        if (cType !is CompletedType) {
-            throw TypeResolutionException("Cast on uncompleted type: $cType", begin())
-        }
-
-        return@memoize cType
-    }
 }
 
 class BuiltinVaArg internal constructor(id: Int, val assign: Expression, val typeName: TypeName) : Expression(id) {
     override fun begin(): Position = assign.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
-        val cType = typeName.specifyType(typeHolder).typeDesc.cType()
-        if (cType !is CompletedType) {
-            throw TypeResolutionException("va_arg on uncompleted type: $cType", begin())
-        }
-
-        return@memoize cType
-    }
 }
 
 class BuiltinVaStart internal constructor(id: Int, val vaList: Expression, val param: Expression) : Expression(id) {
     override fun begin(): Position = vaList.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): VOID = VOID
 }
 
 class BuiltinVaEnd internal constructor(id: Int, val vaList: Expression) : Expression(id) {
     override fun begin(): Position = vaList.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): VOID = VOID
 }
 
 class BuiltinVaCopy internal constructor(id: Int, val dest: Expression, val src: Expression) : Expression(id) {
     override fun begin(): Position = dest.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): VOID = VOID
 }

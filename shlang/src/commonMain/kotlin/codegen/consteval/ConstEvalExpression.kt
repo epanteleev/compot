@@ -3,6 +3,7 @@ package codegen.consteval
 import types.*
 import parser.nodes.*
 import parser.nodes.visitors.ExpressionVisitor
+import sema.SemanticAnalysis
 import typedesc.TypeHolder
 
 
@@ -14,21 +15,21 @@ sealed class ConstEvalExpression<T>: ExpressionVisitor<T?> {
             return expression.accept(ctx)
         }
 
-        fun eval(expr: Expression, typeHolder: TypeHolder): Number? = when (expr.resolveType(typeHolder)) {
+        fun eval(expr: Expression, sema: SemanticAnalysis): Number? = when (expr.accept(sema)) {
             BOOL, INT, SHORT, CHAR, UINT, USHORT, UCHAR, is CEnumType -> {
-                val ctx = CommonConstEvalContext<Int>(typeHolder)
+                val ctx = CommonConstEvalContext<Int>(sema)
                 eval(expr, TryConstEvalExpressionInt(ctx))
             }
             LONG, ULONG -> {
-                val ctx = CommonConstEvalContext<Long>(typeHolder)
+                val ctx = CommonConstEvalContext<Long>(sema)
                 eval(expr, TryConstEvalExpressionLong(ctx))
             }
             FLOAT -> {
-                val ctx = CommonConstEvalContext<Float>(typeHolder)
+                val ctx = CommonConstEvalContext<Float>(sema)
                 eval(expr, TryConstEvalExpressionFloat(ctx))
             }
             DOUBLE -> {
-                val ctx = CommonConstEvalContext<Double>(typeHolder)
+                val ctx = CommonConstEvalContext<Double>(sema)
                 eval(expr, TryConstEvalExpressionDouble(ctx))
             }
             else -> null
@@ -89,19 +90,19 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
             BinaryOpType.MUL      -> left * right
             BinaryOpType.DIV      -> left / right
             BinaryOpType.MOD      -> left % right
-            BinaryOpType.LT       -> when (binop.resolveType(ctx.typeHolder())) {
+            BinaryOpType.LT       -> when (binop.accept(ctx.semanticAnalysis())) {
                 is AnyCUnsigned -> if (left.toUInt() < right.toUInt()) 1 else 0
                 else -> if (left < right) 1 else 0
             }
-            BinaryOpType.GT       -> when (binop.resolveType(ctx.typeHolder())) {
+            BinaryOpType.GT       -> when (binop.accept(ctx.semanticAnalysis())) {
                 is AnyCUnsigned -> if (left.toUInt() > right.toUInt()) 1 else 0
                 else -> if (left > right) 1 else 0
             }
-            BinaryOpType.LE       -> when (binop.resolveType(ctx.typeHolder())) {
+            BinaryOpType.LE       -> when (binop.accept(ctx.semanticAnalysis())) {
                 is AnyCUnsigned -> if (left.toUInt() <= right.toUInt()) 1 else 0
                 else -> if (left <= right) 1 else 0
             }
-            BinaryOpType.GE       -> when (binop.resolveType(ctx.typeHolder())) {
+            BinaryOpType.GE       -> when (binop.accept(ctx.semanticAnalysis())) {
                 is AnyCUnsigned -> if (left.toUInt() >= right.toUInt()) 1 else 0
                 else -> if (left >= right) 1 else 0
             }
@@ -111,7 +112,7 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
             BinaryOpType.BIT_OR   -> left or right
             BinaryOpType.BIT_XOR  -> left xor right
             BinaryOpType.SHL      -> left shl right
-            BinaryOpType.SHR      -> when (binop.resolveType(ctx.typeHolder())) {
+            BinaryOpType.SHR      -> when (binop.accept(ctx.semanticAnalysis())) {
                 is AnyCUnsigned -> left ushr right
                 else -> left shr right
             }
@@ -157,7 +158,7 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(cast: Cast): Int? {
-        val expression = eval(cast.cast, ctx.typeHolder()) ?: return null
+        val expression = eval(cast.cast, ctx.semanticAnalysis()) ?: return null
         val type = cast.typeName.specifyType(ctx.typeHolder()).typeDesc
         return when (type.cType()) {
             is AnyCInteger -> expression.toInt()
@@ -240,19 +241,19 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
             BinaryOpType.MUL -> left * right
             BinaryOpType.DIV -> left / right
             BinaryOpType.MOD -> left % right
-            BinaryOpType.LT -> when (binop.resolveType(ctx.typeHolder())) {
+            BinaryOpType.LT -> when (binop.accept(ctx.semanticAnalysis())) {
                 is AnyCUnsigned -> if (left.toULong() < right.toULong()) 1 else 0
                 else -> if (left < right) 1 else 0
             }
-            BinaryOpType.GT -> when (binop.resolveType(ctx.typeHolder())) {
+            BinaryOpType.GT -> when (binop.accept(ctx.semanticAnalysis())) {
                 is AnyCUnsigned -> if (left.toULong() > right.toULong()) 1 else 0
                 else -> if (left > right) 1 else 0
             }
-            BinaryOpType.LE -> when (binop.resolveType(ctx.typeHolder())) {
+            BinaryOpType.LE -> when (binop.accept(ctx.semanticAnalysis())) {
                 is AnyCUnsigned -> if (left.toULong() <= right.toULong()) 1 else 0
                 else -> if (left <= right) 1 else 0
             }
-            BinaryOpType.GE -> when (binop.resolveType(ctx.typeHolder())) {
+            BinaryOpType.GE -> when (binop.accept(ctx.semanticAnalysis())) {
                 is AnyCUnsigned -> if (left.toULong() >= right.toULong()) 1 else 0
                 else -> if (left >= right) 1 else 0
             }
@@ -262,7 +263,7 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
             BinaryOpType.BIT_OR -> left or right
             BinaryOpType.BIT_XOR -> left xor right
             BinaryOpType.SHL -> left shl right.toInt()
-            BinaryOpType.SHR -> when (binop.resolveType(ctx.typeHolder())) {
+            BinaryOpType.SHR -> when (binop.accept(ctx.semanticAnalysis())) {
                 is AnyCUnsigned -> left ushr right.toInt()
                 else -> left shr right.toInt()
             }
@@ -304,7 +305,7 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
     }
 
     override fun visit(cast: Cast): Long? {
-        val expression = eval(cast.cast, ctx.typeHolder()) ?: return null
+        val expression = eval(cast.cast, ctx.semanticAnalysis()) ?: return null
         val type = cast.typeName.specifyType(ctx.typeHolder()).typeDesc
         return when (type.cType()) {
             is AnyCInteger -> expression.toLong()

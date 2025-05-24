@@ -18,7 +18,7 @@ object GenerateIR {
     }
 }
 
-private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack(), NameGenerator()) {
+private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), SemanticAnalysis(typeHolder), VarStack(), NameGenerator()) {
     fun visit(programNode: ProgramNode) = vregStack.scoped {
         for (node in programNode.nodes) {
             when (node) {
@@ -34,13 +34,13 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
     }
 
     private fun generateDeclaration(node: Declaration) {
-        val declSpec = node.declspec.specifyType(typeHolder)
+        val declSpec = node.declspec.specifyType(sema.typeHolder)
         if (declSpec.storageClass == StorageClass.TYPEDEF) {
             return
         }
 
         for (declarator in node.declarators()) {
-            val varDesc = SemanticAnalysis(typeHolder).declareVar(declarator, declSpec)
+            val varDesc = sema.declareVar(declarator, declSpec)
                 ?: throw IRCodeGenError("Typedef is not supported in global declarations", node.begin())
 
             when (declarator) {

@@ -7,6 +7,7 @@ import intrinsic.VaStart
 import tokenizer.tokens.*
 import tokenizer.tokens.CToken
 import parser.nodes.visitors.TypeNodeVisitor
+import sema.SemanticAnalysis
 import tokenizer.Position
 
 
@@ -164,7 +165,7 @@ class EnumSpecifier(name: Identifier, val enumerators: List<Enumerator>) : AnyTy
     }
 
     private fun constEval(typeHolder: TypeHolder, expr: Expression, enumeratorValues: Map<String, Int>): Int {
-        val ctx = CommonConstEvalContext<Int>(typeHolder, enumeratorValues)
+        val ctx = CommonConstEvalContext<Int>(SemanticAnalysis(typeHolder), enumeratorValues)
         val constExpr = ConstEvalExpression.eval(expr, TryConstEvalExpressionInt(ctx))
             ?: throw IllegalStateException("Cannot evaluate enum value")
 

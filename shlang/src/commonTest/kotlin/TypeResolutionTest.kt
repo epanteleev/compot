@@ -3,6 +3,7 @@ import types.*
 import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.nodes.*
+import sema.SemanticAnalysis
 import tokenizer.CTokenizer
 import tokenizer.TokenList
 import typedesc.StorageClass
@@ -24,7 +25,8 @@ class TypeResolutionTest {
 
         val expr = parser.assignment_expression() as Expression
         val typeResolver = TypeHolder.default()
-        val type = expr.resolveType(typeResolver)
+        val sema = SemanticAnalysis(typeResolver)
+        val type = expr.accept(sema)
         assertEquals(INT, type)
     }
 
@@ -35,7 +37,8 @@ class TypeResolutionTest {
 
         val expr = parser.assignment_expression() as Expression
         val typeResolver = TypeHolder.default()
-        val type = expr.resolveType(typeResolver)
+        val sema = SemanticAnalysis(typeResolver)
+        val type = expr.accept(sema)
         assertEquals(DOUBLE, type)
     }
 
