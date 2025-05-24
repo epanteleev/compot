@@ -12,12 +12,22 @@ import parser.nodes.visitors.*
 import tokenizer.Position
 
 
-sealed class Expression {
+sealed class Expression(private val id: Int) {
     protected var type: CType? = null
 
     abstract fun begin(): Position
     abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
     abstract fun resolveType(typeHolder: TypeHolder): CompletedType
+
+    override fun hashCode(): Int = id
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Expression
+
+        return id == other.id
+    }
 
     protected fun convertToPrimitive(type: CompletedType): CPrimitive? = when (type) {
         is CPrimitive -> type
@@ -43,11 +53,11 @@ sealed class Expression {
 
 // https://port70.net/~nsz/c/c11/n1570.html#6.5.2.5
 // 6.5.2.5 Compound literals
-class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerList) : Expression() {
+class CompoundLiteral internal constructor(id: Int, val typeName: TypeName, val initializerList: InitializerList) : Expression(id) {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
     override fun begin(): Position = typeName.begin()
 
-    fun typeDesc(typeHolder: TypeHolder): TypeDesc {
+    private fun typeDesc(typeHolder: TypeHolder): TypeDesc {
         val type = typeName.specifyType(typeHolder).typeDesc
         val ctype = type.cType()
         if (ctype is CUncompletedArrayType) {
@@ -67,7 +77,7 @@ class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerLi
     }
 }
 
-data class BinaryOp(val left: Expression, val right: Expression, val opType: BinaryOpType) : Expression() {
+class BinaryOp internal constructor(id: Int, val left: Expression, val right: Expression, val opType: BinaryOpType) : Expression(id) {
     override fun begin(): Position = left.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -97,14 +107,14 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     }
 }
 
-class EmptyExpression(private val where: Position) : Expression() {
+class EmptyExpression internal constructor(id: Int, private val where: Position) : Expression(id) {
     override fun begin(): Position = where
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): VOID = VOID
 }
 
-class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expression) : Expression() {
+class Conditional internal constructor(id: Int, val cond: Expression, val eTrue: Expression, val eFalse: Expression) : Expression(id) {
     override fun begin(): Position = cond.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -134,7 +144,7 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     }
 }
 
-class FunctionCall(val primary: Expression, val args: List<Expression>) : Expression() {
+class FunctionCall internal constructor(id: Int, val primary: Expression, val args: List<Expression>) : Expression(id) {
     override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -191,7 +201,7 @@ class FunctionCall(val primary: Expression, val args: List<Expression>) : Expres
     }
 }
 
-class MemberAccess(val primary: Expression, val fieldName: Identifier) : Expression() {
+class MemberAccess internal constructor(id: Int, val primary: Expression, val fieldName: Identifier) : Expression(id) {
     override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -215,7 +225,7 @@ class MemberAccess(val primary: Expression, val fieldName: Identifier) : Express
     }
 }
 
-class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) : Expression() {
+class ArrowMemberAccess internal constructor(id: Int, val primary: Expression, private val ident: Identifier) : Expression(id) {
     override fun begin(): Position = primary.begin()
     fun fieldName(): String = ident.str()
 
@@ -243,7 +253,7 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
     }
 }
 
-data class VarNode(private val str: Identifier) : Expression() {
+class VarNode internal constructor(id: Int, private val str: Identifier) : Expression(id) {
     override fun begin(): Position = str.position()
     fun name(): String = str.str()
     fun nameIdent(): Identifier = str
@@ -262,7 +272,7 @@ data class VarNode(private val str: Identifier) : Expression() {
     }
 }
 
-data class StringNode(val literals: List<StringLiteral>) : Expression() {
+class StringNode internal constructor(id: Int, val literals: List<StringLiteral>) : Expression(id) {
     init {
         assertion(literals.isNotEmpty()) { "Empty string node" }
     }
@@ -292,7 +302,7 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
     fun data(): String = data
 }
 
-data class CharNode(val char: CharLiteral) : Expression() {
+class CharNode internal constructor(id: Int, val char: CharLiteral) : Expression(id) {
     override fun begin(): Position = char.position()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): CHAR = CHAR
@@ -300,13 +310,13 @@ data class CharNode(val char: CharLiteral) : Expression() {
     fun toByte(): Byte = char.code()
 }
 
-data class NumNode(val number: PPNumber) : Expression() {
+class NumNode internal constructor(id: Int, val number: PPNumber) : Expression(id) {
     override fun begin(): Position = number.position()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): CPrimitive = number.type
 }
 
-data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expression() {
+class UnaryOp internal constructor(id: Int, val primary: Expression, val opType: UnaryOpType) : Expression(id) {
     override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -336,7 +346,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
     }
 }
 
-data class ArrayAccess(val primary: Expression, val expr: Expression) : Expression() {
+class ArrayAccess internal constructor(id: Int, val primary: Expression, val expr: Expression) : Expression(id) {
     override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -378,7 +388,7 @@ class SizeOfExpr(val expr: Expression) : SizeOfParam() {
     override fun constEval(typeHolder: TypeHolder): Int = expr.resolveType(typeHolder).size()
 }
 
-data class SizeOf(val expr: SizeOfParam) : Expression() {
+class SizeOf internal constructor(id: Int, val expr: SizeOfParam) : Expression(id) {
     override fun begin(): Position = expr.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): LONG = LONG
@@ -386,7 +396,7 @@ data class SizeOf(val expr: SizeOfParam) : Expression() {
     fun constEval(typeHolder: TypeHolder): Int = expr.constEval(typeHolder)
 }
 
-data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
+class Cast internal constructor(id: Int, val typeName: TypeName, val cast: Expression) : Expression(id) {
     override fun begin(): Position = typeName.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -400,7 +410,7 @@ data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
     }
 }
 
-class BuiltinVaArg(val assign: Expression, val typeName: TypeName) : Expression() {
+class BuiltinVaArg internal constructor(id: Int, val assign: Expression, val typeName: TypeName) : Expression(id) {
     override fun begin(): Position = assign.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -414,21 +424,21 @@ class BuiltinVaArg(val assign: Expression, val typeName: TypeName) : Expression(
     }
 }
 
-class BuiltinVaStart(val vaList: Expression, val param: Expression) : Expression() {
+class BuiltinVaStart internal constructor(id: Int, val vaList: Expression, val param: Expression) : Expression(id) {
     override fun begin(): Position = vaList.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): VOID = VOID
 }
 
-class BuiltinVaEnd(val vaList: Expression) : Expression() {
+class BuiltinVaEnd internal constructor(id: Int, val vaList: Expression) : Expression(id) {
     override fun begin(): Position = vaList.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): VOID = VOID
 }
 
-class BuiltinVaCopy(val dest: Expression, val src: Expression) : Expression() {
+class BuiltinVaCopy internal constructor(id: Int, val dest: Expression, val src: Expression) : Expression(id) {
     override fun begin(): Position = dest.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 

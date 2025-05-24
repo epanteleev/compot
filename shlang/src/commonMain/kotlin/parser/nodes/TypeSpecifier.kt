@@ -2,6 +2,7 @@ package parser.nodes
 
 import common.assertion
 import parser.nodes.visitors.TypeSpecifierVisitor
+import sema.SemanticAnalysis
 import tokenizer.Position
 import typedesc.CTypeBuilder
 import typedesc.TypeHolder
@@ -53,7 +54,7 @@ class TypeName(val specifiers: DeclarationSpecifier, val abstractDeclarator: Abs
             return specifierType
         }
 
-        val typeDesc = abstractDeclarator.resolveType(specifierType.typeDesc, typeHolder)
+        val typeDesc = SemanticAnalysis(typeHolder).resolveAbstractDeclaratorType(abstractDeclarator, specifierType.typeDesc)
         return DeclSpec(typeDesc, specifierType.storageClass)
     }
 }

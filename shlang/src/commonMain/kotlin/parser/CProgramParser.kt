@@ -118,7 +118,8 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             val expr = expression()
             if (check(";")) {
                 val tok = eat()
-                return@rule fabric.newReturnStatement(retKeyword.asToken(), expr ?: EmptyExpression(tok.position()))
+                val returnExpr = expr ?: fabric.newEmptyExpression(tok.position())
+                return@rule fabric.newReturnStatement(retKeyword.asToken(), returnExpr)
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -280,12 +281,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 }
             }
 
-            val condition = expression() ?: EmptyExpression(cond.position())
+            val condition = expression() ?: fabric.newEmptyExpression(cond.position())
             if (!check(";")) {
                 throw ParserException(InvalidToken("Expected ';'", peak()))
             }
             val expr = eat()
-            val update = expression() ?: EmptyExpression(expr.position())
+            val update = expression() ?: fabric.newEmptyExpression(expr.position())
             if (!check(")")) {
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
@@ -582,7 +583,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             val expr = constant_expression() ?: throw ParserException(InvalidToken("Expected constant expression", peak()))
             return@rule StructDeclarator(StructDeclaratorItem(declarator), expr)
         }
-        return@rule StructDeclarator(StructDeclaratorItem(declarator), EmptyExpression(declarator.begin()))
+        return@rule StructDeclarator(StructDeclaratorItem(declarator), fabric.newEmptyExpression(declarator.begin()))
     }
 
     // struct_declarator_list
@@ -704,7 +705,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val name = peak<Identifier>()
         val eq = eat()
         if (!check("=")) {
-            return@rule Enumerator(name, EmptyExpression(eq.position()))
+            return@rule Enumerator(name, fabric.newEmptyExpression(eq.position()))
         }
         eat()
         val expr = constant_expression()?: throw ParserException(InvalidToken("Expected constant expression", peak()))
@@ -1016,7 +1017,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 eat()
                 if (check("]")) {
                     val br = eat()
-                    declarators.add(ArrayDeclarator(EmptyExpression(br.position())))
+                    declarators.add(ArrayDeclarator(fabric.newEmptyExpression(br.position())))
                     continue
                 }
                 val size = constant_expression()?: throw ParserException(InvalidToken("Expected constant expression", peak()))
@@ -1051,7 +1052,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             val ident = peak<Identifier>()
             eat()
-            identifiers.add(IdentNode(ident))
+            identifiers.add(fabric.newIdentifier(ident))
             if (check(",")) {
                 eat()
             } else {
@@ -1161,7 +1162,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 eat()
                 if (check("]")) {
                     val br = eat()
-                    abstractDeclarators.add(ArrayDeclarator(EmptyExpression(br.position())))
+                    abstractDeclarators.add(ArrayDeclarator(fabric.newEmptyExpression(br.position())))
                     continue
                 }
                 val size = constant_expression()?: throw ParserException(InvalidToken("Expected constant expression", peak()))
@@ -1198,7 +1199,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val els = conditional_expression()?: throw ParserException(InvalidToken("Expected conditional expression", peak()))
-            logor = Conditional(logor, then, els)
+            logor = fabric.newConditional(logor, then, els)
         }
 
         return@rule logor
@@ -1454,7 +1455,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         eat()
         val cast = cast_expression()?: throw ParserException(InvalidToken("Expected cast expression", peak()))
-        return@cast_expression Cast(typeName, cast)
+        return@cast_expression fabric.newCast(typeName, cast)
     }
 
     // type_name
@@ -1547,23 +1548,23 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (check("++")) {
             eat()
             val unary = unary_expression() ?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-            return@rule UnaryOp(unary, PrefixUnaryOpType.INC)
+            return@rule fabric.newUnaryOp(unary, PrefixUnaryOpType.INC)
         }
         if (check("--")) {
             eat()
             val unary = unary_expression() ?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-            return@rule UnaryOp(unary, PrefixUnaryOpType.DEC)
+            return@rule fabric.newUnaryOp(unary, PrefixUnaryOpType.DEC)
         }
         val op = unary_operator()
         if (op != null) {
             val cast = cast_expression() ?: throw ParserException(InvalidToken("Expected cast expression", peak()))
-            return@rule UnaryOp(cast, op)
+            return@rule fabric.newUnaryOp(cast, op)
         }
         if (check("sizeof")) {
             eat()
             val expr = unary_expression()
             if (expr != null) {
-                return@rule SizeOf(SizeOfExpr(expr))
+                return@rule fabric.newSizeOf(SizeOfExpr(expr))
             }
             if (!check("(")) {
                 throw ParserException(InvalidToken("Expected unary expression", peak()))
@@ -1574,7 +1575,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
             eat()
-            return@rule SizeOf(SizeOfType(type))
+            return@rule fabric.newSizeOf(SizeOfType(type))
         }
         return@rule null
     }
@@ -1604,9 +1605,9 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         eat()
         if (initList != null) {
-            return@rule CompoundLiteral(type, initList)
+            return@rule fabric.newCompoundLiteral(type, initList)
         } else {
-            return@rule CompoundLiteral(type, InitializerList(start.position(), listOf()))
+            return@rule fabric.newCompoundLiteral(type, InitializerList(start.position(), listOf()))
         }
     }
 
@@ -1630,7 +1631,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 val expr = expression() ?: throw ParserException(InvalidToken("Expected expression", peak()))
                 if (check("]")) {
                     eat()
-                    primary = ArrayAccess(primary, expr)
+                    primary = fabric.newArrayAccess(primary, expr)
                 } else {
                     throw ParserException(InvalidToken("Expected ']'", peak()))
                 }
@@ -1641,7 +1642,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 val args = argument_expression_list()
                 if (check(")")) {
                     eat()
-                    primary = FunctionCall(primary, args)
+                    primary = fabric.newFunctionCall(primary, args)
                 } else {
                     throw ParserException(InvalidToken("Expected ')'", peak()))
                 }
@@ -1651,24 +1652,24 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 eat()
                 val ident = peak<Identifier>()
                 eat()
-                primary = MemberAccess(primary, ident)
+                primary = fabric.newMemberAccess(primary, ident)
                 continue
             }
             if (check("->")) {
                 eat()
                 val ident = peak<Identifier>()
                 eat()
-                primary = ArrowMemberAccess(primary, ident)
+                primary = fabric.newArrowMemberAccess(primary, ident)
                 continue
             }
             if (check("++")) {
                 eat()
-                primary = UnaryOp(primary, PostfixUnaryOpType.INC)
+                primary = fabric.newUnaryOp(primary, PostfixUnaryOpType.INC)
                 continue
             }
             if (check("--")) {
                 eat()
-                primary = UnaryOp(primary, PostfixUnaryOpType.DEC)
+                primary = fabric.newUnaryOp(primary, PostfixUnaryOpType.DEC)
                 continue
             }
             break
@@ -1825,7 +1826,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
             eat()
-            return@rule BuiltinVaArg(expr, typeName)
+            return@rule fabric.newBuiltinVaArg(expr, typeName)
         }
         if (check("__builtin_va_start")) {
             eat()
@@ -1843,7 +1844,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
             eat()
-            return@rule BuiltinVaStart(expr, param)
+            return@rule fabric.newBuiltinVaStart(expr, param)
         }
         if (check("__builtin_va_end")) {
             eat()
@@ -1856,7 +1857,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
             eat()
-            return@rule BuiltinVaEnd(expr)
+            return@rule fabric.newBuiltinVaEnd(expr)
         }
         if (check("__builtin_va_copy")) {
             eat()
@@ -1874,13 +1875,13 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
             eat()
-            return@rule BuiltinVaCopy(expr1, expr2)
+            return@rule fabric.newBuiltinVaCopy(expr1, expr2)
         }
         if (check<Identifier>() &&
             typeHolder().getTypedefOrNull(peak<Identifier>().str()) == null) {
             val ident = peak<Identifier>()
             eat()
-            return@rule VarNode(ident)
+            return@rule fabric.newVarNode(ident)
         }
         if (check<AnyStringLiteral>()) {
             val allLiterals = arrayListOf<StringLiteral>()
@@ -1891,17 +1892,17 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 }
                 eat()
             }
-            return@rule StringNode(allLiterals)
+            return@rule fabric.newStringNode(allLiterals)
         }
         if (check<CharLiteral>()) {
             val char = peak<CharLiteral>()
             eat()
-            return@rule CharNode(char)
+            return@rule fabric.newCharNode(char)
         }
         if (check<PPNumber>()) {
             val num = peak<PPNumber>()
             eat()
-            return@rule NumNode(num)
+            return@rule fabric.newNumNode(num)
         }
         if (check("(")) {
             eat()

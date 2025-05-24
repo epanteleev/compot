@@ -25,7 +25,7 @@ data class EmptyParamDeclarator(val where: Position) : AnyParamDeclarator() {
 
 class ParamAbstractDeclarator(val abstractDeclarator: AbstractDeclarator) : AnyParamDeclarator() {
     override fun resolveType(declSpec: DeclSpec, typeHolder: TypeHolder): TypeDesc {
-        return abstractDeclarator.resolveType(declSpec.typeDesc, typeHolder)
+        return SemanticAnalysis(typeHolder).resolveAbstractDeclaratorType(abstractDeclarator, declSpec.typeDesc)
     }
 }
 

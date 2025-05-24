@@ -101,10 +101,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitCompoundLiteral(compoundLiteral: CompoundLiteral): Value {
-        val type   = compoundLiteral.typeDesc(typeHolder)
-        val irType = mb.toIRType<AggregateType>(typeHolder, type.cType())
+        val type   = compoundLiteral.resolveType(typeHolder)
+        val irType = mb.toIRType<AggregateType>(typeHolder, type)
         val adr    = ir.alloc(irType)
-        visitInitializerList(compoundLiteral.initializerList, adr, type.asType())
+        visitInitializerList(compoundLiteral.initializerList, adr, type.asType(compoundLiteral.begin()))
         return adr
     }
 

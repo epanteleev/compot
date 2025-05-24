@@ -6,7 +6,7 @@ import typedesc.VarDescriptor
 import types.CFunctionType
 
 
-class FunctionNode(val typeHolder: TypeHolder, val varDescriptor: VarDescriptor, val specifier: DeclarationSpecifier, val declarator: Declarator, val body: Statement) {
+class FunctionNode internal constructor(val typeHolder: TypeHolder, val varDescriptor: VarDescriptor, val specifier: DeclarationSpecifier, val declarator: Declarator, val body: Statement) {
     fun begin(): Position = specifier.begin()
 
     fun name(): String {

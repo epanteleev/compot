@@ -1,11 +1,16 @@
 package sema
 
+import codegen.consteval.ArraySizeConstEvalContext
+import codegen.consteval.ConstEvalExpression
+import codegen.consteval.TryConstEvalExpressionLong
 import common.assertion
+import parser.nodes.AbstractDeclarator
 import parser.nodes.AnyDeclarator
 import parser.nodes.ArrayDeclarator
 import parser.nodes.Declarator
 import parser.nodes.DirectDeclarator
 import parser.nodes.DirectVarDeclarator
+import parser.nodes.EmptyExpression
 import parser.nodes.ExpressionInitializer
 import parser.nodes.FunctionDeclarator
 import parser.nodes.IdentifierList
@@ -14,6 +19,7 @@ import parser.nodes.InitializerListInitializer
 import parser.nodes.NodePointer
 import parser.nodes.Parameter
 import parser.nodes.ParameterTypeList
+import parser.nodes.ParameterVarArg
 import parser.nodes.StringNode
 import typedesc.DeclSpec
 import typedesc.StorageClass
@@ -30,9 +36,10 @@ import types.CStringLiteral
 import types.CType
 import types.CUncompletedArrayType
 import types.InitializerType
+import types.VOID
 import types.asType
 
-class SemanticAnalysis(private val typeHolder: TypeHolder) {
+class SemanticAnalysis(val typeHolder: TypeHolder) {
     private fun wrapPointers(type: CType, pointers: List<NodePointer>): CType {
         var pointerType = type
         for (pointer in pointers) {
@@ -111,16 +118,16 @@ class SemanticAnalysis(private val typeHolder: TypeHolder) {
     }
 
 
-    private fun resolveAllDeclInDirectDeclarator(directDeclarator: DirectDeclarator, baseType: TypeDesc): TypeDesc {
+    private fun resolveAllDeclaratorsInDirectDeclarator(directDeclarator: DirectDeclarator, baseType: TypeDesc): TypeDesc {
         var currentType = baseType
         for (directDeclaratorParam in directDeclarator.directDeclaratorParams.reversed()) {
             when (directDeclaratorParam) {
                 is ArrayDeclarator -> {
-                    currentType = directDeclaratorParam.resolveType(currentType, typeHolder)
+                    currentType = resolveArrayDeclaratorType(directDeclaratorParam, currentType)
                 }
 
                 is ParameterTypeList -> {
-                    val abstractType = directDeclaratorParam.resolveType(currentType, typeHolder)
+                    val abstractType = resolveParameterTypeList(directDeclaratorParam, currentType)
                     currentType = TypeDesc.from(CFunctionType(directDeclarator.name(), abstractType.cType() as AbstractCFunction), abstractType.qualifiers())
                 }
 
@@ -135,14 +142,13 @@ class SemanticAnalysis(private val typeHolder: TypeHolder) {
             assertion(directDeclarator.directDeclaratorParams.size == 1) { "Function pointer should have only one parameter" }
             val pointers = directDeclarator.decl.declarator.pointers
             if (pointers.isEmpty()) {
-                resolveAllDeclInDirectDeclarator(directDeclarator, baseType)
+                resolveAllDeclaratorsInDirectDeclarator(directDeclarator, baseType)
             } else {
-                val fnDecl = directDeclarator.parameterTypeList()
-                val type = fnDecl.resolveType(baseType, typeHolder)
+                val type = resolveParameterTypeList(directDeclarator.parameterTypeList(), baseType)
                 resolveFunctionDeclarator(directDeclarator.decl, type)
             }
         }
-        is DirectVarDeclarator -> resolveAllDeclInDirectDeclarator(directDeclarator, baseType)
+        is DirectVarDeclarator -> resolveAllDeclaratorsInDirectDeclarator(directDeclarator, baseType)
     }
 
     private fun resolveFunctionDeclarator(functionDeclarator: FunctionDeclarator, typeDesc: TypeDesc): TypeDesc {
@@ -181,5 +187,72 @@ class SemanticAnalysis(private val typeHolder: TypeHolder) {
     fun resolveParameterType(parameter: Parameter): TypeDesc {
         val type = parameter.declspec.specifyType(typeHolder)
         return parameter.paramDeclarator.resolveType(type, typeHolder)
+    }
+
+    fun resolveAbstractDeclaratorType(abstractDeclarator: AbstractDeclarator, typeDesc: TypeDesc): TypeDesc {
+        var pointerType = typeDesc.cType()
+        for (pointer in abstractDeclarator.pointers) { //TODO wrap pointers fn
+            pointerType = CPointer(pointerType, pointer.property())
+        }
+        var newTypeDesc = TypeDesc.from(pointerType)
+        if (abstractDeclarator.directAbstractDeclarators == null) {
+            return newTypeDesc
+        }
+
+        for (abstractDeclarator in abstractDeclarator.directAbstractDeclarators.reversed()) {
+            newTypeDesc = when (abstractDeclarator) {
+                is ArrayDeclarator -> resolveArrayDeclaratorType(abstractDeclarator, newTypeDesc)
+                is ParameterTypeList -> resolveParameterTypeList(abstractDeclarator, newTypeDesc)
+                is AbstractDeclarator -> resolveAbstractDeclaratorType(abstractDeclarator, newTypeDesc)
+            }
+        }
+
+        return newTypeDesc
+    }
+
+    private fun resolveArrayDeclaratorType(arrayDeclarator: ArrayDeclarator, typeDesc: TypeDesc): TypeDesc {
+        if (arrayDeclarator.constexpr is EmptyExpression) {
+            return TypeDesc.from(CUncompletedArrayType(typeDesc))
+        }
+
+        val ctx = ArraySizeConstEvalContext(typeHolder)
+        val size = ConstEvalExpression.eval(arrayDeclarator.constexpr, TryConstEvalExpressionLong(ctx))
+            ?: return TypeDesc.from(CUncompletedArrayType(typeDesc))
+        return TypeDesc.from(CArrayType(typeDesc, size))
+    }
+
+    private fun resolveParameterTypeList(parameterTypeList: ParameterTypeList, typeDesc: TypeDesc): TypeDesc {
+        val params = resolveParamTypeListTypes(parameterTypeList)
+        return TypeDesc.from(AbstractCFunction(typeDesc, params, parameterTypeList.isVarArg()), arrayListOf())
+    }
+
+    private fun resolveParamTypeListTypes(parameterTypeList: ParameterTypeList): List<TypeDesc> {
+        if (parameterTypeList.params.size == 1) {
+            val first = parameterTypeList.params[0]
+            if (first !is Parameter) {
+                return emptyList()
+            }
+            val type = resolveParameterType(first)
+            // Special case for void
+            // Pattern: 'void f(void)' can be found in the C program.
+            return if (type.cType() == VOID) {
+                emptyList()
+            } else {
+                listOf(type)
+            }
+        }
+
+        val paramTypes = mutableListOf<TypeDesc>()
+        for (param in parameterTypeList.params) {
+            when (param) {
+                is Parameter -> {
+                    val type = resolveParameterType(param)
+                    paramTypes.add(type)
+                }
+                is ParameterVarArg -> {}
+            }
+        }
+
+        return paramTypes
     }
 }
