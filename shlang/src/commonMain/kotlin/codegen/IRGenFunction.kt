@@ -1519,7 +1519,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(returnStatement: ReturnStatement) {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(returnStatement)) {
+            if (ir.last() !is TerminateInstruction) {
+                throw RuntimeException("Here: ${returnStatement.begin()}")
+            }
             return
         }
 

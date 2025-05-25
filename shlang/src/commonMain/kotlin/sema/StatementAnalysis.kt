@@ -34,7 +34,6 @@ class StatementAnalysisResult(private val state: Map<Statement, StmState>, priva
         return state[statement]!! == StmState.EXITED
     }
 
-
     fun switchItems(switch: SwitchStatement): List<SwitchItem> {
         return switchInfo[switch]?.cases ?: emptyList()
     }
@@ -105,24 +104,13 @@ class StatementAnalysis(): StatementVisitor<StmState> {
 
     private var currentState: StmState = StmState.REACHABLE
 
-    private fun union(state: StmState) : StmState {
-        val st = when (currentState) {
-            StmState.REACHABLE -> state
-            StmState.EXITED -> StmState.EXITED
-            StmState.LOOP_TERMINATED -> if (state == StmState.REACHABLE) StmState.LOOP_TERMINATED else state
-        }
-
-        currentState = st
-        return st
-    }
-
     override fun visit(emptyStatement: EmptyStatement): StmState {
-        state[emptyStatement] = union(StmState.REACHABLE)
+        state[emptyStatement] = currentState
         return currentState
     }
 
     override fun visit(exprStatement: ExprStatement): StmState {
-        state[exprStatement] = union(StmState.REACHABLE)
+        state[exprStatement] = currentState
         return currentState
     }
 
@@ -132,12 +120,12 @@ class StatementAnalysis(): StatementVisitor<StmState> {
             return labeledStatement.stmt.accept(this)
         }
 
-        state[labeledStatement] = union(StmState.REACHABLE)
+        state[labeledStatement] = currentState
         return labeledStatement.stmt.accept(this)
     }
 
     override fun visit(gotoStatement: GotoStatement): StmState {
-        val initial = union(StmState.REACHABLE)
+        val initial = currentState
         state[gotoStatement] = initial
         val label = gotoStatement.label() ?:
             throw IllegalStateException("Goto statement without label: ${gotoStatement.name()}")
@@ -161,7 +149,7 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         val loop = stack.peekTopLoop()
         loopInfo[loop]!!.continues.add(continueStatement)
 
-        val initial = union(StmState.REACHABLE)
+        val initial = currentState
         state[continueStatement] = initial
         currentState = if (initial == StmState.EXITED) {
             StmState.EXITED
@@ -173,17 +161,19 @@ class StatementAnalysis(): StatementVisitor<StmState> {
     }
 
     override fun visit(breakStatement: BreakStatement): StmState {
-        val loop = stack.top()
-        if (loop is WhileStatement || loop is DoWhileStatement || loop is ForStatement) {
-            loopInfo[loop]!!.breaks.add(breakStatement)
-        } else if (loop is CaseStatement || loop is DefaultStatement) {
-            val switch = stack.peekTopSwitch()
-            switchInfo[switch]!!.states.last().after = StmState.LOOP_TERMINATED
+        when (val loop = stack.top()) {
+            is WhileStatement, is DoWhileStatement, is ForStatement -> {
+                loopInfo[loop]!!.breaks.add(breakStatement)
+            }
+            is CaseStatement, is DefaultStatement -> {
+                val switch = stack.peekTopSwitch()
+                switchInfo[switch]!!.states.last().after = StmState.LOOP_TERMINATED
+            }
+            else -> {}
         }
-
-        val initial = union(StmState.REACHABLE)
-        state[breakStatement] = initial
-        currentState = if (initial == StmState.EXITED) {
+internal 
+        state[breakStatement] = currentState
+        currentState = if (currentState == StmState.EXITED) {
             StmState.EXITED
         } else {
             StmState.LOOP_TERMINATED
@@ -192,9 +182,9 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         return currentState
     }
 
-    private fun propagateFallThrough(info: SwitchInfo, state: StmState) {
+    private fun propagateFallThrough(info: SwitchInfo, state: StmState, skipLast: Boolean) {
         for ((idx, st) in info.states.reversed().withIndex()) {
-            if (idx == 0) {
+            if (idx == 0 && skipLast) {
                 continue
             }
 
@@ -213,16 +203,13 @@ class StatementAnalysis(): StatementVisitor<StmState> {
 
         val info = switchInfo[top]!!
 
-        val lastItem = info.states.lastOrNull()
-        val initial = union(StmState.REACHABLE)
+        val initial = currentState
         state[switchItem] = initial
         info.cases.add(switchItem)
         val caseInfo = CaseInfo(switchItem, initial, initial)
         info.states.add(caseInfo)
 
-        if (lastItem != null) {
-            propagateFallThrough(info, before)
-        }
+        propagateFallThrough(info, before, true)
 
         val default = stack.scoped(switchItem) {
             switchItem.stmt().accept(this)
@@ -234,7 +221,7 @@ class StatementAnalysis(): StatementVisitor<StmState> {
             StmState.EXITED -> StmState.EXITED
             StmState.LOOP_TERMINATED -> StmState.LOOP_TERMINATED
         }
-        propagateFallThrough(info, default)
+        propagateFallThrough(info, default, true)
 
         return currentState
     }
@@ -243,13 +230,13 @@ class StatementAnalysis(): StatementVisitor<StmState> {
     override fun visit(caseStatement: CaseStatement): StmState = handleSwitchItem(caseStatement)
 
     override fun visit(returnStatement: ReturnStatement): StmState {
-        state[returnStatement] = union(StmState.REACHABLE)
+        state[returnStatement] = currentState
         currentState = StmState.EXITED
         return currentState
     }
 
     override fun visit(compoundStatement: CompoundStatement): StmState {
-        state[compoundStatement] = union(StmState.REACHABLE)
+        state[compoundStatement] = currentState
         for (item in compoundStatement.statements) {
             currentState = when (item) {
                 is CompoundStmtDeclaration -> currentState
@@ -261,7 +248,7 @@ class StatementAnalysis(): StatementVisitor<StmState> {
     }
 
     override fun visit(ifElseStatement: IfElseStatement): StmState {
-        val initial = union(StmState.REACHABLE)
+        val initial = currentState
         state[ifElseStatement] = initial
 
         val thenState = ifElseStatement.then.accept(this)
@@ -286,7 +273,7 @@ class StatementAnalysis(): StatementVisitor<StmState> {
     }
 
     override fun visit(ifStatement: IfStatement): StmState {
-        val initial = union(StmState.REACHABLE)
+        val initial = currentState
         state[ifStatement] = initial
 
         val thenState = ifStatement.then.accept(this)
@@ -297,8 +284,22 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         return currentState
     }
 
+    private fun finalizeLoop(loopInfo: LoopInfo, loopState: StmState): StmState {
+        val isNoBreaksAndCont = loopInfo.breaks.isEmpty() && loopInfo.continues.isEmpty()
+        if (isNoBreaksAndCont && currentState == StmState.EXITED) {
+            return StmState.EXITED
+        }
+        val isAllExited = loopInfo.breaks.all { state[it] == StmState.EXITED } && loopInfo.continues.all { state[it] == StmState.EXITED }
+        if (isAllExited && currentState == StmState.EXITED) {
+            return StmState.EXITED
+        }
+
+        currentState = loopState
+        return loopState
+    }
+
     override fun visit(doWhileStatement: DoWhileStatement): StmState {
-        val initial = union(StmState.REACHABLE)
+        val initial = currentState
         state[doWhileStatement] = initial
         val loop = LoopInfo()
         loopInfo[doWhileStatement] = loop
@@ -307,21 +308,11 @@ class StatementAnalysis(): StatementVisitor<StmState> {
             currentState = doWhileStatement.body.accept(this)
         }
 
-        val isNoBreaksAndCont = loop.breaks.isEmpty() && loop.continues.isEmpty()
-        if (isNoBreaksAndCont && currentState == StmState.EXITED) {
-            return StmState.EXITED
-        }
-        val isAllExited = loop.breaks.all { state[it] == StmState.EXITED } && loop.continues.all { state[it] == StmState.EXITED }
-        if (isAllExited && currentState == StmState.EXITED) {
-            return StmState.EXITED
-        }
-
-        currentState = initial
-        return currentState
+        return finalizeLoop(loop, initial)
     }
 
     override fun visit(whileStatement: WhileStatement): StmState {
-        val initial = union(StmState.REACHABLE)
+        val initial = currentState
         state[whileStatement] = initial
         val loop = LoopInfo()
         loopInfo[whileStatement] = loop
@@ -331,21 +322,11 @@ class StatementAnalysis(): StatementVisitor<StmState> {
             currentState = initial
         }
 
-        val isNoBreaksAndCont = loop.breaks.isEmpty() && loop.continues.isEmpty()
-        if (isNoBreaksAndCont && currentState == StmState.EXITED) {
-            return StmState.EXITED
-        }
-        val isAllExited = loop.breaks.all { state[it] == StmState.EXITED } && loop.continues.all { state[it] == StmState.EXITED }
-        if (isAllExited && currentState == StmState.EXITED) {
-            return StmState.EXITED
-        }
-
-        currentState = initial
-        return currentState
+        return finalizeLoop(loop, initial)
     }
 
     override fun visit(forStatement: ForStatement): StmState {
-        val initial = union(StmState.REACHABLE)
+        val initial = currentState
         state[forStatement] = initial
         val loop = LoopInfo()
         loopInfo[forStatement] = loop
@@ -359,21 +340,11 @@ class StatementAnalysis(): StatementVisitor<StmState> {
             currentState = initial
         }
 
-        val isNoBreaksAndCont = loop.breaks.isEmpty() && loop.continues.isEmpty()
-        if (isNoBreaksAndCont && currentState == StmState.EXITED) {
-            return StmState.EXITED
-        }
-        val isAllExited = loop.breaks.all { state[it] == StmState.EXITED } && loop.continues.all { state[it] == StmState.EXITED }
-        if (isAllExited && currentState == StmState.EXITED) {
-            return StmState.EXITED
-        }
-
-        currentState = initial
-        return currentState
+        return finalizeLoop(loop, initial)
     }
 
     override fun visit(switchStatement: SwitchStatement): StmState {
-        val initial = union(StmState.REACHABLE)
+        val initial = currentState
         state[switchStatement] = initial
 
         val sInfo = SwitchInfo(mutableListOf())
@@ -382,10 +353,7 @@ class StatementAnalysis(): StatementVisitor<StmState> {
             currentState = switchStatement.body.accept(this)
         }
 
-        val lastItem = sInfo.states.lastOrNull()
-        if (lastItem != null) {
-            propagateFallThrough(sInfo, currentState)
-        }
+        propagateFallThrough(sInfo, currentState, false)
 
         val info = switchInfo[switchStatement] ?: throw IllegalStateException("Switch statement info not found")
         if (info.isTerminator()) {
