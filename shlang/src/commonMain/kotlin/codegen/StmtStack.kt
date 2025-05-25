@@ -6,6 +6,7 @@ import ir.module.builder.impl.FunctionDataBuilder
 import ir.types.IntegerType
 import ir.value.Value
 import ir.value.constant.IntegerConstant
+import parser.nodes.SwitchItem
 
 
 internal class StmtStack {
@@ -61,6 +62,15 @@ internal sealed class StmtInfo {
 
 internal class SwitchStmtInfo(val conditionType: IntegerType, val condBlock: Label, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo() {
     private var default: Label? = null
+    private val visited = hashSetOf<SwitchItem>()
+
+    fun markVisited(item: SwitchItem) {
+        visited.add(item)
+    }
+
+    fun isVisited(item: SwitchItem): Boolean {
+        return visited.contains(item)
+    }
 
     fun resolveDefault(ir: FunctionDataBuilder): Label {
         if (default == null) {

@@ -1412,14 +1412,21 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     override fun visit(emptyStatement: EmptyStatement) {}
 
     override fun visit(exprStatement: ExprStatement) {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(exprStatement)) {
+            if (ir.last() !is TerminateInstruction) {
+                throw RuntimeException("Here: ${exprStatement.begin()}")
+            }
             return
         }
+
         visitExpression(exprStatement.expr, true)
     }
 
     override fun visit(labeledStatement: LabeledStatement) {
-        if (ir.last() is TerminateInstruction && labeledStatement.gotos().isEmpty()) {
+        if (stmAnalysis.isUnreachable(labeledStatement) && labeledStatement.gotos().isEmpty()) {
+            if (ir.last() !is TerminateInstruction) {
+                throw RuntimeException("Here: ${labeledStatement.begin()}")
+            }
             return
         }
         val label = seekOrAddLabel(labeledStatement.name())
@@ -1431,9 +1438,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(gotoStatement: GotoStatement) {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(gotoStatement)) {
+            if (ir.last() !is TerminateInstruction) {
+                throw RuntimeException("Here: ${gotoStatement.begin()}")
+            }
             return
         }
+
         if (gotoStatement.label() == null) {
             throw IRCodeGenError("Goto statement outside of labeled statement", gotoStatement.begin())
         }
@@ -1443,7 +1454,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(continueStatement: ContinueStatement) {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(continueStatement)) {
+            if (ir.last() !is TerminateInstruction) {
+                throw RuntimeException("Here: ${continueStatement.begin()}")
+            }
             return
         }
 
@@ -1474,6 +1488,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         ir.switchLabel(default)
         visitStatement(defaultStatement.stmt)
+        switchInfo.markVisited(defaultStatement)
     }
 
     override fun visit(caseStatement: CaseStatement) {
@@ -1497,6 +1512,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         switchInfo.table.add(caseBlock)
         switchInfo.values.add(caseValueConverted)
+        switchInfo.markVisited(caseStatement)
 
         ir.switchLabel(caseBlock)
         visitStatement(caseStatement.stmt)
@@ -1506,6 +1522,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (ir.last() is TerminateInstruction) {
             return
         }
+
         val fnStmt = stmtStack.root()
         val expr = returnStatement.expr
         if (expr is EmptyExpression) {
@@ -1554,7 +1571,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(ifElseStatement: IfElseStatement) = scoped {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(ifElseStatement)) {
+            if (ir.last() !is TerminateInstruction) {
+                throw RuntimeException("Here: ${ifElseStatement.begin()}")
+            }
             return@scoped
         }
         val condition = makeConditionFromExpression(ifElseStatement.condition)
@@ -1587,7 +1607,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(ifStatement: IfStatement) = scoped {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(ifStatement)) {
+            if (ir.last() !is TerminateInstruction) {
+                throw RuntimeException("Here: ${ifStatement.begin()}")
+            }
             return@scoped
         }
         val condition = makeConditionFromExpression(ifStatement.condition)
@@ -1604,9 +1627,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(doWhileStatement: DoWhileStatement) = scoped {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(doWhileStatement)) {
+            if (ir.last() !is TerminateInstruction) {
+                throw RuntimeException("Here: ${doWhileStatement.begin()}")
+            }
             return@scoped
         }
+
         val bodyBlock = ir.createLabel()
         stmtStack.scoped(LoopStmtInfo()) { loopStmt ->
             ir.branch(bodyBlock)
@@ -1631,9 +1658,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(whileStatement: WhileStatement) = scoped {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(whileStatement)) {
+            if (ir.last() !is TerminateInstruction) {
+                throw RuntimeException("Here: ${whileStatement.begin()}")
+            }
             return@scoped
         }
+
         val bodyBlock = ir.createLabel()
         stmtStack.scoped(LoopStmtInfo()) { loopStmtInfo ->
             val conditionBlock = loopStmtInfo.resolveCondition(ir)
@@ -1686,9 +1717,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             val endBlock = loopStmtInfo.resolveExit(ir)
             ir.branchCond(condition, bodyBlock, endBlock)
             ir.switchLabel(bodyBlock)
-
             visitStatement(forStatement.body)
-            if (stmAnalysis.isReachable(forStatement.body)) {
+            if (ir.last() !is TerminateInstruction) {
                 if (forStatement.update is EmptyExpression) {
                     ir.branch(conditionBlock)
                 } else {

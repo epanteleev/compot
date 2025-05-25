@@ -63,14 +63,20 @@ class BreakStatement(id: Int, private val breakKeyword: Keyword) : Statement(id)
     override fun <T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-class DefaultStatement(id: Int, private val defaultKeyword: Keyword, val stmt: Statement) : Statement(id) {
-    override fun begin(): Position = defaultKeyword.position()
-    override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
+sealed class SwitchItem(id: Int): Statement(id) {
+    abstract fun stmt(): Statement
 }
 
-class CaseStatement(id: Int, private val caseKeyword: Keyword, val constExpression: Expression, val stmt: Statement) : Statement(id) {
+class DefaultStatement(id: Int, private val defaultKeyword: Keyword, val stmt: Statement) : SwitchItem(id) {
+    override fun begin(): Position = defaultKeyword.position()
+    override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
+    override fun stmt(): Statement = stmt
+}
+
+class CaseStatement(id: Int, private val caseKeyword: Keyword, val constExpression: Expression, val stmt: Statement) : SwitchItem(id) {
     override fun begin(): Position = caseKeyword.position()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
+    override fun stmt(): Statement = stmt
 }
 
 class ReturnStatement(id: Int, private val retKeyword: Keyword, val expr: Expression): Statement(id) {
