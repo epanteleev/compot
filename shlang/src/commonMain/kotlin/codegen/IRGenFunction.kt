@@ -1562,7 +1562,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(compoundStatement: CompoundStatement) = scoped {
-        if (ir.last() is TerminateInstruction) {
+        if (stmAnalysis.isUnreachable(compoundStatement)) {
+            if (ir.last() !is TerminateInstruction) {
+                throw RuntimeException("Here: ${compoundStatement.begin()}")
+            }
             return@scoped
         }
         for (node in compoundStatement.statements) {

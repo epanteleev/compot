@@ -9,92 +9,6 @@ enum class StmState {
     LOOP_TERMINATED,
 }
 
-class SwitchInfo(val cases: MutableList<SwitchItem>, val states: MutableList<CaseInfo> = arrayListOf()) {
-    fun isTerminator(): Boolean {
-        val default = states.find { it.caseStatement is DefaultStatement }
-        if (default == null) {
-            return false
-        }
-
-        return states.all { it.after == StmState.EXITED }
-    }
-}
-
-class StatementAnalysisResult(private val state: Map<Statement, StmState>, private val switchInfo: Map<SwitchStatement, SwitchInfo>) {
-    fun isReachable(statement: Statement): Boolean {
-        return state[statement]!! == StmState.REACHABLE
-    }
-
-    fun isUnreachable(statement: Statement): Boolean {
-        val s = state[statement]!!
-        return s == StmState.EXITED || s == StmState.LOOP_TERMINATED
-    }
-
-    fun isExited(statement: Statement): Boolean {
-        return state[statement]!! == StmState.EXITED
-    }
-
-    fun switchItems(switch: SwitchStatement): List<SwitchItem> {
-        return switchInfo[switch]?.cases ?: emptyList()
-    }
-
-    override fun toString(): String = buildString {
-        append("Statement Analysis Result:\n")
-        for ((statement, state) in state) {
-            append("  |${statement.begin()}| ${statement.accept(StmName)}: $state\n")
-        }
-    }
-}
-
-private class StmtStack {
-    private val stack = ArrayList<Statement>()
-
-    fun push(statement: Statement) {
-        stack.add(statement)
-    }
-
-    fun pop(): Statement {
-        if (stack.isEmpty()) {
-            throw IllegalStateException("Stack is empty, cannot pop")
-        }
-        return stack.removeAt(stack.size - 1)
-    }
-
-    fun peekTopSwitch(): SwitchStatement {
-        val switch = stack.lastOrNull { it is SwitchStatement }
-        if (switch == null) {
-            throw IllegalStateException("No switch statement on the stack")
-        }
-
-        return switch as SwitchStatement
-    }
-
-    fun peekTopLoop(): Statement {
-        val loop = stack.lastOrNull { it is WhileStatement || it is DoWhileStatement || it is ForStatement }
-        if (loop == null) {
-            throw IllegalStateException("No loop statement on the stack")
-        }
-
-        return loop
-    }
-
-    fun top(): Statement {
-        if (stack.isEmpty()) {
-            throw IllegalStateException("Stack is empty, cannot peek")
-        }
-        return stack[stack.size - 1]
-    }
-
-    fun<T> scoped(statement: Statement, closure: (Statement) -> T): T {
-        push(statement)
-        val ret = closure(statement)
-        pop()
-        return ret
-    }
-}
-
-class LoopInfo(val breaks: MutableList<BreakStatement> = arrayListOf(), val continues: MutableList<ContinueStatement> = arrayListOf())
-class CaseInfo(val caseStatement: SwitchItem, val before: StmState, var after: StmState)
 
 class StatementAnalysis(): StatementVisitor<StmState> {
     private val state = hashMapOf<Statement, StmState>()
@@ -171,7 +85,7 @@ class StatementAnalysis(): StatementVisitor<StmState> {
             }
             else -> {}
         }
-internal 
+
         state[breakStatement] = currentState
         currentState = if (currentState == StmState.EXITED) {
             StmState.EXITED

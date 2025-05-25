@@ -3,7 +3,7 @@ package sema
 import parser.nodes.*
 import parser.nodes.visitors.StatementVisitor
 
-object StmName: StatementVisitor<String> {
+internal object StmName: StatementVisitor<String> {
     override fun visit(emptyStatement: EmptyStatement): String = "EmptyStatement"
     override fun visit(exprStatement: ExprStatement): String = "ExprStatement"
     override fun visit(labeledStatement: LabeledStatement): String = "LabeledStatement(${labeledStatement.name()})"

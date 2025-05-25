@@ -1,62 +1,14 @@
 package sema
 
-import codegen.consteval.CommonConstEvalContext
-import codegen.consteval.ConstEvalExpression
-import codegen.consteval.TryConstEvalExpressionInt
+import codegen.consteval.*
 import common.assertion
 import intrinsic.VaStart
-import parser.nodes.AnyStructDeclaratorItem
-import parser.nodes.AnyTypeNode
-import parser.nodes.EmptyExpression
-import parser.nodes.EmptyStructDeclaratorItem
-import parser.nodes.EnumDeclaration
-import parser.nodes.EnumSpecifier
-import parser.nodes.Expression
-import parser.nodes.FunctionSpecifierNode
-import parser.nodes.StorageClassSpecifier
-import parser.nodes.StructDeclaration
-import parser.nodes.StructDeclarator
-import parser.nodes.StructDeclaratorItem
-import parser.nodes.StructField
-import parser.nodes.StructSpecifier
-import parser.nodes.TypeNode
-import parser.nodes.TypeQualifierNode
-import parser.nodes.UnionDeclaration
-import parser.nodes.UnionSpecifier
+import parser.nodes.*
 import parser.nodes.visitors.TypeNodeVisitor
 import tokenizer.Position
-import typedesc.DeclSpec
-import typedesc.FunctionSpecifier
-import typedesc.StorageClass
-import typedesc.TypeDesc
-import typedesc.TypeProperty
-import typedesc.TypeQualifier
-import typedesc.VarDescriptor
-import types.AnonMember
-import types.BOOL
-import types.CEnumType
-import types.CHAR
-import types.CPrimitive
-import types.CStructType
-import types.CType
-import types.CUncompletedEnumType
-import types.CUncompletedStructType
-import types.CUncompletedUnionType
-import types.CUnionType
-import types.CompletedType
-import types.DOUBLE
-import types.FLOAT
-import types.FieldMember
-import types.INT
-import types.LONG
-import types.Member
-import types.SHORT
-import types.UCHAR
-import types.UINT
-import types.ULONG
-import types.USHORT
-import types.VOID
-import types.asType
+import typedesc.*
+import types.*
+
 
 internal class CTypeBuilder internal constructor(private val where: Position, private val sema: SemanticAnalysis): TypeNodeVisitor<TypeProperty> {
     private val typeProperties = mutableListOf<TypeQualifier>()
