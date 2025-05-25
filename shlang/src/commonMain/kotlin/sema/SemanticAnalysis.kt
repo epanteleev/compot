@@ -122,16 +122,13 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
     private fun resolveAllDeclaratorsInDirectDeclarator(directDeclarator: DirectDeclarator, baseType: TypeDesc): TypeDesc {
         var currentType = baseType
         for (directDeclaratorParam in directDeclarator.directDeclaratorParams.reversed()) {
-            when (directDeclaratorParam) {
+            currentType = when (directDeclaratorParam) {
                 is ArrayDeclarator -> {
-                    currentType = resolveArrayDeclaratorType(directDeclaratorParam, currentType)
+                    resolveArrayDeclaratorType(directDeclaratorParam, currentType)
                 }
-
                 is ParameterTypeList -> {
-                    val abstractType = resolveParameterTypeList(directDeclaratorParam, currentType)
-                    currentType = TypeDesc.from(CFunctionType(directDeclarator.name(), abstractType.cType() as AbstractCFunction), abstractType.qualifiers())
+                    resolveParameterTypeList(directDeclaratorParam, currentType)
                 }
-
                 is IdentifierList -> throw IllegalStateException("Identifier list is not supported")
             }
         }
@@ -153,8 +150,8 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
     }
 
     private fun resolveFunctionDeclarator(functionDeclarator: FunctionDeclarator, typeDesc: TypeDesc): TypeDesc {
-        val cType = if (typeDesc.cType() is AbstractCFunction) {
-            TypeDesc.from(CPointer(typeDesc.cType() as AbstractCFunction, setOf()), listOf())
+        val cType = if (typeDesc.cType() is CFunctionType) {
+            TypeDesc.from(CPointer(typeDesc.cType(), setOf()), listOf())
         } else {
             typeDesc
         }
@@ -232,7 +229,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
 
     private fun resolveParameterTypeList(parameterTypeList: ParameterTypeList, typeDesc: TypeDesc): TypeDesc {
         val params = resolveParamTypeListTypes(parameterTypeList)
-        return TypeDesc.from(AbstractCFunction(typeDesc, params, parameterTypeList.isVarArg()), arrayListOf())
+        return TypeDesc.from(CFunctionType(typeDesc, params, parameterTypeList.isVarArg()), arrayListOf())
     }
 
     private fun resolveParamTypeListTypes(parameterTypeList: ParameterTypeList): List<TypeDesc> {
@@ -291,7 +288,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
     private fun convertToPrimitive(type: CompletedType): CPrimitive? = when (type) {
         is CPrimitive -> type
         is AnyCArrayType -> type.asPointer()
-        is AnyCFunctionType -> type.asPointer()
+        is CFunctionType -> type.asPointer()
         else -> null
     }
 
@@ -393,7 +390,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
 
     private fun resolveFunctionCallType0(functionCall: FunctionCall): CPointer {
         val functionType = functionCall.primary.accept(this)
-        if (functionType is AbstractCFunction) {
+        if (functionType is CFunctionType) {
             return CPointer(functionType, setOf())
         }
         if (functionType !is CPointer) {
@@ -402,7 +399,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
         return functionType
     }
 
-    fun functionType(functionCall: FunctionCall): AnyCFunctionType {
+    fun functionType(functionCall: FunctionCall): CFunctionType {
         resolveFunctionCallParams(functionCall)
         val functionType = if (functionCall.primary !is VarNode) {
             resolveFunctionCallType0(functionCall)
@@ -410,7 +407,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
             typeHolder.getFunctionType(functionCall.primary.name()).cType()
         }
         if (functionType is CPointer) {
-            return functionType.dereference(functionCall.begin(), typeHolder) as AbstractCFunction
+            return functionType.dereference(functionCall.begin(), typeHolder).asType(functionCall.begin())
         }
         if (functionType !is CFunctionType) {
             throw TypeResolutionException("Function call of '' with non-function type", functionCall.begin())

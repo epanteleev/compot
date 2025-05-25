@@ -18,7 +18,7 @@ internal class CFunctionPrototype(val returnType: Type, val argumentTypes: List<
 
 internal class CFunctionPrototypeBuilder(
     private val begin: Position,
-    private val functionType: AnyCFunctionType,
+    private val functionType: CFunctionType,
     private val mb: ModuleBuilder,
     val typeHolder: TypeHolder,
     val storageClass: StorageClass?,
@@ -78,7 +78,7 @@ internal class CFunctionPrototypeBuilder(
                     types.addAll(parameters)
                     offset += parameters.size - 1
                 }
-                is AnyCArrayType, is AnyCFunctionType, is CPointer -> types.add(PtrType)
+                is AnyCArrayType, is CFunctionType, is CPointer -> types.add(PtrType)
                 is BOOL        -> types.add(I8Type)
                 is CPrimitive  -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type.cType()))
             }

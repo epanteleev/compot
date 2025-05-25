@@ -4,6 +4,7 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
 
+
 // Mini FAQ about the misc libc/gcc crt files.
 // https://dev.gentoo.org/~vapier/crt.txt
 internal object SystemConfig {
@@ -22,87 +23,88 @@ internal object SystemConfig {
         return paths
     }
 
-    fun crtStaticObjects(): List<String> {
+    private fun findCrtStaticObjectPaths(path: String): List<String>? {
+        val crtObjectPathRh = Path.of(path)
+        if (!crtObjectPathRh.exists()) {
+            return null
+        }
+
+        val objs = crtCommonStaticObjects.map { "$path$it" }
+        val first = Path.of(objs.first())
+        if (!first.exists()) {
+            return null
+        }
+
+        return objs
+    }
+
+    private fun crtInit(crtObjects: List<String>): List<String> {
         val crtPath = crtPath()
 
         val objects = arrayListOf<String>()
-        for (crtObject in crtGCCObjects) {
+        for (crtObject in crtObjects) {
             objects.add("$crtPath/$crtObject")
         }
 
-        val crtObjectPathRh = Path.of(CRT_OBJECT_PATH_RH)
-        if (crtObjectPathRh.exists()) {
-            return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_PATH_RH$it" }
-        }
-
-        val crtObjectGNUPath = Path.of(CRT_OBJECT_GNU_LINUX_PATH)
-        if (crtObjectGNUPath.exists()) {
-            return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
-        }
-
-        val crtObjectPath = Path.of(CRT_OBJECT_PATH)
-        if (crtObjectPath.exists()) {
-            return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_PATH$it" }
-        }
-
         return objects
+    }
+
+    fun crtStaticObjects(): List<String> {
+        val objects = crtInit(crtGCCObjects)
+
+
+        val staticObjects = findCrtStaticObjectPaths(CRT_OBJECT_PATH)
+            ?: findCrtStaticObjectPaths(CRT_OBJECT_PATH_RH)
+            ?: findCrtStaticObjectPaths(CRT_OBJECT_GNU_LINUX_PATH)
+            ?: arrayListOf()
+
+        return objects + staticObjects
+    }
+
+    private fun findCrtSharedObjectPaths(path: String): List<String>? {
+        val crtObjectPathRh = Path.of(path)
+        if (!crtObjectPathRh.exists()) {
+            return null
+        }
+
+        val objs = crtCommonSharedObjects.map { "$path$it" }
+        val first = Path.of(objs.first())
+        if (!first.exists()) {
+            return null
+        }
+
+        return objs
     }
 
     fun crtSharedObjects(): List<String> {
-        val crtPath = crtPath()
+        val objects = crtInit(crtSharedObjects)
 
-        val objects = arrayListOf<String>()
-        for (crtObject in crtSharedObjects) {
-            objects.add("$crtPath/$crtObject")
+        val crtObjectPcGcc = findCrtSharedObjectPaths(CRT_OBJECT_PATH_RH)
+            ?: findCrtSharedObjectPaths(CRT_OBJECT_GNU_LINUX_PATH)
+            ?: findCrtSharedObjectPaths(CRT_OBJECT_PATH)
+            ?: arrayListOf()
+
+        return objects + crtObjectPcGcc
+    }
+
+    private fun findCrtPath(path: String): String? {
+        val crtObjectPath = Path.of(path)
+        if (!crtObjectPath.exists()) {
+            return null
         }
 
-        val crtObjectPathRh = Path.of(CRT_OBJECT_PATH_RH)
-        if (crtObjectPathRh.exists()) {
-            return crtCommonSharedObjects.mapTo(objects) { "$CRT_OBJECT_PATH_RH$it" }
-        }
+        val crtPath = crtObjectPath
+            .listDirectoryEntries()
+            .first()
 
-        val crtObjectGNUPath = Path.of(CRT_OBJECT_GNU_LINUX_PATH)
-        if (crtObjectGNUPath.exists()) {
-            return crtCommonSharedObjects.mapTo(objects) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
-        }
-
-        val crtObjectPath = Path.of(CRT_OBJECT_PATH)
-        if (crtObjectPath.exists()) {
-            return crtCommonSharedObjects.mapTo(objects) { "$CRT_OBJECT_PATH$it" }
-        }
-
-        return objects
+        return crtPath.toString()
     }
 
     private fun crtPath(): String {
-        val crtPathGccRh = Path.of(CRT_OBJECT_GCC_RH)
-        if (crtPathGccRh.exists()) {
-            val crtPath = crtPathGccRh
-                .listDirectoryEntries()
-                .first()
-
-            return crtPath.toString()
-        }
-
-        val crtPathGccPc = Path.of(CRT_OBJECT_PC_GCC)
-        if (crtPathGccPc.exists()) {
-            val crtPath = crtPathGccPc
-                .listDirectoryEntries()
-                .first()
-
-            return crtPath.toString()
-        }
-
-        val crtPathGcc = Path.of(CRT_OBJECT_GCC)
-        if (crtPathGcc.exists()) {
-            val crtPath = crtPathGcc
-                .listDirectoryEntries()
-                .first()
-
-            return crtPath.toString()
-        }
-
-        throw IllegalStateException("Cannot find appropriate GCC toolchain")
+        return findCrtPath(CRT_OBJECT_GCC_RH) ?:
+            findCrtPath(CRT_OBJECT_PC_GCC) ?:
+            findCrtPath(CRT_OBJECT_GCC) ?:
+            throw IllegalStateException("Cannot find appropriate GCC toolchain")
     }
 
     fun dynamicLinker(): String = "/lib64/ld-linux-x86-64.so.2"

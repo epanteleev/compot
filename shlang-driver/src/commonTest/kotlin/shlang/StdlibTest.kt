@@ -101,6 +101,13 @@ sealed class StdlibTest: CommonCTest() {
         val result = runCTest("shlang/stdlib/glob", listOf(), options())
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testMemsetArg() {
+        val result = runCTest("shlang/stdlib/memset_arg", listOf(), options())
+        assertEquals("Date: 1/1/1\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {

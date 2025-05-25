@@ -4,22 +4,18 @@ import parser.nodes.*
 import kotlin.collections.*
 
 
-class StatementAnalysisResult(private val state: Map<Statement, StmState>, private val switchInfo: Map<SwitchStatement, SwitchInfo>) {
+class StatementAnalysisResult(private val state: Map<Statement, StmState>) {
     fun isReachable(statement: Statement): Boolean {
         return state[statement]!! == StmState.REACHABLE
     }
 
     fun isUnreachable(statement: Statement): Boolean {
         val s = state[statement]!!
-        return s == StmState.EXITED || s == StmState.LOOP_TERMINATED
+        return s == StmState.EXITED || s == StmState.TERMINATED
     }
 
     fun isExited(statement: Statement): Boolean {
         return state[statement]!! == StmState.EXITED
-    }
-
-    fun switchItems(switch: SwitchStatement): List<SwitchItem> {
-        return switchInfo[switch]?.cases ?: emptyList()
     }
 
     override fun toString(): String = buildString {

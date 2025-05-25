@@ -989,15 +989,15 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             if (check("(")) {
                 eat()
                 if (check(")")) {
-                    eat()
-                    declarators.add(ParameterTypeList(listOf()))
+                    val paren = eat()
+                    declarators.add(ParameterTypeList(paren.position(), listOf()))
                     continue
                 }
                 val declspec = parameter_type_list()
                 if (declspec != null) {
                     if (check(")")) {
-                        eat()
-                        declarators.add(ParameterTypeList(declspec))
+                        val paren = eat()
+                        declarators.add(ParameterTypeList(paren.position(), declspec))
                         continue
                     }
                     throw ParserException(InvalidToken("Expected ')'", peak()))
@@ -1134,16 +1134,16 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             if (check("(")) {
                 eat()
                 if (check(")")) {
-                    eat()
-                    abstractDeclarators.add(ParameterTypeList(listOf()))
+                    val paren = eat()
+                    abstractDeclarators.add(ParameterTypeList(paren.position(),listOf()))
                     continue
                 }
 
                 val parameters = parameter_type_list()
                 if (parameters != null) {
                     if (check(")")) {
-                        eat()
-                        abstractDeclarators.add(ParameterTypeList(parameters))
+                        val paren = eat()
+                        abstractDeclarators.add(ParameterTypeList(paren.position(), parameters))
                         continue
                     }
                     throw ParserException(InvalidToken("Expected ')'", peak()))
@@ -1792,11 +1792,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val pointers = pointer()
         if (pointers != null) {
             val declarator = direct_abstract_declarator()
-            return@rule AbstractDeclarator(pointers, declarator)
+            return@rule AbstractDeclarator(pointers.first().begin(), pointers, declarator)
         }
 
         val declarator = direct_abstract_declarator()?: return@rule null
-        return@rule AbstractDeclarator(listOf(), declarator)
+        return@rule AbstractDeclarator(declarator.first().begin(), listOf(), declarator)
     }
 
     // Reference: https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.cc#L11004

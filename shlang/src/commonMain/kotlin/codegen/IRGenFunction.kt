@@ -445,7 +445,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val memberType = member.cType()
-        if (memberType is CAggregateType || memberType is AnyCFunctionType) {
+        if (memberType is CAggregateType || memberType is CFunctionType) {
             return gep
         }
         val memberIRType = mb.toIRLVType<PrimitiveType>(sema.typeHolder, memberType)
@@ -474,7 +474,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val memberType = member.cType()
-        if (memberType is CAggregateType || memberType is AnyCFunctionType) {
+        if (memberType is CAggregateType || memberType is CFunctionType) {
             return gep
         }
 
@@ -511,20 +511,20 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (!isRvalue) {
             return adr
         }
-        if (arrayType is CAggregateType || arrayType is AnyCFunctionType) {
+        if (arrayType is CAggregateType || arrayType is CFunctionType) {
             return adr
         }
         return ir.load(elementType.asType(), adr)
     }
 
-    private fun convertArg(function: AnyFunctionPrototype, argIdx: Int, expr: Value): Value {
+    private fun convertArg(function: AnyFunctionPrototype, argIdx: Int, expr: Value, pos: Position): Value {
         if (argIdx < function.arguments().size) {
             val cvt = function.argument(argIdx) ?: throw RuntimeException("Internal error")
             return ir.convertLVToType(expr, cvt)
         }
 
         if (!function.attributes.contains(VarArgAttribute)) {
-            throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'", Position.UNKNOWN) //TODO correct position
+            throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'", pos)
         }
         return when (expr.type()) {
             F32Type -> ir.convertLVToType(expr, F64Type)
@@ -539,28 +539,28 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val attributes = hashSetOf<FunctionAttribute>()
 
         var offset = evaluateFirstArgIdx(returnType)
-        for ((idx, argValue) in args.withIndex()) {
-            val expr = visitExpression(argValue, true)
-            when (val argCType = argValue.accept(sema)) {
-                is CPrimitive, is AnyCFunctionType, is CUncompletedArrayType, is CStringLiteral -> {
-                    val convertedArg = convertArg(function, idx + offset, expr)
+        for ((idx, argExpr) in args.withIndex()) {
+            val exprValue = visitExpression(argExpr, true)
+            when (val argCType = argExpr.accept(sema)) {
+                is CPrimitive, is CFunctionType, is CUncompletedArrayType, is CStringLiteral -> {
+                    val convertedArg = convertArg(function, idx + offset, exprValue, argExpr.begin())
                     convertedArgs.add(convertedArg)
                 }
                 is CArrayType -> {
                     val type = mb.toIRType<ArrayType>(sema.typeHolder, argCType)
-                    val convertedArg = ir.gep(expr, type.elementType(), I64Value.of(0))
+                    val convertedArg = ir.gep(exprValue, type.elementType(), I64Value.of(0))
                     convertedArgs.add(convertedArg)
                 }
                 is AnyCStructType -> {
                     if (argCType === VaStart.vaList) {
-                        convertedArgs.add(expr)
+                        convertedArgs.add(exprValue)
                         continue
                     }
                     if (!argCType.isSmall()) {
                         val irType = mb.toIRType<StructType>(sema.typeHolder, argCType)
                         attributes.add(ByValue(idx + offset, irType))
                     }
-                    val argValues = ir.loadCoerceArguments(argCType, expr)
+                    val argValues = ir.loadCoerceArguments(argCType, exprValue)
                     convertedArgs.addAll(argValues)
                     offset += argValues.size - 1
                 }
@@ -585,7 +585,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         ir.gfp(value, irType, I64Value.of(0))
                     }
                     is CPrimitive,
-                    is AnyCFunctionType,
+                    is CFunctionType,
                     is CStringLiteral,
                     is CUncompletedArrayType -> value
                 }
@@ -681,10 +681,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (primary !is VarNode) {
             return visitFunPointerCall(functionCall)
         }
+        val functionType = functionCall.accept(sema)
         val function = mb.findFunction(primary.name()) ?: return visitFunPointerCall(functionCall)
-        val argInfo = convertFunctionArgs(function, functionType.retType().cType(), functionCall.args)
+        val argInfo = convertFunctionArgs(function, functionType, functionCall.args)
 
-        return when (val functionType = functionCall.accept(sema)) {
+        return when (functionType) {
             VOID -> {
                 val cont = ir.createLabel()
                 ir.vcall(function, argInfo.args, argInfo.attributes, cont)
@@ -1148,7 +1149,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     return addr
                 }
                 val type = unaryOp.accept(sema)
-                if (type is CAggregateType || type is AnyCFunctionType) {
+                if (type is CAggregateType || type is CFunctionType) {
                     return addr
                 }
 
@@ -1213,14 +1214,25 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun getVariableAddress(varNode: VarNode, rvalueAddr: Value, isRvalue: Boolean): Value {
-        if (!isRvalue) {
-            return rvalueAddr
-        }
         when (val type = varNode.accept(sema)) {
-            is AnyCStructType, is AnyCFunctionType -> {
+            is CFunctionType -> {
+                return rvalueAddr
+            }
+            is AnyCStructType -> {
+                if (isRvalue) {
+                    return rvalueAddr
+                }
+                if (isArgumentVariable(varNode) && !type.isSmall()) {
+                    val irType = mb.toIRType<StructType>(sema.typeHolder, type)
+                    return ir.gfp(rvalueAddr, irType, I64Value.of(0L))
+                }
+
                 return rvalueAddr
             }
             is AnyCArrayType -> {
+                if (!isRvalue) {
+                    return rvalueAddr
+                }
                 return if (!isArgumentVariable(varNode)) {
                     rvalueAddr
                 } else {
@@ -1228,6 +1240,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
             }
             is CPrimitive -> {
+                if (!isRvalue) {
+                    return rvalueAddr
+                }
                 val converted = mb.toIRLVType<PrimitiveType>(sema.typeHolder, type)
                 return ir.load(converted, rvalueAddr)
             }
@@ -1260,7 +1275,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.store(rvalueAdr, ir.convertLVToType(arg, PtrType))
                 vregStack[param.name] = rvalueAdr
             }
-            is CPrimitive, is AnyCFunctionType -> {
+            is CPrimitive, is CFunctionType -> {
                 val irType = mb.toIRLVType<PrimitiveType>(sema.typeHolder, cType)
                 val rvalueAdr = ir.alloc(irType)
                 ir.store(rvalueAdr, ir.convertLVToType(arg, irType))
@@ -1292,7 +1307,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         for (currentArg in parameters.indices) {
             val param = parameters[currentArg]
             when (val cType = param.cType()) {
-                is CPrimitive, is AnyCArrayType, is AnyCFunctionType -> visitPrimitiveParameter(param, arguments[argumentIdx])
+                is CPrimitive, is AnyCArrayType, is CFunctionType -> visitPrimitiveParameter(param, arguments[argumentIdx])
                 is AnyCStructType -> {
                     if (!cType.isSmall()) {
                         visitPrimitiveParameter(param, arguments[argumentIdx])
@@ -1326,7 +1341,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val ret = ir.load(I8Type, returnValueAdr)
                 ir.ret(I8Type, arrayOf(ret))
             }
-            is CPrimitive, is AnyCFunctionType -> {
+            is CPrimitive, is CFunctionType -> {
                 val retType = mb.toIRLVType<PrimitiveType>(sema.typeHolder, retCType.cType())
                 val returnValueAdr = fnStmt.resolveReturnValueAdr { ir.alloc(retType) }
                 ir.switchLabel(exitBlock)
@@ -1535,7 +1550,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val value = visitExpression(expr, true)
         when (val type = returnStatement.expr.accept(sema)) {
-            is CPrimitive, is CStringLiteral, is AnyCFunctionType -> when (functionType.retType().cType()) {
+            is CPrimitive, is CStringLiteral, is CFunctionType -> when (functionType.retType().cType()) {
                 is BOOL -> {
                     val returnType = ir.prototype().returnType().asType<PrimitiveType>()
                     val returnValue = ir.convertLVToType(value, FlagType)

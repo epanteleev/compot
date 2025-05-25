@@ -153,7 +153,7 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         val fnType = expr.cFunctionType()
 
-        assertEquals("int add(int, int)", fnType.toString())
+        assertEquals("int(int, int)", fnType.toString())
     }
 
     @Test
@@ -164,7 +164,7 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         val fnType = expr.cFunctionType()
 
-        assertEquals("int add()", fnType.toString())
+        assertEquals("int()", fnType.toString())
     }
 
     @Test
@@ -175,7 +175,7 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         val fnType = expr.cFunctionType()
 
-        assertEquals("int add(int a(int, int), int)", fnType.toString())
+        assertEquals("int(int(int, int), int)", fnType.toString())
     }
 
     @Test
@@ -186,7 +186,7 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         val fnType = expr.cFunctionType()
 
-        assertEquals("int printf(const char*, ...)", fnType.toString())
+        assertEquals("int(const char*, ...)", fnType.toString())
     }
 
     @Test
@@ -203,7 +203,7 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         val fnType = expr.cFunctionType()
 
-        assertEquals("int(int, int)* test1(int)", fnType.toString())
+        assertEquals("int(int, int)*(int)", fnType.toString())
     }
 
     @Test
@@ -255,8 +255,8 @@ class TypeResolutionTest {
         parser.translation_unit()
         val typeResolver = parser.globalTypeHolder()
 
-        assertEquals("int b(int)", typeResolver.getFunctionType("b").toString())
-        assertEquals("int n(float)", typeResolver.getFunctionType("n").toString())
+        assertEquals("int(int)", typeResolver.getFunctionType("b").toString())
+        assertEquals("int(float)", typeResolver.getFunctionType("n").toString())
     }
 
     @Test

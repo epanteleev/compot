@@ -68,7 +68,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
         }
         is VarNode -> when (expr.accept(sema)) {
-            is CAggregateType, is AnyCFunctionType -> staticAddressOf(expr) ?: throw RuntimeException("internal error")
+            is CAggregateType, is CFunctionType -> staticAddressOf(expr) ?: throw RuntimeException("internal error")
             else -> defaultContEval(lValueType, expr)
         }
         is CompoundLiteral -> {
@@ -235,7 +235,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     protected fun generateExternDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value =
         when (val cType = varDesc.cType()) {
             is CFunctionType -> {
-                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, sema.typeHolder, varDesc.storageClass)
+                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType, mb, sema.typeHolder, varDesc.storageClass)
                     .build()
                 getExternFunction(declarator.name(), cPrototype)
             }
@@ -244,7 +244,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     protected fun generateGlobalDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value = when (val cType = varDesc.cType()) {
         is CFunctionType -> {
-            val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, sema.typeHolder, varDesc.storageClass).build()
+            val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType, mb, sema.typeHolder, varDesc.storageClass).build()
             createFunctionPrototype(declarator, cPrototype)
         }
         is CPrimitive -> {
@@ -277,7 +277,6 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             val elements = arrayListOf(zero)
             registerGlobal(declarator, InitializerListValue(irType, elements), attr)
         }
-        is AbstractCFunction -> TODO()
         is CStringLiteral -> TODO()
     }
 

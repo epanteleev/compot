@@ -3,7 +3,7 @@ package ir.attributes
 import ir.types.StructType
 
 
-class ByValue(val argumentIndex: Int, val aggregateType: StructType): FunctionAttribute, ArgumentValueAttribute {
+class ByValue(val argumentIndex: Int, val aggregateType: StructType): FunctionAttribute, ArgumentValueAttribute { //TODO remove this attribute
     override fun toString(): String = "!byval[$argumentIndex]"
 
     override fun hashCode(): Int {

@@ -1,16 +1,14 @@
 package sema
 
-import parser.nodes.*
-
 
 internal class StmtStack {
-    private val stack = ArrayList<Statement>()
+    private val stack = ArrayList<StmtInfo>()
 
-    fun push(statement: Statement) {
+    fun push(statement: StmtInfo) {
         stack.add(statement)
     }
 
-    fun pop(): Statement {
+    fun pop(): StmtInfo {
         if (stack.isEmpty()) {
             throw IllegalStateException("Stack is empty, cannot pop")
         }
@@ -18,25 +16,25 @@ internal class StmtStack {
         return stack.removeAt(stack.size - 1)
     }
 
-    fun peekTopSwitch(): SwitchStatement {
-        val switch = stack.lastOrNull { it is SwitchStatement }
+    fun peekTopSwitch(): SwitchInfo {
+        val switch = stack.lastOrNull { it is SwitchInfo }
         if (switch == null) {
             throw IllegalStateException("No switch statement on the stack")
         }
 
-        return switch as SwitchStatement
+        return switch as SwitchInfo
     }
 
-    fun peekTopLoop(): Statement {
-        val loop = stack.lastOrNull { it is WhileStatement || it is DoWhileStatement || it is ForStatement }
+    fun peekTopLoop(): LoopInfo {
+        val loop = stack.lastOrNull { it is LoopInfo }
         if (loop == null) {
             throw IllegalStateException("No loop statement on the stack")
         }
 
-        return loop
+        return loop as LoopInfo
     }
 
-    fun top(): Statement {
+    fun top(): StmtInfo {
         if (stack.isEmpty()) {
             throw IllegalStateException("Stack is empty, cannot peek")
         }
@@ -44,7 +42,7 @@ internal class StmtStack {
         return stack[stack.size - 1]
     }
 
-    fun<T> scoped(statement: Statement, closure: (Statement) -> T): T {
+    fun<T> scoped(statement: StmtInfo, closure: (StmtInfo) -> T): T {
         push(statement)
         val ret = closure(statement)
         pop()

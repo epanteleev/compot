@@ -10,7 +10,7 @@ class CPointer(private val type: CType, private val properties: Set<TypeQualifie
 
     fun dereference(where: Position, typeHolder: TypeHolder): CompletedType {
         val cType = when (type) {
-            is CFunctionType          -> type.functionType.asType(where)
+            is CFunctionType       -> type.asType(where)
             is CUncompletedStructType -> typeHolder.getStructType(type.name)
             is CUncompletedUnionType  -> typeHolder.getUnionType(type.name)
             is CUncompletedEnumType   -> typeHolder.getEnumType(type.name)

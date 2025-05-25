@@ -438,7 +438,7 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
             val lea = bb.putBefore(gfp, Lea.lea(gfp.source().asValue()))
             gfp.source(lea)
 
-        } else if (ptr.isa(generate())) {
+        } else if (ptr.isa(stackAlloc())) {
             val basicType = gfp.basicType.asType<AggregateType>()
             val index = U64Value.of(basicType.offset(gfp.index().toInt()))
             return bb.replace(gfp, LeaStack.lea(gfp.source(), U8Type, index))

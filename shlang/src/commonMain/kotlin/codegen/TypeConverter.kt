@@ -72,7 +72,7 @@ internal object TypeConverter {
         is CUnionType -> convertUnionType(typeHolder, type)
         is CPointer   -> PtrType
         is CEnumType  -> I32Type
-        is CFunctionType, is AbstractCFunction -> PtrType
+        is CFunctionType -> PtrType
         else -> throw RuntimeException("Unknown type, type=$type, class=${type::class}")
     }
 
