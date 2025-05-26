@@ -124,7 +124,7 @@ internal class CTypeBuilder internal constructor(private val where: Position, pr
         is StructDeclaratorItem -> sema.declareVar(anyStructDeclaratorItem.expr, declSpec)
             ?: throw IllegalStateException("Typedef is not supported in struct fields")
         is EmptyStructDeclaratorItem -> {
-            VarDescriptor(anyStructDeclaratorItem.name(), declSpec.typeDesc.asType(), declSpec.typeDesc.qualifiers(), declSpec.storageClass)
+            VarDescriptor(anyStructDeclaratorItem.name(), declSpec.typeDesc.asType(anyStructDeclaratorItem.begin()), declSpec.typeDesc.qualifiers(), declSpec.storageClass)
         }
     }
 

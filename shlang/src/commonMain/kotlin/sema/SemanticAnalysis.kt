@@ -430,10 +430,10 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
 
     override fun visit(stringNode: StringNode): CompletedType = memoize(stringNode) {
         if (stringNode.data().isEmpty()) {
-            return@memoize CStringLiteral(TypeDesc.from(CHAR), 1)
+            return@memoize CStringLiteral( 1)
         }
 
-        return@memoize CStringLiteral(TypeDesc.from(CHAR), stringNode.length().toLong())
+        return@memoize CStringLiteral(stringNode.length().toLong())
     }
 
     override fun visit(assignment: CharNode): CompletedType = CHAR

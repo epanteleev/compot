@@ -6,8 +6,8 @@ import typedesc.TypeDesc
 sealed class Member(protected val typeDesc: TypeDesc) {
     abstract fun cType(): CompletedType
     fun typeDesc(): TypeDesc   = typeDesc
-    fun size(): Int            = typeDesc.asType<CompletedType>().size()
-    fun alignmentOf(): Int     = typeDesc.asType<CompletedType>().alignmentOf()
+    fun size(): Int            = cType().size()
+    fun alignmentOf(): Int     = cType().alignmentOf()
 }
 
 class AnonMember(typeDesc: TypeDesc): Member(typeDesc) {

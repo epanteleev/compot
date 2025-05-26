@@ -1,5 +1,7 @@
 package types
 
+import tokenizer.Position
+
 
 sealed class CAggregateType: CompletedType() {
     fun hasFloatOnly(lo: Int, hi: Int): Boolean {
@@ -16,8 +18,9 @@ sealed class CAggregateType: CompletedType() {
             return true
 
         } else if (ty is CArrayType) {
+            val elementType = ty.type.asType<CompletedType>(Position.UNKNOWN)
             for (i in 0 until ty.dimension.toInt()) {
-                if (!hasFloat(ty.type.cType(), lo, hi, offset + i * ty.type.asType<CompletedType>().size())) {
+                if (!hasFloat(ty.type.cType(), lo, hi, offset + i * elementType.size())) {
                     return false
                 }
             }

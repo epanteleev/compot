@@ -274,13 +274,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val t = type.element()
                     val irType = mb.toIRType<AggregateType>(sema.typeHolder, t.cType())
                     val fieldPtr = ir.gep(lvalueAdr, irType, I64Value.of(idx))
-                    visitInitializerList(init.list, fieldPtr, t.asType())
+                    visitInitializerList(init.list, fieldPtr, t.asType(singleInitializer.begin()))
                 }
                 is CStructType -> {
                     val t = type.fieldByIndexOrNull(idx) ?: throw IRCodeGenError("Field '$idx' not found", init.begin())
                     val irType = mb.toIRType<AggregateType>(sema.typeHolder, type)
                     val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
-                    visitInitializerList(init.list, fieldPtr, t.asType())
+                    visitInitializerList(init.list, fieldPtr, t.asType(init.begin()))
                 }
                 else -> throw RuntimeException("Unknown type: type=$type")
             }
@@ -1330,7 +1330,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitReturnType(fnStmt: FunctionStmtInfo, retCType: TypeDesc, args: List<ArgumentValue>, where: Position) {
         val exitBlock = fnStmt.resolveExit(ir)
-        when (val cType = retCType.asType<CompletedType>()) {
+        when (val cType = retCType.asType<CompletedType>(where)) {
             is VOID -> {
                 ir.switchLabel(exitBlock)
                 ir.retVoid()
@@ -1921,7 +1921,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val fieldType = mb.toIRType<ArrayType>(sema.typeHolder, innerType)
                     val index = designator.constEval(sema).toInt()
 
-                    innerType = innerType.element().asType()
+                    innerType = innerType.element().asType(designator.begin())
                     address = ir.gfp(address, fieldType, I64Value.of(index))
                 }
                 is MemberDesignator -> {

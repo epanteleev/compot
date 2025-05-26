@@ -9,7 +9,7 @@ class TypeDesc private constructor(private val baseType: CType, private val prop
     fun qualifiers(): List<TypeQualifier> = properties
     fun cType(): CType = baseType
 
-    inline fun<reified T: CType> asType(where: Position = Position.UNKNOWN): T {
+    inline fun<reified T: CType> asType(where: Position): T {
         val cTy = cType()
         if (cTy !is T) {
             throw TypeResolutionException("Type $cTy is not of type ${T::class.simpleName}", where)

@@ -1,5 +1,6 @@
 package types
 
+import tokenizer.Position
 import typedesc.TypeDesc
 
 
@@ -16,17 +17,17 @@ sealed class AnyCArrayType(val type: TypeDesc): CAggregateType() {
     }
 }
 
-class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(elementType) {
+class CStringLiteral(val dimension: Long): AnyCArrayType(TypeDesc.from(CHAR)) {
     override fun toString(): String = buildString {
         append(type)
         append("[$dimension]")
     }
 
     override fun size(): Int {
-        return type.asType<CompletedType>().size() * dimension.toInt()
+        return CHAR.size() * dimension.toInt()
     }
 
-    override fun alignmentOf(): Int = type.asType<CompletedType>().alignmentOf()
+    override fun alignmentOf(): Int = CHAR.alignmentOf()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -47,7 +48,7 @@ class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(
 
 class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     override fun size(): Int {
-        return type.asType<CompletedType>().size() * dimension.toInt() //TODO
+        return type.asType<CompletedType>(Position.UNKNOWN).size() * dimension.toInt() //TODO
     }
 
     override fun toString(): String = buildString {
@@ -56,7 +57,7 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     }
 
     override fun alignmentOf(): Int {
-        return type.asType<CompletedType>().alignmentOf()
+        return type.asType<CompletedType>(Position.UNKNOWN).alignmentOf()
     }
 
     override fun equals(other: Any?): Boolean {

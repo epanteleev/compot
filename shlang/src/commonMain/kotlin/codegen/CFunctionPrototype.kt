@@ -62,7 +62,7 @@ internal class CFunctionPrototypeBuilder(
             types.add(PtrType)
         }
         for ((idx, type) in functionType.args().withIndex()) {
-            when (val ty = type.asType<CompletedType>()) {
+            when (val ty = type.asType<CompletedType>(begin)) {
                 is AnyCStructType -> {
                     if (ty === VaStart.vaList) {
                         types.add(PtrType)
