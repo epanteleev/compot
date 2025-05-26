@@ -16,7 +16,12 @@ class FunctionNode internal constructor(val typeHolder: TypeHolder, val varDescr
     fun parameterTypeList(): ParameterTypeList {
         val decl = declarator.directDeclarator.decl
         if (decl !is FunctionDeclarator) {
-            return declarator.directDeclarator.directDeclaratorParams[0] as ParameterTypeList
+            val first = declarator.directDeclarator.directDeclaratorParams.firstOrNull()
+            if (first !is ParameterTypeList) {
+                throw IllegalStateException("Expected ParameterTypeList, but found: $first in ${begin()}")
+            }
+
+            return first
         }
 
         val directDeclaratorParams = decl.declarator.directDeclarator.directDeclaratorParams

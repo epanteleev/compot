@@ -1,7 +1,6 @@
 package sema
 
 import codegen.consteval.*
-import common.assertion
 import parser.LineAgnosticAstPrinter
 import parser.nodes.*
 import parser.nodes.BinaryOpType
@@ -117,8 +116,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
             }
         }
     }
-
-
+    
     private fun resolveAllDeclaratorsInDirectDeclarator(directDeclarator: DirectDeclarator, baseType: TypeDesc): TypeDesc {
         var currentType = baseType
         for (directDeclaratorParam in directDeclarator.directDeclaratorParams.reversed()) {
@@ -135,28 +133,18 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
         return currentType
     }
 
-    private fun resolveDirectDeclarator(directDeclarator: DirectDeclarator, baseType: TypeDesc): TypeDesc = when (directDeclarator.decl) {
-        is FunctionDeclarator -> {
-            assertion(directDeclarator.directDeclaratorParams.size == 1) { "Function pointer should have only one parameter" }
-            val pointers = directDeclarator.decl.declarator.pointers
-            if (pointers.isEmpty()) {
-                resolveAllDeclaratorsInDirectDeclarator(directDeclarator, baseType)
-            } else {
-                val type = resolveParameterTypeList(directDeclarator.parameterTypeList(), baseType)
-                resolveFunctionDeclarator(directDeclarator.decl, type)
-            }
+    private fun resolveDirectDeclarator(directDeclarator: DirectDeclarator, baseType: TypeDesc): TypeDesc {
+        val resolvedDeclList = resolveAllDeclaratorsInDirectDeclarator(directDeclarator, baseType)
+        return when (val decl = directDeclarator.decl) {
+            is FunctionDeclarator ->  resolveFunctionDeclarator(decl, resolvedDeclList)
+            is DirectVarDeclarator -> resolvedDeclList
         }
-        is DirectVarDeclarator -> resolveAllDeclaratorsInDirectDeclarator(directDeclarator, baseType)
     }
 
-    private fun resolveFunctionDeclarator(functionDeclarator: FunctionDeclarator, typeDesc: TypeDesc): TypeDesc {
-        val cType = if (typeDesc.cType() is CFunctionType) {
-            TypeDesc.from(CPointer(typeDesc.cType(), setOf()), listOf())
-        } else {
-            typeDesc
-        }
-
-        return resolveDirectDeclarator(functionDeclarator.declarator.directDeclarator, cType)
+    private fun resolveFunctionDeclarator(functionDeclarator: FunctionDeclarator, resolvedDeclList: TypeDesc): TypeDesc {
+        val ctype = wrapPointers(resolvedDeclList.cType(), functionDeclarator.declarator.pointers)
+        val typeDesc = TypeDesc.from(ctype, resolvedDeclList.qualifiers())
+        return resolveDirectDeclarator(functionDeclarator.declarator.directDeclarator, typeDesc)
     }
 
     fun resolveParameterList(parameterTypeList: ParameterTypeList): List<VarDescriptor>? {

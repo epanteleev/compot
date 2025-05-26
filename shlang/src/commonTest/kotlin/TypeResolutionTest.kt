@@ -200,7 +200,6 @@ class TypeResolutionTest {
         val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
         val expr = parser.function_definition() as FunctionNode
-        val typeResolver = TypeHolder.default()
         val fnType = expr.cFunctionType()
 
         assertEquals("int(int, int)*(int)", fnType.toString())
