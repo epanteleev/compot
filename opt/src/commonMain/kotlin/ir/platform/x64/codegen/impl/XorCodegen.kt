@@ -98,7 +98,13 @@ internal class XorCodegen(val type: IntegerType, val asm: X64MacroAssembler): GP
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
+        val xor = first.value() xor second.value()
+        if (Imm.canBeImm32(xor)) {
+            asm.mov(size, Imm32.of(xor), dst)
+        } else {
+            asm.copy(size, Imm64.of(xor), temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
@@ -117,11 +123,18 @@ internal class XorCodegen(val type: IntegerType, val asm: X64MacroAssembler): GP
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.xor(size, second, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        if (first == dst) {
+            asm.xor(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.xor(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

@@ -116,7 +116,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
             }
         }
     }
-    
+
     private fun resolveAllDeclaratorsInDirectDeclarator(directDeclarator: DirectDeclarator, baseType: TypeDesc): TypeDesc {
         var currentType = baseType
         for (directDeclaratorParam in directDeclarator.directDeclaratorParams.reversed()) {

@@ -605,7 +605,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val srcOperand = operand(move.source())
 
         when (val sourceType = move.source().asType<PrimitiveType>()) {
-            is FloatingPointType -> MoveFloatByIndexCodegen(sourceType, asm)(destination, srcOperand, index)
+            is FloatingPointType -> MoveFloatByIndexCodegen(sourceType, move.index().asType(), asm)(destination, srcOperand, index)
             is IntegerType, is PtrType -> {
                 val indexType = move.index().asType<PrimitiveType>()
                 MoveIntByIndexCodegen(sourceType, indexType, asm)(destination, srcOperand, index)
