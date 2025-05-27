@@ -40,12 +40,13 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
         return type
     }
 
-    private fun wrapPointers(type: CType, pointers: List<NodePointer>): CType {
+    private fun wrapPointers(typeDesc: TypeDesc, pointers: List<NodePointer>): TypeDesc {
+        val type = typeDesc.cType()
         var pointerType = type
         for (pointer in pointers) {
             pointerType = CPointer(pointerType, pointer.property())
         }
-        return pointerType
+        return TypeDesc.from(pointerType, typeDesc.qualifiers())
     }
 
     fun resolveTypedef(declarator: Declarator, declSpec: DeclSpec): Typedef? {
@@ -53,9 +54,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
             return null
         }
 
-        val pointerType = wrapPointers(declSpec.typeDesc.cType(), declarator.pointers)
-        val newTypeDesc = TypeDesc.from(pointerType, declSpec.typeDesc.qualifiers())
-
+        val newTypeDesc = wrapPointers(declSpec.typeDesc, declarator.pointers)
         val type = resolveDirectDeclarator(declarator.directDeclarator, newTypeDesc)
         return Typedef(declarator.name(), type)
     }
@@ -70,15 +69,13 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
             return null
         }
 
-        val pointerType = wrapPointers(declSpec.typeDesc.cType(), declarator.pointers)
-        val newTypeDesc = TypeDesc.from(pointerType, declSpec.typeDesc.qualifiers())
+        val newTypeDesc = wrapPointers(declSpec.typeDesc, declarator.pointers)
         val type = resolveDirectDeclarator(declarator.directDeclarator, newTypeDesc)
         return VarDescriptor(declarator.name(), type.asType(declarator.begin()), type.qualifiers(), declSpec.storageClass)
     }
 
     private fun declareVar(initDeclarator: InitDeclarator, declSpec: DeclSpec): VarDescriptor {
-        val pointerType = wrapPointers(declSpec.typeDesc.cType(), initDeclarator.declarator.pointers)
-        val newTypeDesc = TypeDesc.from(pointerType, declSpec.typeDesc.qualifiers())
+        val newTypeDesc = wrapPointers(declSpec.typeDesc, initDeclarator.declarator.pointers)
 
         val type = resolveDirectDeclarator(initDeclarator.declarator.directDeclarator, newTypeDesc)
         val baseType = type.cType()
@@ -142,8 +139,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
     }
 
     private fun resolveFunctionDeclarator(functionDeclarator: FunctionDeclarator, resolvedDeclList: TypeDesc): TypeDesc {
-        val ctype = wrapPointers(resolvedDeclList.cType(), functionDeclarator.declarator.pointers)
-        val typeDesc = TypeDesc.from(ctype, resolvedDeclList.qualifiers())
+        val typeDesc = wrapPointers(resolvedDeclList, functionDeclarator.declarator.pointers)
         return resolveDirectDeclarator(functionDeclarator.declarator.directDeclarator, typeDesc)
     }
 
@@ -187,8 +183,7 @@ class SemanticAnalysis internal constructor(val typeHolder: TypeHolder): Express
     }
 
     private fun resolveAbstractDeclaratorType(abstractDeclarator: AbstractDeclarator, typeDesc: TypeDesc): TypeDesc {
-        val pointerType = wrapPointers(typeDesc.cType(), abstractDeclarator.pointers)
-        var newTypeDesc = TypeDesc.from(pointerType)
+        var newTypeDesc = wrapPointers(typeDesc, abstractDeclarator.pointers)
         if (abstractDeclarator.directAbstractDeclarators == null) {
             return newTypeDesc
         }

@@ -4,18 +4,19 @@ import parser.nodes.*
 import kotlin.collections.*
 
 
-class StatementAnalysisResult(private val state: Map<Statement, StmState>) {
+class StatementAnalysisResult(private val state: Map<Statement, StmtInfo>) {
     fun isReachable(statement: Statement): Boolean {
-        return state[statement]!! == StmState.REACHABLE
+        return state[statement]!!.before == StmState.REACHABLE
     }
 
     fun isUnreachable(statement: Statement): Boolean {
-        val s = state[statement]!!
+        val s = state[statement]!!.before
         return s == StmState.EXITED || s == StmState.TERMINATED
     }
 
-    fun isExited(statement: Statement): Boolean {
-        return state[statement]!! == StmState.EXITED
+    fun isTerminator(statement: Statement): Boolean {
+        val s = state[statement]!!.after
+        return s == StmState.EXITED || s == StmState.TERMINATED
     }
 
     override fun toString(): String = buildString {
