@@ -35,6 +35,7 @@ import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
 import sema.SemanticAnalysis
 import sema.StatementAnalysis
+import sema.SwitchInfo
 import tokenizer.Position
 import typedesc.*
 
@@ -1494,14 +1495,18 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         switchInfo.markVisited(defaultStatement)
     }
 
-    override fun visit(caseStatement: CaseStatement) {
-        val switchInfo = stmtStack.top() as SwitchStmtInfo
-
+    private fun evaluateCaseStatement(caseStatement: CaseStatement, switchInfo: SwitchStmtInfo): IntegerConstant {
         val ctx = CommonConstEvalContext<Int>(sema)
         val constant = ConstEvalExpression.eval(caseStatement.constExpression, TryConstEvalExpressionInt(ctx))
             ?: throw IRCodeGenError("Case statement with non-constant expression: ${LineAgnosticAstPrinter.print(caseStatement.constExpression)}", caseStatement.begin())
 
-        val caseValueConverted = IntegerConstant.of(switchInfo.conditionType.asType(), constant)
+        return IntegerConstant.of(switchInfo.conditionType.asType(), constant)
+    }
+
+    override fun visit(caseStatement: CaseStatement) {
+        val switchInfo = stmtStack.top() as SwitchStmtInfo
+
+        val caseValueConverted = evaluateCaseStatement(caseStatement, switchInfo)
         val caseBlock = ir.createLabel()
         if (ir.last() !is TerminateInstruction) {
             if (switchInfo.isFallThrough(ir.currentLabel())) {
@@ -1735,7 +1740,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             PtrType -> ir.ptr2int(condition, I64Type)
             else -> condition
         }
-
         val conditionBlock = ir.currentLabel()
         stmtStack.scoped(SwitchStmtInfo(cvtCond.type().asType(), conditionBlock, arrayListOf(), arrayListOf())) { info ->
             visitStatement(switchStatement.body)

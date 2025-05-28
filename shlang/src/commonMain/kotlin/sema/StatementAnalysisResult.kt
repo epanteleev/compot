@@ -19,6 +19,10 @@ class StatementAnalysisResult(private val state: Map<Statement, StmtInfo>) {
         return s == StmState.EXITED || s == StmState.TERMINATED
     }
 
+    fun switchInfo(statement: SwitchStatement): SwitchInfo? {
+        return state[statement] as? SwitchInfo
+    }
+
     override fun toString(): String = buildString {
         append("Statement Analysis Result:\n")
         for ((statement, state) in state) {

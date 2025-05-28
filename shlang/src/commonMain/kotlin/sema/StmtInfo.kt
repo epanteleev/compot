@@ -17,6 +17,10 @@ class SwitchInfo(before: StmState, after: StmState, val switchStatement: SwitchS
 
         return states.all { it.after == StmState.EXITED }
     }
+
+    fun defaultCase(): SwitchItemInfo? {
+        return states.find { it.caseStatement is DefaultStatement }
+    }
 }
 
 class LoopInfo(before: StmState, after: StmState, val loop: Statement, val breaks: MutableList<BreakStatement> = arrayListOf(), val continues: MutableList<ContinueStatement> = arrayListOf()): StmtInfo(before, after) {
