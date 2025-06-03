@@ -35,8 +35,8 @@ class IndirectionVoidCall private constructor(id: Identity,
         return operands.last()
     }
 
-    override fun pointer(newPointer: Value) {
-        update(operands.size - 1, newPointer)
+    override fun pointer(newValue: Value) {
+        update(operands.size - 1, newValue)
     }
 
     override fun arguments(): List<Value> {

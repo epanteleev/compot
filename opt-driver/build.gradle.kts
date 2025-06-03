@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
     id("kotlin-application")
@@ -8,13 +9,14 @@ plugins {
 group = "org.ssa"
 version = "1.0"
 
-application {
-    mainClass.set("OptStartupKt")
-}
-
 kotlin {
     jvm {
-        withJava()
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        binaries {
+            executable {
+                mainClass.set("OptStartupKt")
+            }
+        }
     }
 
     sourceSets {

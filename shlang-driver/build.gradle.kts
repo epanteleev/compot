@@ -1,21 +1,22 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
     id("kotlin-common")
-    application
 }
 
 group = "org.shlang"
 version = "1.0-SNAPSHOT"
 
-application {
-    mainClass.set("ShlangStartupKt")
-}
-
 kotlin {
     jvm {
-        withJava()
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        binaries {
+            executable {
+                mainClass.set("ShlangStartupKt")
+            }
+        }
     }
 
     sourceSets {
@@ -59,19 +60,8 @@ tasks.withType(Test::class.java).all {
     }
 }
 
-private fun shlang(): String {
-    val shlangDriver = projectDir.resolve("build")
-        .resolve("install")
-        .resolve("shlang-driver")
-        .resolve("bin")
-        .resolve("shlang-driver")
-
-    return shlangDriver.toString()
-}
-
 task("makeDist") {
-    group = "verification"
-    dependsOn("test")
-    dependsOn("installDist")
-    project.logger.debug("Running tests")
+    group = "distribution"
+    dependsOn("allTests")
+    dependsOn("installJvmDist")
 }

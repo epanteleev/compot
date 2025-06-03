@@ -125,11 +125,11 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
-    override fun visit(ifElseStatement: IfStatement) {
+    override fun visit(ifStatement: IfStatement) {
         buffer.append("if(")
-        ifElseStatement.condition.accept(this)
+        ifStatement.condition.accept(this)
         buffer.append(") {")
-        ifElseStatement.then.accept(this)
+        ifStatement.then.accept(this)
         buffer.append('}')
     }
 

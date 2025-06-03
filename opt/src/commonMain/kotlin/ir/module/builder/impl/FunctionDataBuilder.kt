@@ -221,11 +221,11 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.put(fp2Int)
     }
 
-    override fun phi(incoming: List<Value>, valueTypes: PrimitiveType, labels: List<Label>): Phi {
+    override fun phi(incoming: List<Value>, valueType: PrimitiveType, labels: List<Label>): Phi {
         val resolvedLabels = arrayFrom(labels) {
             it.resolve(fd.blocks)
         }
-        return bb.put(Phi.phi(resolvedLabels, valueTypes, incoming.toTypedArray()))
+        return bb.put(Phi.phi(resolvedLabels, valueType, incoming.toTypedArray()))
     }
 
     override fun int2ptr(value: Value): Int2Pointer {
