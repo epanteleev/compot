@@ -23,6 +23,15 @@ class StatementAnalysisResult(private val state: Map<Statement, StmtInfo>) {
         return state[statement] as? SwitchInfo
     }
 
+    fun isFallthrough(statement: LabeledStatement): Boolean {
+        val info = state[statement]!!
+        if (info !is LabeledStatementInfo) {
+            throw IllegalArgumentException("Statement is not a labeled statement: $statement")
+        }
+
+        return info.fallthrough
+    }
+
     override fun toString(): String = buildString {
         append("Statement Analysis Result:\n")
         for ((statement, state) in state) {

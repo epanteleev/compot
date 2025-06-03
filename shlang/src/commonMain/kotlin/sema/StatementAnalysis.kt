@@ -2,6 +2,7 @@ package sema
 
 import parser.nodes.*
 import parser.nodes.visitors.StatementVisitor
+import kotlin.collections.get
 
 
 enum class StmState {
@@ -14,6 +15,13 @@ class StatementAnalysis(): StatementVisitor<StmState> {
     private val state = hashMapOf<Statement, StmtInfo>()
     private val stack = StmtStack()
     private var currentState: StmState = StmState.REACHABLE
+    private var lastSeenStmt: Statement? = null
+
+    private fun lastSeen(statement: Statement, fn: (Statement?) -> StmState): StmState {
+        val current = lastSeenStmt
+        lastSeenStmt = statement
+        return fn(current)
+    }
 
     override fun visit(emptyStatement: EmptyStatement): StmState {
         state[emptyStatement] = SomeStatementInfo(currentState, currentState, emptyStatement)
@@ -25,30 +33,65 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         return currentState
     }
 
-    override fun visit(labeledStatement: LabeledStatement): StmState {
-        if (state[labeledStatement]?.before == StmState.REACHABLE) {
-            currentState = StmState.REACHABLE
-            return labeledStatement.stmt.accept(this)
+    private fun gotoLabel(labeledStatement: LabeledStatement) {
+        val labelState = state[labeledStatement]
+        if (labelState?.before == StmState.REACHABLE) {
+            return
         }
 
-        state[labeledStatement] = SomeStatementInfo(currentState, currentState, labeledStatement)
-        return labeledStatement.stmt.accept(this)
+        val initial = LabeledStatementInfo(currentState, currentState, labeledStatement, false)
+        state[labeledStatement] = initial
+        val after = labeledStatement.stmt.accept(this)
+        initial.after = after
+    }
+
+    private fun isFallthroughGoto(prev: Statement?, labeledStatement: LabeledStatement): Boolean {
+        if (prev == null) {
+            return true
+        }
+
+        val prevState = state[prev]
+        if (prev is GotoStatement && prev.name() == labeledStatement.name() && prevState?.before == StmState.REACHABLE) {
+            return true
+        }
+        return prevState?.after == StmState.REACHABLE
+    }
+
+    override fun visit(labeledStatement: LabeledStatement): StmState = lastSeen(labeledStatement) { prev ->
+        val labelState = state[labeledStatement] as? LabeledStatementInfo
+        val isFallThrough = isFallthroughGoto(prev, labeledStatement)
+        if (labelState != null && labelState.before == StmState.REACHABLE) {
+            labelState.fallthrough = isFallThrough
+            currentState = labelState.after
+
+            return@lastSeen currentState
+        }
+
+        val initial = LabeledStatementInfo(currentState, currentState, labeledStatement, isFallThrough)
+        state[labeledStatement] = initial
+        val after = labeledStatement.stmt.accept(this)
+        currentState = after
+        initial.after = currentState
+        return@lastSeen currentState
     }
 
     private fun isLabelUnreachable(label: LabeledStatement): Boolean {
-        val labelState = state[label]?.before
-        return labelState == null || labelState == StmState.EXITED || labelState == StmState.TERMINATED
+        val labelState = state[label]
+        if (labelState == null) {
+            return true
+        }
+
+        return labelState.before == StmState.EXITED || labelState.before == StmState.TERMINATED
     }
 
-    override fun visit(gotoStatement: GotoStatement): StmState {
+    override fun visit(gotoStatement: GotoStatement): StmState = lastSeen(gotoStatement) {
         val initial = SomeStatementInfo(currentState, StmState.TERMINATED, gotoStatement)
         state[gotoStatement] = initial
         val label = gotoStatement.label() ?:
             throw IllegalStateException("Goto statement without label: ${gotoStatement.name()}")
 
         if (currentState == StmState.REACHABLE && isLabelUnreachable(label)) {
-            state[label] = SomeStatementInfo(StmState.REACHABLE, StmState.REACHABLE, label)
-            label.accept(this)
+            gotoLabel(label)
         }
 
         currentState = if (initial.before == StmState.EXITED) {
@@ -56,11 +99,11 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         } else {
             StmState.TERMINATED
         }
-
-        return currentState
+        initial.after = currentState
+        return@lastSeen currentState
     }
 
-    override fun visit(continueStatement: ContinueStatement): StmState {
+    override fun visit(continueStatement: ContinueStatement): StmState = lastSeen(continueStatement)  {
         val loop = stack.peekTopLoop()
         loop.continues.add(continueStatement)
 
@@ -72,10 +115,11 @@ class StatementAnalysis(): StatementVisitor<StmState> {
             StmState.TERMINATED
         }
 
-        return currentState
+        initial.after = currentState
+        return@lastSeen currentState
     }
 
-    override fun visit(breakStatement: BreakStatement): StmState {
+    override fun visit(breakStatement: BreakStatement): StmState = lastSeen(breakStatement) {
         when (val loop = stack.top()) {
             is LoopInfo -> {
                 loop.breaks.add(breakStatement)
@@ -95,7 +139,7 @@ class StatementAnalysis(): StatementVisitor<StmState> {
             StmState.TERMINATED
         }
         stmtState.after = currentState
-        return currentState
+        return@lastSeen currentState
     }
 
     private fun propagateFallThrough(info: SwitchInfo, state: StmState, skipLast: Boolean) {
@@ -112,7 +156,7 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         }
     }
 
-    private fun handleSwitchItem(switchItem: SwitchItem): StmState {
+    private fun handleSwitchItem(switchItem: SwitchItem): StmState = lastSeen(switchItem) {
         val before = currentState
         val info = stack.peekTopSwitch()
         val switchState = state[info.stmt()]!!
@@ -137,20 +181,20 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         }
         propagateFallThrough(info, default, true)
 
-        return currentState //TODO return caseInfo.after???
+        return@lastSeen currentState //TODO return caseInfo.after???
     }
 
     override fun visit(defaultStatement: DefaultStatement): StmState = handleSwitchItem(defaultStatement)
     override fun visit(caseStatement: CaseStatement): StmState = handleSwitchItem(caseStatement)
 
-    override fun visit(returnStatement: ReturnStatement): StmState {
+    override fun visit(returnStatement: ReturnStatement): StmState = lastSeen(returnStatement) {
         val initial = SomeStatementInfo(currentState, StmState.EXITED, returnStatement)
         state[returnStatement] = initial
         currentState = StmState.EXITED
-        return currentState
+        return@lastSeen currentState
     }
 
-    override fun visit(compoundStatement: CompoundStatement): StmState {
+    private fun handleCompoundStatement(compoundStatement: CompoundStatement): StmState {
         val stmtInfo = SomeStatementInfo(currentState, currentState, compoundStatement)
         state[compoundStatement] = stmtInfo
         for (item in compoundStatement.statements) {
@@ -164,7 +208,11 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         return currentState
     }
 
-    override fun visit(ifElseStatement: IfElseStatement): StmState {
+    override fun visit(compoundStatement: CompoundStatement): StmState = lastSeen(compoundStatement) {
+        return@lastSeen handleCompoundStatement(compoundStatement)
+    }
+
+    override fun visit(ifElseStatement: IfElseStatement): StmState = lastSeen(ifElseStatement) {
         val initial = SomeStatementInfo(currentState, currentState, ifElseStatement)
         state[ifElseStatement] = initial
 
@@ -187,10 +235,10 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         }
 
         initial.after = currentState
-        return currentState
+        return@lastSeen currentState
     }
 
-    override fun visit(ifStatement: IfStatement): StmState {
+    override fun visit(ifStatement: IfStatement): StmState = lastSeen(ifStatement) {
         val stmtInfo = SomeStatementInfo(currentState, currentState, ifStatement)
         state[ifStatement] = stmtInfo
 
@@ -200,7 +248,7 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         }
 
         stmtInfo.after = currentState
-        return currentState
+        return@lastSeen currentState
     }
 
     private fun finalLoopState(loopInfo: LoopInfo): StmState {
@@ -218,7 +266,7 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         return loopInfo.before
     }
 
-    override fun visit(doWhileStatement: DoWhileStatement): StmState {
+    override fun visit(doWhileStatement: DoWhileStatement): StmState = lastSeen(doWhileStatement) {
         val loopInfo = LoopInfo(currentState, currentState, doWhileStatement)
         state[doWhileStatement] = loopInfo
 
@@ -228,10 +276,10 @@ class StatementAnalysis(): StatementVisitor<StmState> {
 
         val stateAfter = finalLoopState(loopInfo)
         loopInfo.after = stateAfter
-        return stateAfter
+        return@lastSeen stateAfter
     }
 
-    override fun visit(whileStatement: WhileStatement): StmState {
+    override fun visit(whileStatement: WhileStatement): StmState = lastSeen(whileStatement) {
         val loopInfo = LoopInfo(currentState, currentState, whileStatement)
         state[whileStatement] = loopInfo
 
@@ -242,10 +290,10 @@ class StatementAnalysis(): StatementVisitor<StmState> {
 
         val stateAfter = finalLoopState(loopInfo)
         loopInfo.after = stateAfter
-        return stateAfter
+        return@lastSeen stateAfter
     }
 
-    override fun visit(forStatement: ForStatement): StmState {
+    override fun visit(forStatement: ForStatement): StmState = lastSeen(forStatement) {
         val loop = LoopInfo(currentState, currentState, forStatement)
         state[forStatement] = loop
         stack.scoped(loop) {
@@ -258,10 +306,10 @@ class StatementAnalysis(): StatementVisitor<StmState> {
             currentState = loop.before
         }
 
-        return finalLoopState(loop)
+        return@lastSeen finalLoopState(loop)
     }
 
-    override fun visit(switchStatement: SwitchStatement): StmState {
+    override fun visit(switchStatement: SwitchStatement): StmState = lastSeen(switchStatement) {
         val info = SwitchInfo(currentState, currentState, switchStatement, mutableListOf())
         state[switchStatement] = info
 
@@ -272,19 +320,20 @@ class StatementAnalysis(): StatementVisitor<StmState> {
         propagateFallThrough(info, currentState, false)
         if (info.isTerminator()) {
             currentState = StmState.EXITED
-            return currentState
+            return@lastSeen currentState
         } else {
             currentState = info.before
         }
 
         info.after = currentState
-        return currentState
+        return@lastSeen currentState
     }
 
     companion object {
         fun analyze(function: FunctionNode): StatementAnalysisResult {
             val analysis = StatementAnalysis()
-            function.body.accept(analysis)
+            analysis.handleCompoundStatement(function.body)
+            //function.body.accept(analysis)
             return StatementAnalysisResult(analysis.state)
         }
     }

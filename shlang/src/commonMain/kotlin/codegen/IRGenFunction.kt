@@ -1436,7 +1436,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(labeledStatement: LabeledStatement) {
-        if (stmAnalysis.isUnreachable(labeledStatement) && labeledStatement.gotos().isEmpty()) {
+        if (stmAnalysis.isUnreachable(labeledStatement)) {
             return
         }
         val label = seekOrAddLabel(labeledStatement.name())

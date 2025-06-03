@@ -335,14 +335,14 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //   : declaration
     //   | statement
     //   ;
-    fun compound_statement(): Statement? = rule {
+    fun compound_statement(): CompoundStatement ? = rule {
         if (!check("{")) {
             return@rule null
         }
         eat()
         if (check("}")) {
             val tok = eat()
-            return@rule fabric.newEmptyStatement(tok.position())
+            return@rule fabric.newCompoundStatement(listOf())
         }
         val statements = mutableListOf<CompoundStmtItem>()
         while (!check("}")) {

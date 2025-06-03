@@ -34,6 +34,10 @@ internal class StmtStack {
         return loop as LoopInfo
     }
 
+    fun tryPeekTopLoop(): LoopInfo? {
+        return stack.lastOrNull { it is LoopInfo } as? LoopInfo
+    }
+
     fun top(): StmtInfo {
         if (stack.isEmpty()) {
             throw IllegalStateException("Stack is empty, cannot peek")

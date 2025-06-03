@@ -4,6 +4,9 @@ import parser.nodes.*
 
 sealed class StmtInfo(val before: StmState, internal var after: StmState) {
     abstract fun stmt(): Statement
+    final override fun toString(): String {
+        return "StmtInfo(before=$before, after=$after)"
+    }
 }
 
 class SwitchInfo(before: StmState, after: StmState, val switchStatement: SwitchStatement, internal val cases: MutableList<SwitchItem>, internal val states: MutableList<SwitchItemInfo> = arrayListOf()): StmtInfo(before, after) {
@@ -33,4 +36,8 @@ class SwitchItemInfo(val caseStatement: SwitchItem, before: StmState, after: Stm
 
 class SomeStatementInfo(before: StmState, after: StmState, val statement: Statement): StmtInfo(before, after) {
     override fun stmt(): Statement = statement
+}
+
+class LabeledStatementInfo(before: StmState, after: StmState, val labeledStatement: LabeledStatement, var fallthrough: Boolean): StmtInfo(before, after) {
+    override fun stmt(): Statement = labeledStatement
 }
