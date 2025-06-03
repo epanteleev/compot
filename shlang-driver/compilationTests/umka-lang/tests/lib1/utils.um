@@ -1,1 +1,0 @@
-fn f*() {printf("Utils from lib 1\n")}

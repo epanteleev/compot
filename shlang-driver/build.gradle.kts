@@ -69,49 +69,9 @@ private fun shlang(): String {
     return shlangDriver.toString()
 }
 
-task("prepareTests") {
+task("makeDist") {
     group = "verification"
     dependsOn("test")
     dependsOn("installDist")
     project.logger.debug("Running tests")
-}
-
-tasks.create<Exec>("runChibicc") {
-    group = "verification"
-    dependsOn("prepareTests")
-    workingDir = workingDir.resolve("compilationTests")
-
-    commandLine("python3", "chibicc.py", shlang())
-}
-
-tasks.create<Exec>("runUmka") {
-    group = "verification"
-    dependsOn("prepareTests")
-    workingDir = workingDir.resolve("compilationTests")
-
-    commandLine("python3", "umka.py", shlang())
-}
-
-tasks.create<Exec>("runBfish") {
-    group = "verification"
-    dependsOn("prepareTests")
-    workingDir = workingDir.resolve("compilationTests")
-
-    commandLine("python3", "bfish.py", shlang())
-}
-
-tasks.create<Exec>("runUtf8") {
-    group = "verification"
-    dependsOn("prepareTests")
-    workingDir = workingDir.resolve("compilationTests")
-
-    commandLine("python3", "utf8.py", shlang())
-}
-
-tasks.create("runtests") {
-    group = "verification"
-    dependsOn("runUtf8")
-    dependsOn("runChibicc")
-    dependsOn("runBfish")
-    dependsOn("runUmka")
 }
