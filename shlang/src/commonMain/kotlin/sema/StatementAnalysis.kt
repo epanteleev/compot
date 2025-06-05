@@ -19,8 +19,9 @@ class StatementAnalysis(): StatementVisitor<StmState> {
 
     private fun lastSeen(statement: Statement, fn: (Statement?) -> StmState): StmState {
         val current = lastSeenStmt
+        val ret = fn(current)
         lastSeenStmt = statement
-        return fn(current)
+        return ret
     }
 
     override fun visit(emptyStatement: EmptyStatement): StmState {
