@@ -1,5 +1,3 @@
-
-
 static int gotoLoop(int p) {
   while (p != 1) {
     p--;

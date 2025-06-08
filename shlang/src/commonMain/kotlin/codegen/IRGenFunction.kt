@@ -34,8 +34,6 @@ import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
 import sema.SemanticAnalysis
-import sema.StatementAnalysis
-import sema.SwitchInfo
 import tokenizer.Position
 import typedesc.*
 
@@ -53,7 +51,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     AbstractIRGenerator(moduleBuilder, sema, varStack, nameGenerator),
     StatementVisitor<Unit>,
     DeclaratorVisitor<Value> {
-    private val stmAnalysis = StatementAnalysis.analyze(functionNode)
     private var stringToLabel = mutableMapOf<String, Label>()
     private val stmtStack = StmtStack()
 
@@ -1428,7 +1425,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     override fun visit(emptyStatement: EmptyStatement) {}
 
     override fun visit(exprStatement: ExprStatement) {
-        if (stmAnalysis.isUnreachable(exprStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return
         }
 
@@ -1436,7 +1433,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(labeledStatement: LabeledStatement) {
-        if (stmAnalysis.isUnreachable(labeledStatement)) {
+        if (ir.last() is TerminateInstruction && labeledStatement.gotos().isEmpty()) {
             return
         }
         val label = seekOrAddLabel(labeledStatement.name())
@@ -1448,7 +1445,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(gotoStatement: GotoStatement) {
-        if (stmAnalysis.isUnreachable(gotoStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return
         }
 
@@ -1461,7 +1458,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(continueStatement: ContinueStatement) {
-        if (stmAnalysis.isUnreachable(continueStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return
         }
 
@@ -1473,7 +1470,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(breakStatement: BreakStatement) {
-        if (stmAnalysis.isUnreachable(breakStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return
         }
 
@@ -1527,7 +1524,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(returnStatement: ReturnStatement) {
-        if (stmAnalysis.isUnreachable(returnStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return
         }
 
@@ -1567,7 +1564,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(compoundStatement: CompoundStatement) = scoped {
-        if (stmAnalysis.isUnreachable(compoundStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return@scoped
         }
         for (node in compoundStatement.statements) {
@@ -1579,7 +1576,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(ifElseStatement: IfElseStatement) = scoped {
-        if (stmAnalysis.isUnreachable(ifElseStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return@scoped
         }
         val condition = makeConditionFromExpression(ifElseStatement.condition)
@@ -1590,7 +1587,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         // then
         ir.switchLabel(thenBlock)
         visitStatement(ifElseStatement.then)
-        val endBlock = if (!stmAnalysis.isTerminator(ifElseStatement.then)) {
+        val endBlock = if (ir.last() !is TerminateInstruction) {
             val endBlock = ir.createLabel()
             ir.branch(endBlock)
             endBlock
@@ -1602,7 +1599,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.switchLabel(elseBlock)
         visitStatement(ifElseStatement.elseNode)
 
-        if (!stmAnalysis.isTerminator(ifElseStatement.elseNode)) {
+        if (ir.last() !is TerminateInstruction) {
             val newEndBlock = endBlock ?: ir.createLabel()
             ir.branch(newEndBlock)
             ir.switchLabel(newEndBlock)
@@ -1612,7 +1609,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(ifStatement: IfStatement) = scoped {
-        if (stmAnalysis.isUnreachable(ifStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return@scoped
         }
         val condition = makeConditionFromExpression(ifStatement.condition)
@@ -1622,14 +1619,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branchCond(condition, thenBlock, endBlock)
         ir.switchLabel(thenBlock)
         visitStatement(ifStatement.then)
-        if (!stmAnalysis.isTerminator(ifStatement.then)) {
+        if (ir.last() !is TerminateInstruction) {
             ir.branch(endBlock)
         }
         ir.switchLabel(endBlock)
     }
 
     override fun visit(doWhileStatement: DoWhileStatement) = scoped {
-        if (stmAnalysis.isUnreachable(doWhileStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return@scoped
         }
 
@@ -1640,7 +1637,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             visitStatement(doWhileStatement.body)
 
-            if (!stmAnalysis.isTerminator(doWhileStatement.body)) {
+            if (ir.last() !is TerminateInstruction) {
                 val conditionBlock = loopStmt.resolveCondition(ir)
                 ir.branch(conditionBlock)
                 ir.switchLabel(conditionBlock)
@@ -1657,7 +1654,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(whileStatement: WhileStatement) = scoped {
-        if (stmAnalysis.isUnreachable(whileStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return@scoped
         }
 
@@ -1672,7 +1669,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.branchCond(condition, bodyBlock, endBlock)
             ir.switchLabel(bodyBlock)
             visitStatement(whileStatement.body)
-            if (!stmAnalysis.isTerminator(whileStatement.body)) {
+            if (ir.last() !is TerminateInstruction) {
                 ir.branch(conditionBlock)
             }
             ir.switchLabel(endBlock)
@@ -1694,7 +1691,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(forStatement: ForStatement) = scoped {
-        if (stmAnalysis.isUnreachable(forStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return@scoped
         }
         val bodyBlock = ir.createLabel()
@@ -1713,7 +1710,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.branchCond(condition, bodyBlock, endBlock)
             ir.switchLabel(bodyBlock)
             visitStatement(forStatement.body)
-            if (!stmAnalysis.isTerminator(forStatement.body)) {
+            if (ir.last() !is TerminateInstruction) {
                 if (forStatement.update is EmptyExpression) {
                     ir.branch(conditionBlock)
                 } else {
@@ -1732,7 +1729,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(switchStatement: SwitchStatement) = scoped {
-        if (stmAnalysis.isUnreachable(switchStatement)) {
+        if (ir.last() is TerminateInstruction) {
             return@scoped
         }
         val condition = visitExpression(switchStatement.condition, true)
