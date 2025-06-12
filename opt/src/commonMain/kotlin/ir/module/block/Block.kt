@@ -4,6 +4,7 @@ import ir.value.*
 import common.assertion
 import ir.instruction.*
 import common.LeakedLinkedList
+import common.arrayWrapperOf
 import ir.module.LabelResolver
 import ir.module.ModificationCounter
 import ir.value.constant.UndefValue
@@ -12,7 +13,6 @@ import ir.value.constant.UndefValue
 class Block private constructor(private val mc: ModificationCounter, override val index: Int): Label, Iterable<Instruction> {
     private val instructions = InstructionList()
     internal val predecessors = arrayListOf<Block>()
-    internal val successors   = arrayListOf<Block>()
 
     private var instructionIndex: Int = 0
 
@@ -20,9 +20,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return predecessors
     }
 
-    fun successors(): List<Block> {
-        return successors
-    }
+    fun successors(): List<Block> = arrayWrapperOf(last().targets())
 
     fun last(): TerminateInstruction {
         return lastOrNull() ?:
@@ -128,12 +126,10 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     private fun makeEdge(to: Block) = mc.cf {
-        successors.add(to)
         to.predecessors.add(this)
     }
 
     internal fun removeEdge(to: Block) = mc.cf {
-        successors.remove(to)
         to.predecessors.remove(this)
     }
 
