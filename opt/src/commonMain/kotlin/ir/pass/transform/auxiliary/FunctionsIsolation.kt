@@ -18,22 +18,6 @@ import ir.value.constant.U64Value
 
 
 internal class FunctionsIsolation private constructor(private val cfg: FunctionData, private val ctx: CompileContext) {
-    private fun mustBeIsolated(arg: ArgumentValue): Boolean {
-        // Argument is in overflow area
-        return arg.attributes.find { it is ByValue } == null
-    }
-
-    private fun isolateArgumentValues() {
-        val begin = cfg.begin()
-        for (arg in cfg.arguments()) {
-            if (!mustBeIsolated(arg)) {
-                continue
-            }
-
-            arg.updateUsages(begin.prepend(Copy.copy(arg)))
-        }
-    }
-
     private fun isolateByValueArgument(bb: Block, call: Instruction, i: ByValue, arg: Value) {
         call as Callable
 
@@ -104,7 +88,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     fun pass() {
-        isolateArgumentValues()
+       // isolateArgumentValues()
         isolateCall()
     }
 

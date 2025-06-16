@@ -1,6 +1,7 @@
 package ir.platform.x64.auxiliary
 
 import asm.x64.Imm
+import ir.attributes.ByValue
 import ir.global.AnyAggregateGlobalConstant
 import ir.global.*
 import ir.types.*
@@ -27,6 +28,7 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
     private fun constName(): String = "${PREFIX}.$idx.${constantIndex++}"
 
     private fun pass() {
+        isolateArgumentValues()
         for (bb in cfg.analysis(BfsOrderOrderFabric)) {
             this.bb = bb
             bb.transform { it.accept(this) }
@@ -42,6 +44,22 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
 
     private fun u64imm32(): ValueMatcher = { it is U64Value && !Imm.canBeImm32(it.u64.toLong()) }
     private fun i64imm32(): ValueMatcher = { it is I64Value && !Imm.canBeImm32(it.i64) }
+
+    private fun mustBeIsolated(arg: ArgumentValue): Boolean {
+        // Argument is in overflow area
+        return arg.attributes.find { it is ByValue } == null
+    }
+
+    private fun isolateArgumentValues() {
+        val begin = cfg.begin()
+        for (arg in cfg.arguments()) {
+            if (!mustBeIsolated(arg)) {
+                continue
+            }
+
+            arg.updateUsages(begin.prepend(Copy.copy(arg)))
+        }
+    }
 
     override fun visit(alloc: Alloc): Instruction {
         // Before:
