@@ -1538,19 +1538,20 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val value = visitExpression(expr, true)
         when (val type = returnStatement.expr.accept(sema)) {
-            is CPrimitive, is CStringLiteral, is CFunctionType -> when (functionType.retType().cType()) {
-                is BOOL -> {
-                    val returnType = ir.prototype().returnType().asType<PrimitiveType>()
-                    val returnValue = ir.convertLVToType(value, FlagType)
-                    val cvt = ir.convertLVToType(returnValue, returnType)
-                    ir.store(fnStmt.returnValueAdr(), cvt)
+            is CPrimitive, is CStringLiteral, is CFunctionType -> {
+                val returnType = ir.prototype().returnType().asType<PrimitiveType>()
+                when (functionType.retType().cType()) {
+                    is BOOL -> {
+                        val returnValue = ir.convertLVToType(value, FlagType)
+                        val cvt = ir.convertLVToType(returnValue, returnType)
+                        ir.store(fnStmt.returnValueAdr(), cvt)
+                    }
+                    is CPrimitive -> {
+                        val returnValue = ir.convertLVToType(value, returnType)
+                        ir.store(fnStmt.returnValueAdr(), returnValue)
+                    }
+                    else -> throw RuntimeException("internal error")
                 }
-                is CPrimitive -> {
-                    val returnType = ir.prototype().returnType().asType<PrimitiveType>()
-                    val returnValue = ir.convertLVToType(value, returnType)
-                    ir.store(fnStmt.returnValueAdr(), returnValue)
-                }
-                else -> throw RuntimeException("internal error")
             }
             is AnyCStructType -> {
                 ir.memcpy(fnStmt.returnValueAdr(), value, U64Value.of(type.size().toLong()))
