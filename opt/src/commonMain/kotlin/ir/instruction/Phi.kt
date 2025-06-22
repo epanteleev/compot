@@ -1,11 +1,13 @@
 package ir.instruction
 
+import common.arrayWith
 import common.arrayWrapperOf
 import ir.types.*
 import ir.value.Value
 import common.forEachWith
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
+import ir.value.constant.UndefValue
 
 
 class Phi private constructor(id: Identity, owner: Block, private val ty: PrimitiveType, private var incoming: Array<Block>, incomingValue: Array<Value>):
@@ -23,7 +25,7 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
 
     override fun type(): PrimitiveType = ty
 
-    fun values(): List<Block> = arrayWrapperOf(incoming)
+    fun incoming(): List<Block> = arrayWrapperOf(incoming)
 
     fun value(idx: Int, newValue: Value) {
         update(idx, newValue)
@@ -46,13 +48,13 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
     }
 
     fun zip(closure: (Block, Value) -> Unit) {
-        values().forEachWith(operands) { bb, value ->
+        incoming().forEachWith(operands) { bb, value ->
             closure(bb, value)
         }
     }
 
     fun zipWithIndex(closure: (Block, Value, Int) -> Unit) {
-        values().forEachWith(operands) { bb, value, i ->
+        incoming().forEachWith(operands) { bb, value, i ->
             closure(bb, value, i)
         }
     }
@@ -63,6 +65,14 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
 
     companion object {
         const val NAME = "phi"
+
+        fun undef(type: PrimitiveType, predecessors: Array<Block>): InstBuilder<Phi> = {
+            id: Identity, owner: Block -> undef(id, owner, type, predecessors)
+        }
+
+        private fun undef(id: Identity, owner: Block, type: PrimitiveType, predecessors: Array<Block>): Phi {
+            return registerUser(Phi(id, owner, type, predecessors, arrayWith(predecessors.size) { UndefValue }))
+        }
 
         fun phi(incoming: Array<Block>, valueTypes: PrimitiveType, incomingValue: Array<Value>): InstBuilder<Phi> = {
             id: Identity, owner: Block -> make(id, owner, valueTypes, incoming, incomingValue)

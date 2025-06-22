@@ -632,10 +632,6 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
         return phi
     }
 
-    override fun visit(phi: UncompletedPhi): Instruction? {
-        throw UnsupportedOperationException("UncompletedPhi is not supported in lowering")
-    }
-
     private fun lowerReturnArg(returnValue: ReturnValue, index: Int) {
         val retVal = returnValue.returnValue(index)
         if (retVal.isa(f32v())) {

@@ -1,5 +1,6 @@
 package ir.module.builder
 
+import ir.instruction.Return
 import ir.value.ArgumentValue
 import ir.module.FunctionPrototype
 import ir.module.FunctionData
@@ -41,8 +42,11 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
     abstract fun build(): FunctionData
 
     protected fun normalizeBlocks() {
-        val last = fd.blocks.lastOrNull()
-            ?: throw IllegalStateException("Function '${prototype.name}' does not have return instruction")
-        fd.blocks.swapBlocks(last.index, fd.blocks.size() - 1)
+        val idx = fd.blocks.blocks().indexOfFirst { it.last() is Return }
+        if (idx < 0) {
+            throw IllegalStateException("Function data must have a return block")
+        }
+
+        fd.blocks.swapBlocks(idx, fd.blocks.size() - 1)
     }
 }

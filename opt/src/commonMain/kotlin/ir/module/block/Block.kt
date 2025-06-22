@@ -133,6 +133,18 @@ class Block private constructor(private val mc: ModificationCounter, override va
         to.predecessors.remove(this)
     }
 
+    internal fun predIndex(pred: Block): Int {
+        assertion(pred in predecessors) {
+            "pred=$pred is not in bb=$this"
+        }
+
+        return predecessors.indexOf(pred)
+    }
+
+    internal fun setPred(pred: Block, index: Int) {
+        predecessors[index] = pred
+    }
+
     private fun allocateValue(): Int {
         val currentValue = instructionIndex
         instructionIndex += 1

@@ -358,12 +358,8 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
 
     override fun visit(phi: Phi): InstBuilder<Instruction> {
         val newUsages = arrayFrom(phi.operands()) { it -> it }
-        val newIncoming = arrayFrom(phi.values()) { mapBlock(it) }
+        val newIncoming = arrayFrom(phi.incoming()) { mapBlock(it) }
         return Phi.phi(newIncoming, phi.type(), newUsages)
-    }
-
-    override fun visit(phi: UncompletedPhi): InstBuilder<Instruction> {
-        throw raiseError("Unsupported operation")
     }
 
     override fun visit(returnValue: ReturnValue): InstBuilder<Instruction> {

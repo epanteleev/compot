@@ -309,8 +309,6 @@ internal object NormalizeInstruction: IRInstructionVisitor<Value>() {
 
     override fun visit(phi: Phi): Value = phi
 
-    override fun visit(phi: UncompletedPhi): Value = phi
-
     override fun visit(returnValue: ReturnValue): Value {
         TODO("Not yet implemented")
     }

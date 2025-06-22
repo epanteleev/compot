@@ -2,7 +2,6 @@ package ir.pass.analysis.traverse
 
 import ir.module.FunctionData
 import ir.module.Sensitivity
-import ir.pass.analysis.traverse.iterator.PostorderIterator
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
@@ -10,8 +9,8 @@ import ir.pass.common.FunctionAnalysisPassFabric
 
 private class PostOrderPass(private val functionData: FunctionData): FunctionAnalysisPass<BlockOrder>() {
     override fun run(): BlockOrder {
-        val order = PostorderIterator(functionData.begin(), functionData.size()).order()
-        return BlockOrder(order, functionData.marker())
+        val preorder = functionData.analysis(PreOrderFabric)
+        return BlockOrder(preorder.reversed(), functionData.marker())
     }
 }
 

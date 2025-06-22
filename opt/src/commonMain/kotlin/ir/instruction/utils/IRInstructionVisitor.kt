@@ -44,7 +44,6 @@ abstract class IRInstructionVisitor<T> {
     abstract fun visit(fcmp: FloatCompare): T
     abstract fun visit(load: Load): T
     abstract fun visit(phi: Phi): T
-    abstract fun visit(phi: UncompletedPhi): T
     abstract fun visit(returnValue: ReturnValue): T
     abstract fun visit(returnVoid: ReturnVoid): T
     abstract fun visit(indirectionCall: IndirectionCall): T

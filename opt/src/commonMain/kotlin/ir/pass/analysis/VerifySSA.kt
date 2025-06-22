@@ -413,10 +413,6 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
-    override fun visit(phi: UncompletedPhi) {
-        throw ValidateSSAErrorException(functionData, "Uncompleted phi instruction: '${phi.dump()}'")
-    }
-
     override fun visit(phi: Phi) {
         assert(Phi.typeCheck(phi)) {
             val operands = buildString {
@@ -442,7 +438,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
             }
         }
 
-        val incoming     = phi.values()
+        val incoming     = phi.incoming()
         val predecessors = bb.predecessors()
         assert(predecessors.size == incoming.size) {
             "Inconsistent phi instruction: incoming blocks and predecessors are not equal. incoming=$incoming predecessors=$predecessors"

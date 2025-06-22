@@ -27,19 +27,16 @@ class BasicBlocks private constructor(): LabelResolver, Iterable<Block> {
     }
 
     internal fun begin(): Block {
-        assertion(basicBlocks.isNotEmpty() && basicBlocks.first() == Label.entry) {
-            "First block should be entry block, but got '${basicBlocks.first()}'"
+        assertion(basicBlocks.firstOrNull() == Label.entry) {
+            "First block should be entry block, but got '${basicBlocks.firstOrNull()}'"
         }
+
         return basicBlocks[0]
     }
 
     internal fun end(): Block {
-        val endBlock = basicBlocks.last()
-        assertion(endBlock.lastOrNull() is Return) {
-            "Last instruction should be return, but got '${endBlock.lastOrNull()}'"
-        }
-
-        return endBlock
+        return basicBlocks.find { it.lastOrNull() is Return }
+            ?: throw IllegalStateException("Function data must have a return block")
     }
 
     internal fun swapBlocks(aIndex: Int, bIndex: Int) {

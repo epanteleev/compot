@@ -34,10 +34,7 @@ sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree)
     }
 
     protected fun findActualValue(bb: Block, resultType: Type, value: Value): Value {
-        return findActualValueOrNull(bb, resultType, value) ?: let {
-            println("Warning: use uninitialized value: bb=$bb, value=$value")//TODO remove it in future
-            UndefValue
-        }
+        return findActualValueOrNull(bb, resultType, value) ?: UndefValue
     }
 
     protected fun findActualValueOrNull(bb: Block, resultType: Type, value: Value): Value? {
@@ -55,16 +52,17 @@ sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree)
     abstract fun valueMap(bb: Label, value: Value): Value?
 }
 
-internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
+internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, private val uncompletedPhi: Map<Phi, Alloc>, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
     private val escapeState = cfg.analysis(EscapeAnalysisPassFabric)
     private val bbToMapValues = setupValueMap()
 
     init {
+        val phisToRewrite = hashSetOf<Phi>()
         for (bb in dominatorTree) {
-            rewriteValuesSetup(bb.bb)
+            rewriteValuesSetup(bb.bb, phisToRewrite)
         }
 
-        rewritePhis()
+        laterRewrite(phisToRewrite)
     }
 
     private fun setupValueMap(): MutableMap<Block, MutableMap<Value, Value>> {
@@ -77,11 +75,9 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
     }
 
     // Rewrite phi instructions that was not inserted by mem2reg pass.
-    private fun rewritePhis() {
-        for (bb in cfg) {
-            bb.phis { phi ->
-                phi.values { bb, v -> rename(bb, v.type(), v) }
-            }
+    private fun laterRewrite(phisToRewrite: Set<Phi>) {
+        for (phi in phisToRewrite) {
+            phi.values { bb, v -> rename(bb, v.type(), v) }
         }
     }
 
@@ -89,7 +85,7 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
         return bbToMapValues[bb]!![value]
     }
 
-    private fun rewriteValuesSetup(bb: Block) {
+    private fun rewriteValuesSetup(bb: Block, phisToRewrite: MutableSet<Phi>) {
         val valueMap = bbToMapValues[bb]!!
         for (inst in bb) {
             if (inst.isNoOperands()) {
@@ -114,12 +110,13 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
             }
 
             if (inst is Phi) {
+                val alloc = uncompletedPhi[inst]
+                if (alloc != null) {
+                    valueMap[alloc] = inst
+                } else {
+                    phisToRewrite.add(inst)
+                }
                 // Will rewrite it later.
-                continue
-            }
-
-            if (inst is UncompletedPhi) {
-                valueMap[inst.value()] = inst
                 continue
             }
 
@@ -128,8 +125,8 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
     }
 
     companion object {
-        fun run(cfg: FunctionData, dominatorTree: DominatorTree): RewritePrimitives {
-            val ana = RewritePrimitivesUtil(cfg, dominatorTree)
+        fun run(cfg: FunctionData, uncompletedPhi: Map<Phi, Alloc>, dominatorTree: DominatorTree): RewritePrimitives {
+            val ana = RewritePrimitivesUtil(cfg, uncompletedPhi, dominatorTree)
             return RewritePrimitives(ana.bbToMapValues, dominatorTree)
         }
     }

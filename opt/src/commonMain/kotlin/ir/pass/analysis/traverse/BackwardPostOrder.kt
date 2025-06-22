@@ -2,15 +2,43 @@ package ir.pass.analysis.traverse
 
 import ir.module.FunctionData
 import ir.module.Sensitivity
+import ir.module.block.Block
+import ir.module.block.Label
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
-import ir.pass.analysis.traverse.iterator.BackwardPostorderIterator
 
 
 private class BackwardPostOrderPass(private val functionData: FunctionData): FunctionAnalysisPass<BlockOrder>() {
     override fun run(): BlockOrder {
-        val order = BackwardPostorderIterator(functionData.end(), functionData.size()).order()
+        val visited = BooleanArray(functionData.size())
+        val order = arrayListOf<Block>()
+        val stack = arrayListOf<Block>()
+        stack.add(functionData.end())
+
+        while (stack.isNotEmpty()) {
+            val bb = stack.removeLast()
+
+            if (bb.equals(Label.entry)) {
+                continue
+            }
+
+            if (visited[bb.index]) {
+                continue
+            }
+
+            order.add(bb)
+            visited[bb.index] = true
+
+            val predecessors = bb.predecessors()
+            for (idx in predecessors.indices.reversed()) {
+                stack.add(predecessors[idx])
+            }
+        }
+
+        order.add(functionData.begin())
+        order.reverse()
+
         return BlockOrder(order, functionData.marker())
     }
 }
