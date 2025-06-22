@@ -3,10 +3,7 @@ package ir.pass.transform.normalizer
 import ir.instruction.*
 import ir.instruction.lir.*
 import ir.instruction.utils.IRInstructionVisitor
-import ir.types.SignedIntType
-import ir.types.UnsignedIntType
 import ir.value.LocalValue
-import ir.value.TupleValue
 import ir.value.Value
 import ir.value.asType
 import ir.value.asValue

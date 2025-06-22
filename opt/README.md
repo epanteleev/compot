@@ -3,9 +3,9 @@ Yet another compiler backend
 
 ## Features
 - [x] LLVM like IR
-- [x] Optimizations: Mem2Reg
+- [x] Optimizations: Mem2Reg, DCE, Constant folding
 - [x] Code generation: x86_64 only
-- [x] Register allocation: Poletto linear scan
+- [x] Linear Scan Register allocation
 
 ## Usage
 See examples in `example` module.

@@ -45,12 +45,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     varStack: VarStack<Value>,
                     nameGenerator: NameGenerator,
                     private val functionNode: FunctionNode,
-                    private val parameters: List<VarDescriptor>?,
                     private val ir: FunctionDataBuilder,
                     private val functionType: CFunctionType) :
     AbstractIRGenerator(moduleBuilder, sema, varStack, nameGenerator),
     StatementVisitor<Unit>,
     DeclaratorVisitor<Value> {
+
+    private val parameters = sema.resolveParameterList(functionNode.parameterTypeList())
     private var stringToLabel = mutableMapOf<String, Label>()
     private val stmtStack = StmtStack()
 
@@ -2024,11 +2025,10 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
         val fnType = varDesc.cType()
             .asType<CFunctionType>(functionNode.begin())
 
-        val parameters = sema.resolveParameterList(functionNode.parameterTypeList())
         val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, sema.typeHolder, varDesc.storageClass).build()
 
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
-        val funGen = IrGenFunction(mb, sema, vregStack, nameGenerator, functionNode, parameters, currentFunction, fnType)
+        val funGen = IrGenFunction(mb, sema, vregStack, nameGenerator, functionNode, currentFunction, fnType)
 
         funGen.visitFun()
     }
