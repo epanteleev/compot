@@ -1,5 +1,5 @@
 [versions]
-kotlin-gradle-plugin = "2.1.21"
+kotlin-gradle-plugin = "2.2.0"
 dokka-gradle-plugin = "1.9.20"
 
 [libraries]
