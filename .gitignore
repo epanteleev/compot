@@ -5,7 +5,7 @@ gradle/wrapper
 .idea/
 # Ignore Gradle build output directory
 build
-shlang-driver/test-results/
+compot-driver/test-results/
 opt-driver/test-results/
 *.o
 a.out

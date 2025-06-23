@@ -1,4 +1,4 @@
-name: Shlang CI
+name: Compot CI
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v3.3.2
     - name: Run unit tests
-      run: gradle :opt:jvmTest :shlang:jvmTest
+      run: gradle :opt:jvmTest :compot:jvmTest
     - name: Run testcases
       continue-on-error: true
       run: gradle :testcases:jvmTest
@@ -31,5 +31,5 @@ jobs:
       with:
         name: build-artifacts
         path: |
-          shlang/build/
+          compot/build/
           opt/build/

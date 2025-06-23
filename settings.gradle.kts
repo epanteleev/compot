@@ -1,4 +1,4 @@
-rootProject.name = "shlang-root"
+rootProject.name = "compot-root"
 
 pluginManagement {
     includeBuild("build-config")
@@ -6,6 +6,6 @@ pluginManagement {
 
 include("opt")
 include("examples")
-include("shlang")
+include("compot")
 include("opt-driver")
-include("shlang-driver")
+include("compot-driver")
