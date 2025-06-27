@@ -31,7 +31,6 @@ class Not private constructor(id: Identity, owner: Block, tp: IntegerType, value
             return registerUser(Not(id, owner, valueType.asType(), value), value)
         }
 
-
         fun typeCheck(unary: Not): Boolean {
             return true
         }
