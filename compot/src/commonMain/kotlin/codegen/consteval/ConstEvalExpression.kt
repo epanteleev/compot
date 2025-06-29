@@ -554,8 +554,13 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
         return sizeOf.constEval(ctx.semanticAnalysis()).toDouble()
     }
 
-    override fun visit(cast: Cast): Double {
-        TODO("Not yet implemented")
+    override fun visit(cast: Cast): Double? {
+        val expression = eval(cast.cast, ctx.semanticAnalysis()) ?: return null
+        val type = cast.typeName.accept(ctx.semanticAnalysis()).typeDesc
+        return when (type.cType()) {
+            is AnyCFloat -> expression.toDouble()
+            else -> null
+        }
     }
 
     override fun visit(numNode: NumNode): Double {

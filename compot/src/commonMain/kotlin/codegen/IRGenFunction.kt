@@ -23,6 +23,7 @@ import ir.Definitions.WORD_SIZE
 import ir.attributes.ByValue
 import ir.attributes.FunctionAttribute
 import ir.attributes.VarArgAttribute
+import ir.global.GlobalConstant
 import ir.global.StringLiteralGlobalConstant
 import ir.module.AnyFunctionPrototype
 import ir.module.DirectFunctionPrototype
@@ -305,6 +306,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                             val fieldPtr = ir.gep(lvalueAdr, I64Type, I64Value.of(idx))
                             ir.store(fieldPtr, literal)
                         }
+                        is CArrayType -> {
+                            val irType = mb.toIRType<ArrayType>(sema.typeHolder, element)
+                            val startAddr = ir.gep(lvalueAdr, irType, I64Value.of(idx))
+                            ir.memcpy(startAddr, literal, U64Value.of(literal.string.length))
+                            if (irType.sizeOf() > literal.string.length) {
+                                val gep = ir.gep(startAddr, I8Type, I64Value.of(literal.string.length.toLong()))
+                                for (i in literal.string.length until irType.sizeOf()) {
+                                    ir.store(gep, I8Value.of(0))
+                                }
+                            }
+                        }
                         else -> throw IRCodeGenError("Unknown type $type", expr.begin())
                     }
                 }
@@ -483,7 +495,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitSizeOf(sizeOf: SizeOf): Value = I64Value.of(sizeOf.constEval(sema))
 
-    private fun visitStringNode(stringNode: StringNode): Value {
+    private fun visitStringNode(stringNode: StringNode): StringLiteralGlobalConstant {
         val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(I8Type, stringNode.length()), stringNode.data())
         return mb.addConstant(stringLiteral)
     }

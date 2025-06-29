@@ -5,6 +5,7 @@ import ir.types.*
 import ir.Definitions.POINTER_SIZE
 import ir.instruction.Store
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorUnaryOp
 
 
@@ -29,17 +30,21 @@ class StoreFloatCodegen(val type: FloatingPointType, val asm: Assembler): XmmOpe
     }
 
     override fun aa(dst: Address, src: Address) {
-        TODO("Not yet implemented")
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.mov(size, src, temp2)
+        asm.mov(size, temp2, Address.from(temp1, 0))
     }
 
     override fun default(dst: Operand, src: Operand) {
-        if (dst is GPRegister && src is XmmRegister) {
-            asm.movf(size, src, Address.from(dst, 0))
-        } else if (dst is GPRegister && src is Address) {
-            asm.mov(size, src, temp1)
-            asm.mov(size, temp1, Address.from(dst, 0))
-        } else {
-            throw RuntimeException("Internal error: '${Store.NAME}' dst=$dst, src=$src")
+        when (dst) {
+            is GPRegister if src is XmmRegister -> {
+                asm.movf(size, src, Address.from(dst, 0))
+            }
+            is GPRegister if src is Address -> {
+                asm.mov(size, src, temp1)
+                asm.mov(size, temp1, Address.from(dst, 0))
+            }
+            else -> throw RuntimeException("Internal error: '${Store.NAME}' dst=$dst, src=$src")
         }
     }
 }

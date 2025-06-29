@@ -49,7 +49,7 @@ abstract class AnyModuleBuilder {
         return global
     }
 
-    fun addConstant(global: GlobalConstant): GlobalConstant {
+    fun<T: GlobalConstant> addConstant(global: T): T {
         val has = constantPool.put(global.name(), global)
         if (has != null) {
             throw IllegalArgumentException("global with name='${global.name()}' already exists")
