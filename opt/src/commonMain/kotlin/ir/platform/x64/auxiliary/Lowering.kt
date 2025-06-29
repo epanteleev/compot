@@ -25,6 +25,14 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
     private var bb: Block = cfg.begin()
     private var constantIndex = 0
 
+    private val f32SubZero by lazy {
+        module.addConstant(F32ConstantValue(constName(), F32_SUBZERO))
+    }
+
+    private val f64SubZero by lazy {
+        module.addConstant(F64ConstantValue(constName(), F64_SUBZERO))
+    }
+
     private fun constName(): String = "${PREFIX}.$idx.${constantIndex++}"
 
     private fun pass() {
@@ -215,12 +223,10 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
         lowerUnaryOperand(neg)
         val type = neg.type()
         if (type.isa(f32())) {
-            val constant = module.addConstant(F32ConstantValue(constName(), F32_SUBZERO))
-            return bb.replace(neg, Fxor.xor(neg.operand(), constant))
+            return bb.replace(neg, Fxor.xor(neg.operand(), f32SubZero))
 
         } else if (type.isa(f64())) {
-            val constant = module.addConstant(F64ConstantValue(constName(), F64_SUBZERO))
-            return bb.replace(neg, Fxor.xor(neg.operand(), constant))
+            return bb.replace(neg, Fxor.xor(neg.operand(), f64SubZero))
         }
 
         return neg
