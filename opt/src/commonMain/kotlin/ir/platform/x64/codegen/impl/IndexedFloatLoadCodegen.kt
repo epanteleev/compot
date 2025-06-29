@@ -54,13 +54,13 @@ class IndexedFloatLoadCodegen(loadedType: FloatingPointType, indexType: Primitiv
             }
             is Address if operand is GPRegister && index is Address -> {
                 asm.mov(indexSize, index, temp1)
-                asm.movf(size, Address.from(temp1, 0, operand, ScaleFactor.from(size)), xmmTemp1)
+                asm.movf(size, Address.from(operand, 0, temp1, ScaleFactor.from(size)), xmmTemp1)
                 asm.movf(size, xmmTemp1, dst)
             }
             is Address if operand is Address && index is Address -> {
                 asm.mov(POINTER_SIZE, operand, temp1)
                 asm.mov(indexSize, index, temp2)
-                asm.movf(size, Address.from(temp2, 0, temp1, ScaleFactor.from(size)), xmmTemp1)
+                asm.movf(size, Address.from(temp1, 0, temp2, ScaleFactor.from(size)), xmmTemp1)
                 asm.movf(size, xmmTemp1, dst)
             }
             else -> default(dst, operand, index)
