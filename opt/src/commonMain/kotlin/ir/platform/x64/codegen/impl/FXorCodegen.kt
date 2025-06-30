@@ -2,6 +2,7 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.Operand
 import asm.x64.*
+import ir.platform.x64.CallConvention.fpRet
 import ir.types.*
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.X64MacroAssembler
@@ -58,7 +59,8 @@ internal class FXorCodegen(val type: FloatingPointType, val asm: X64MacroAssembl
 
     override fun ara(dst: Address, first: XmmRegister, second: Address) {
         asm.movf(size, first, xmmTemp1)
-        asm.xorpf(size, second, xmmTemp1)
+        asm.movf(size, second, fpRet)
+        asm.xorpf(size, fpRet, xmmTemp1)
         asm.movf(size, xmmTemp1, dst)
     }
 

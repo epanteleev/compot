@@ -2,7 +2,6 @@ package parser.nodes
 
 import codegen.consteval.*
 import sema.SemanticAnalysis
-import typedesc.TypeHolder
 import tokenizer.tokens.Identifier
 import tokenizer.Position
 

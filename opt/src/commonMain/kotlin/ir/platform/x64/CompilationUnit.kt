@@ -14,18 +14,18 @@ import ir.platform.x64.auxiliary.LinearizeInitializerList
 //
 // https://ftp.gnu.org/old-gnu/Manuals/gas-2.9.1/html_node/as_toc.html
 class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
-    fun mkConstant(globalValue: GlobalConstant): ObjLabel = when (globalValue) {
+    fun mkConstant(globalConstant: GlobalConstant): ObjLabel = when (globalConstant) {
         is StringLiteralGlobalConstant -> {
             // name:
             //    .string "string"
-            label(globalValue.name()) {
-                string(globalValue.constant().toString())
+            label(globalConstant.name()) {
+                string(globalConstant.constant().toString())
                 string("\"\"")
-                size(globalValue.name(), globalValue.constant().length())
+                size(globalConstant.name(), globalConstant.constant().length())
             }
         }
-        is AggregateGlobalConstant -> makeAggregateConstant(globalValue.name(), globalValue.contentType().asType(), globalValue.elements())
-        is PrimitiveGlobalConstant -> makePrimitiveConstant(globalValue)
+        is AggregateGlobalConstant -> makeAggregateConstant(globalConstant.name(), globalConstant.contentType().asType(), globalConstant.elements())
+        is PrimitiveGlobalConstant -> makePrimitiveConstant(globalConstant)
     }
 
     fun makeGlobal(globalValue: AnyGlobalValue) {
