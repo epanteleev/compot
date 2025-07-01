@@ -30,13 +30,11 @@ private class LinearScan(private val data: FunctionData): FunctionAnalysisPass<R
 
     private val activeFixedIntervals = arrayListOf<Pair<LiveRange, VReg>>()
 
-    init {
+    override fun run(): RegisterAllocation {
         allocFixedRegisters()
         allocRegistersForArgumentValues()
         allocRegistersForLocalVariables()
-    }
 
-    override fun run(): RegisterAllocation {
         return RegisterAllocation(
             pool.spilledLocalsAreaSize(),
             registerMap,

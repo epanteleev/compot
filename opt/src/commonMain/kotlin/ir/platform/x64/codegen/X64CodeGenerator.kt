@@ -27,7 +27,6 @@ import ir.instruction.Sub
 import ir.instruction.Xor
 import ir.instruction.lir.*
 import ir.instruction.lir.Lea
-import ir.instruction.matching.anytype
 import ir.instruction.matching.fVisible
 import ir.instruction.matching.gVisible
 import ir.module.block.Label
@@ -41,7 +40,6 @@ import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
 import ir.platform.x64.CallConvention.retReg
 import ir.platform.x64.pass.analysis.callinfo.CallInfoAnalysis
-import ir.platform.x64.pass.analysis.callinfo.SavedContext
 import ir.platform.x64.pass.analysis.regalloc.LinearScanFabric
 import ir.value.*
 import ir.value.constant.*
@@ -622,16 +620,15 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val call = downStackFrame.call()
         val context = callInfo.context(call)
 
-        for (arg in context.savedGPRegisters) {
+        for (arg in context.callerSaveGPRegisters) {
             asm.push(POINTER_SIZE, arg)
         }
 
-        for ((idx, arg) in context.savedXmmRegisters.withIndex()) {
+        for ((idx, arg) in context.callerSavedXmmRegisters.withIndex()) {
             asm.movf(QWORD_SIZE, arg, Address.from(rsp, -(QWORD_SIZE * idx + QWORD_SIZE)))
         }
 
-        val argumentsSlotsSize = callInfo.overflowAreaSize(call)
-        val size = context.adjustStackSize(argumentsSlotsSize)
+        val size = context.adjustStackSize()
         if (size != 0) {
             asm.sub(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
         }
@@ -641,17 +638,16 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val call = upStackFrame.call()
         val context = callInfo.context(call)
 
-        val argumentsSlotsSize = callInfo.overflowAreaSize(call)
-        val size = context.adjustStackSize(argumentsSlotsSize)
+        val size = context.adjustStackSize()
         if (size != 0) {
             asm.add(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
         }
 
-        for ((idx, arg) in context.savedXmmRegisters.reversed().withIndex()) {
-            asm.movf(QWORD_SIZE, Address.from(rsp, -(QWORD_SIZE * (context.savedXmmRegisters.size - idx - 1) + QWORD_SIZE)), arg)
+        for ((idx, arg) in context.callerSavedXmmRegisters.reversed().withIndex()) {
+            asm.movf(QWORD_SIZE, Address.from(rsp, -(QWORD_SIZE * (context.callerSavedXmmRegisters.size - idx - 1) + QWORD_SIZE)), arg)
         }
 
-        for (arg in context.savedGPRegisters.reversed()) {
+        for (arg in context.callerSaveGPRegisters.reversed()) {
             asm.pop(POINTER_SIZE, arg)
         }
     }

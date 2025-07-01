@@ -6,7 +6,6 @@ import ir.Definitions
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.instruction.Callable
-import ir.instruction.Instruction
 import ir.module.FunctionData
 import ir.module.Sensitivity
 import ir.pass.analysis.LivenessAnalysisPassFabric
@@ -26,12 +25,13 @@ private class CallInfoAnalysisImpl(private val data: FunctionData): FunctionAnal
     private val registerAllocation = data.analysis(LinearScanFabric)
     private val liveness = data.analysis(LivenessAnalysisPassFabric)
 
-    private val overFlowAreaSize = hashMapOf<Callable, Int>()
     private val savedContexts = hashMapOf<Callable, SavedContext>()
 
-    private fun overflowAreaSize(call: Callable, list: List<VReg?>): Int {
+    private fun overflowAreaSize(call: Callable): Int {
+        val regs = getArgRegisters(call)
+
         var argumentsSlotsSize = 0
-        for ((idx, reg) in list.withIndex()) { // TODO refactor
+        for ((idx, reg) in regs.withIndex()) {
             if (reg !is Address) {
                 continue
             }
@@ -51,37 +51,36 @@ private class CallInfoAnalysisImpl(private val data: FunctionData): FunctionAnal
         return argumentsSlotsSize
     }
 
-    private fun getState(call: Callable): SavedContext {
-        // Any callable instruction is TerminateInstruction
-        // so that we can easily get the caller save registers
-        // from the live-out of the block
-        call as Instruction
-        val liveOut = liveness.liveOut(call.owner())
-        val exclude = if (call is LocalValue) {
-            // Exclude call from liveOut
-            // because this is value haven't been existed when the call is executed
-            setOf(call)
-        } else {
-            setOf()
-        }
-
-        return callerSaveRegisters(liveOut, exclude)
-    }
 
     private fun frameSize(savedRegisters: Set<GPRegister>, savedXmmRegisters: Set<XmmRegister>): Int {
         return (savedRegisters.size + savedXmmRegisters.size + registerAllocation.calleeSaveRegs().size + /** include retaddr and rbp **/ 2) * QWORD_SIZE +
                 registerAllocation.spilledLocalsSize()
     }
 
-    private fun callerSaveRegisters(liveOutOperands: Collection<LocalValue>, exclude: Set<LocalValue>): SavedContext {
+    private fun getArgRegisters(call: Callable): List<VReg?> {
+        val regs = arrayListOf<VReg?>()
+        for (arg in call.arguments()) {
+            if (arg !is LocalValue) {
+                regs.add(null)
+            } else {
+                regs.add(registerAllocation.vRegOrNull(arg))
+            }
+        }
+
+        return regs
+    }
+
+    private fun callerSaveRegisters(liveOutOperands: Collection<LocalValue>, call: Callable): SavedContext {
         val registers = hashSetOf<GPRegister>()
         val xmmRegisters = hashSetOf<XmmRegister>()
+
+        val exclude = call as? LocalValue
         for (value in liveOutOperands) {
             if (value.type() == UndefType) {
                 continue
             }
 
-            if (exclude.contains(value)) {
+            if (exclude == value) {
                 continue
             }
 
@@ -104,7 +103,8 @@ private class CallInfoAnalysisImpl(private val data: FunctionData): FunctionAnal
             }
         }
 
-        return SavedContext(registers, xmmRegisters, frameSize(registers, xmmRegisters))
+        val frameSize = frameSize(registers, xmmRegisters)
+        return SavedContext(registers, xmmRegisters, frameSize, overflowAreaSize(call))
     }
 
     override fun run(): CallInfo {
@@ -114,21 +114,12 @@ private class CallInfoAnalysisImpl(private val data: FunctionData): FunctionAnal
                     continue
                 }
 
-                val regs = arrayListOf<VReg?>()
-                for (arg in inst.arguments()) {
-                    if (arg !is LocalValue) {
-                        regs.add(null)
-                    } else {
-                        regs.add(registerAllocation.vRegOrNull(arg))
-                    }
-                }
-
-                overFlowAreaSize[inst] = overflowAreaSize(inst, regs)
-                savedContexts[inst] = getState(inst)
+                val liveOut = liveness.liveOut(inst.owner())
+                savedContexts[inst] = callerSaveRegisters(liveOut, inst)
             }
         }
 
-        return CallInfo(overFlowAreaSize, savedContexts, data.marker())
+        return CallInfo(savedContexts, data.marker())
     }
 }
 
