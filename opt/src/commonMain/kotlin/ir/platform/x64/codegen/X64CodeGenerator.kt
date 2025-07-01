@@ -40,8 +40,9 @@ import ir.platform.common.AnyCodeGenerator
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
 import ir.platform.x64.CallConvention.retReg
+import ir.platform.x64.pass.analysis.callinfo.CallInfoAnalysis
+import ir.platform.x64.pass.analysis.callinfo.SavedContext
 import ir.platform.x64.pass.analysis.regalloc.LinearScanFabric
-import ir.platform.x64.pass.analysis.regalloc.SavedContext
 import ir.value.*
 import ir.value.constant.*
 
@@ -55,8 +56,10 @@ internal class X64CodeGenerator(val module: LModule, private val ctx: CompileCon
 }
 
 private class CodeEmitter(private val data: FunctionData, private val unit: CompilationUnit, private val ctx: CompileContext): IRInstructionVisitor<Unit>() {
-    private val registerAllocation by lazy { data.analysis(LinearScanFabric) }
-    private val liveness by lazy { data.analysis(LivenessAnalysisPassFabric) }
+    private val registerAllocation = data.analysis(LinearScanFabric)
+    private val liveness = data.analysis(LivenessAnalysisPassFabric)
+    private val callInfo = data.analysis(CallInfoAnalysis)
+
     private val asm = unit.function(data.prototype.name)
     private var next: Block? = null
 
@@ -614,26 +617,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         }
     }
 
-    private fun getState(call: Callable): SavedContext {
-        // Any callable instruction is TerminateInstruction
-        // so that we can easily get the caller save registers
-        // from the live-out of the block
-        call as Instruction
-        val liveOut = liveness.liveOut(call.owner())
-        val exclude = if (call is LocalValue) {
-            // Exclude call from liveOut
-            // because this is value haven't been existed when the call is executed
-            setOf(call)
-        } else {
-            setOf()
-        }
-
-        return registerAllocation.callerSaveRegisters(liveOut, exclude)
-    }
 
     override fun visit(downStackFrame: DownStackFrame) {
         val call = downStackFrame.call()
-        val context = getState(call)
+        val context = callInfo.context(call)
 
         for (arg in context.savedGPRegisters) {
             asm.push(POINTER_SIZE, arg)
@@ -643,7 +630,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             asm.movf(QWORD_SIZE, arg, Address.from(rsp, -(QWORD_SIZE * idx + QWORD_SIZE)))
         }
 
-        val argumentsSlotsSize = registerAllocation.overflowAreaSize(call)
+        val argumentsSlotsSize = callInfo.overflowAreaSize(call)
         val size = context.adjustStackSize(argumentsSlotsSize)
         if (size != 0) {
             asm.sub(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
@@ -652,9 +639,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     override fun visit(upStackFrame: UpStackFrame) {
         val call = upStackFrame.call()
-        val context = getState(call)
+        val context = callInfo.context(call)
 
-        val argumentsSlotsSize = registerAllocation.overflowAreaSize(call)
+        val argumentsSlotsSize = callInfo.overflowAreaSize(call)
         val size = context.adjustStackSize(argumentsSlotsSize)
         if (size != 0) {
             asm.add(POINTER_SIZE, Imm32.of(size.toLong()), rsp)

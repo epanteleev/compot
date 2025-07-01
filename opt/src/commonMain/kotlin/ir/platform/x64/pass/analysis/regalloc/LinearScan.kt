@@ -1,17 +1,14 @@
 package ir.platform.x64.pass.analysis.regalloc
 
-import asm.x64.Address
 import ir.types.*
 import asm.x64.Register
+import ir.pass.common.*
 import ir.value.LocalValue
 import asm.x64.GPRegister.rcx
 import asm.x64.GPRegister.rdx
 import asm.x64.VReg
 import common.assertion
 import common.forEachWith
-import ir.Definitions
-import ir.Definitions.POINTER_SIZE
-import ir.Definitions.QWORD_SIZE
 import ir.instruction.*
 import ir.value.asType
 import ir.module.FunctionData
@@ -20,10 +17,6 @@ import ir.instruction.lir.Lea
 import ir.module.Sensitivity
 import ir.pass.analysis.intervals.LiveIntervalsFabric
 import ir.pass.analysis.intervals.LiveRange
-import ir.pass.common.AnalysisType
-import ir.pass.common.FunctionAnalysisPass
-import ir.pass.common.FunctionAnalysisPassFabric
-import ir.platform.x64.codegen.CodegenException
 import ir.platform.x64.pass.analysis.FixedRegisterInstructionsAnalysis
 
 
@@ -32,7 +25,6 @@ private class LinearScan(private val data: FunctionData): FunctionAnalysisPass<R
     private val fixedRegistersInfo = FixedRegisterInstructionsAnalysis.run(data)
 
     private val registerMap = hashMapOf<LocalValue, VReg>()
-    private val overFlowAreaSize = hashMapOf<Callable, Int>()
     private val active      = linkedMapOf<LocalValue, VReg>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
 
@@ -44,34 +36,11 @@ private class LinearScan(private val data: FunctionData): FunctionAnalysisPass<R
         allocRegistersForLocalVariables()
     }
 
-    private fun overflowAreaSize(call: Callable, list: List<VReg?>): Int {
-        var argumentsSlotsSize = 0
-        for ((idx, reg) in list.withIndex()) { // TODO refactor
-            if (reg !is Address) {
-                continue
-            }
-            val prototype = call.prototype()
-            val byVal = prototype.byValue(idx)
-            if (byVal == null) {
-                argumentsSlotsSize += POINTER_SIZE
-                continue
-            }
-
-            val type = prototype.argument(idx) ?: throw CodegenException("argument type is null")
-            assertion(type is AggregateType) { "type=$type" }
-
-            argumentsSlotsSize += Definitions.alignTo(type.sizeOf(), QWORD_SIZE)
-        }
-
-        return argumentsSlotsSize
-    }
-
     override fun run(): RegisterAllocation {
         return RegisterAllocation(
             pool.spilledLocalsAreaSize(),
             registerMap,
             pool.usedGPCalleeSaveRegisters(),
-            overFlowAreaSize,
             data.marker()
         )
     }
@@ -89,7 +58,6 @@ private class LinearScan(private val data: FunctionData): FunctionAnalysisPass<R
 
     private fun allocFunctionArguments(callable: Callable) {
         val allocation = pool.callerArgumentAllocate(callable.arguments())
-        overFlowAreaSize[callable] = overflowAreaSize(callable, allocation)
         allocation.forEachWith(callable.arguments()) { operand, arg ->
             if (operand == null) {
                 // Nothing to do. UB happens

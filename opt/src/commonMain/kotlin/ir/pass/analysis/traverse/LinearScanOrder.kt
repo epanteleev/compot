@@ -1,6 +1,5 @@
 package ir.pass.analysis.traverse
 
-import ir.instruction.Return
 import ir.module.FunctionData
 import ir.module.Sensitivity
 import ir.module.block.Block

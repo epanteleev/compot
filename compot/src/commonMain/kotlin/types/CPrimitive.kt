@@ -6,7 +6,7 @@ import ir.Definitions.BYTE_SIZE
 sealed class CPrimitive: CompletedType() {
     final override fun alignmentOf(): Int = size()
 
-    fun interfere(type2: CType): CPrimitive? {
+    fun interfere(type2: CPrimitive): CPrimitive? {
         when (this) {
             type2 -> return this
             CHAR -> {
@@ -59,13 +59,9 @@ sealed class CPrimitive: CompletedType() {
 
             INT -> {
                 return when (type2) {
-                    BOOL -> INT
-                    CHAR -> INT
-                    UCHAR -> INT
+                    BOOL, CHAR, UCHAR, SHORT, USHORT -> INT
                     LONG -> LONG
                     ULONG -> ULONG
-                    SHORT -> INT
-                    USHORT -> INT
                     UINT -> UINT
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
@@ -77,13 +73,7 @@ sealed class CPrimitive: CompletedType() {
 
             LONG -> {
                 return when (type2) {
-                    BOOL -> LONG
-                    CHAR -> LONG
-                    UCHAR -> LONG
-                    INT -> LONG
-                    SHORT -> LONG
-                    USHORT -> LONG
-                    UINT -> LONG
+                    BOOL, CHAR, UCHAR, INT, SHORT, USHORT, UINT -> LONG
                     ULONG -> ULONG
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
@@ -101,7 +91,7 @@ sealed class CPrimitive: CompletedType() {
                     SHORT -> FLOAT
                     UINT -> FLOAT
                     DOUBLE -> DOUBLE
-                    LONG -> DOUBLE
+                    LONG -> FLOAT
                     is CEnumType -> FLOAT
                     else -> null
                 }
@@ -186,22 +176,7 @@ sealed class CPrimitive: CompletedType() {
                     else -> return null
                 }
             }
-            is BOOL -> {
-                return when (type2) {
-                    CHAR -> CHAR
-                    UCHAR -> UCHAR
-                    SHORT -> SHORT
-                    USHORT -> USHORT
-                    INT -> INT
-                    UINT -> UINT
-                    LONG -> LONG
-                    ULONG -> ULONG
-                    FLOAT -> FLOAT
-                    DOUBLE -> DOUBLE
-                    is CEnumType -> INT
-                    else -> return null
-                }
-            }
+            is BOOL -> return type2
             else -> return null
         }
     }

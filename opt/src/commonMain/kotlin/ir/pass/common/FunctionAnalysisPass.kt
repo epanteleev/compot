@@ -30,6 +30,7 @@ enum class AnalysisType {
     PRE_ORDER,
     BACKWARD_POST_ORDER,
     BFS_ORDER,
+    CALL_INFO,
     LINEAR_SCAN;
 
     companion object {
