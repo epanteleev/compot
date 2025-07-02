@@ -59,10 +59,10 @@ object CliParser {
     }
 
     private fun printHelp() {
-        println("Usage: ssa [options] <filename>")
+        println("Usage: opt [options] <filename>")
         println("Options:")
         println("  -c, --compile <filename> Set output filename")
-        println("  -O1                      Set optimization level")
+        println("  -O<NUM>                  Set optimization level")
         println("  -o <filename>            Set output filename")
         println("  --dump-ir <directory>    Dump IR to directory")
         println("  -h, --help               Show this help message")

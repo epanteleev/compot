@@ -33,7 +33,6 @@ import ir.module.block.Label
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.pass.CompileContext
-import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.platform.common.AnyCodeGenerator
 import ir.platform.common.CompiledModule
@@ -55,7 +54,6 @@ internal class X64CodeGenerator(val module: LModule, private val ctx: CompileCon
 
 private class CodeEmitter(private val data: FunctionData, private val unit: CompilationUnit, private val ctx: CompileContext): IRInstructionVisitor<Unit>() {
     private val registerAllocation = data.analysis(LinearScanFabric)
-    private val liveness = data.analysis(LivenessAnalysisPassFabric)
     private val callInfo = data.analysis(CallInfoAnalysis)
 
     private val asm = unit.function(data.prototype.name)
