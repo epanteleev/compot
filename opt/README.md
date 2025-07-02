@@ -8,11 +8,45 @@ Yet another compiler backend
 - [x] Linear Scan Register allocation
 
 ## Usage
-See examples in `example` module.
+See examples in `example` module. It shows how to use the `opt` IR in Kotlin code.
 
 ## Available optimizations
-- Mem2Reg
-- Constant folding & Dead code elimination
+### Mem2Reg
+Converts `alloc` instructions to SSA variables and insert `phi` functions. This is similar to the LLVM's Mem2Reg pass by concept.
+The `alloc` instruction will be replaced if it is satisfied following conditions:
+- The `alloc` value is primitive type (int, float, etc.)
+- The value which produces the `alloc` is not escaped to the another function, global variable etc. (seek `Escape Analysis pass`)
+
+### Constant folding & Dead code elimination
+It removes instructions that are not used in the program and replaces constant expressions with their values. 
+Currently, it supports only simple expressions like arithmetic operations and comparisons. 
+
+## Implementation details
+Generally, `opt` IR is similar to LLVM IR. The compilation is based on modules. Each module contains a list of function data, global variables and other metadata.
+Each function contains a list of basic blocks. The basic block contains a list of instructions and every last instruction is a terminator instruction. 
+Some terminator instructions produces control flow edge to another basic block, like `br` instruction. 
+Compared to LLVM IR, all types of `call` instruction produces a control flow edge to the next basic block. 
+It is assumed that only one exit basic block is allowed in the function. Seek `VerifySSA` pass to find out more limitations of the IR.
+  
+There are several steps to convert the IR into machine code: optimization, lowering, code generation.
+### Optimization
+The optimization phase performs the optimization pipeline for each function data in the module. 
+Currently, the compiler doesn't perform any inter-procedural optimizations, so each function is optimized separately. 
+This is optional step and it is run only if the `-O3` flag is specified.
+
+### Lowering
+The lowering phase converts the IR into a lower-level representation that is closer to the machine code.
+This is complicated step to describe it here, I just mention some steps of it:
+- It does SSA deconstruction steps: "parallel" copy insertion for `phi` operands, split critical edges inside the CFG.
+- Put `copy` instructions for function arguments and some instruction operands.
+- Transform `alloc` instructions to stack allocation instructions.
+- Etc.
+
+### Code generation
+The code generation phase converts the lowered IR into X86_64 machine code. 
+This step also performs register allocation and instruction selection. 
+It creates a list of AT&T assembly instructions in text format. 
+The compiler relies on the `as` assembler from GCC toolchain to convert the assembly code into machine code.
 
 ## References
 - [LLVM](https://llvm.org/)

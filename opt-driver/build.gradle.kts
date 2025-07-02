@@ -3,10 +3,10 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
-    id("kotlin-application")
+    id("kotlin-common")
 }
 
-group = "org.ssa"
+group = "org.opt"
 version = "1.0"
 
 kotlin {

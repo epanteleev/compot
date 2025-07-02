@@ -6,7 +6,3 @@ This repository contains of several subprojects:
 - [compot-driver](compot-driver/README.md) - Command line interface for [compot](compot/README.md) compiler frontend
 - [opt-driver](opt-driver/README.md) - Command line interface for [opt](opt/README.md) compiler backend
 - [examples](examples/README.md) - Examples of using [opt](opt/README.md) IR in Kotlin code
-
-
-## Motivation
-In short, just for fun.
