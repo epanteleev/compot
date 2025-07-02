@@ -6,7 +6,7 @@ import ir.module.FunctionData
 import ir.module.MutationMarker
 import ir.module.Sensitivity
 import ir.module.block.Label
-import ir.pass.analysis.traverse.LinearScanOrderFabric
+import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.common.AnalysisResult
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
@@ -43,7 +43,7 @@ private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue
 
 // TODO Inefficient implementation, should be optimized
 private class LivenessAnalysis(private val functionData: FunctionData): FunctionAnalysisPass<LivenessAnalysisInfo>() {
-    private val linearScanOrder = functionData.analysis(LinearScanOrderFabric)
+    private val linearScanOrder = functionData.analysis(PreOrderFabric)
     private val liveness = run {
         val mapOf = hashMapOf<Label, LiveInfo>()
         for (bb in functionData) {
