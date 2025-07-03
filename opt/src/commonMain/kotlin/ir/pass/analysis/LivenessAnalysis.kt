@@ -13,7 +13,7 @@ import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
-data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal var liveOut: MutableSet<LocalValue>) {
+data class LiveInfo(internal val liveIn: MutableSet<LocalValue>, internal val liveOut: MutableSet<LocalValue>) {
     fun liveIn(): Set<LocalValue> = liveIn
     fun liveOut(): Set<LocalValue> = liveOut
 }
@@ -41,9 +41,8 @@ class LivenessAnalysisInfo internal constructor(private val liveness: Map<Label,
 
 private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue>)
 
-// TODO Inefficient implementation, should be optimized
 private class LivenessAnalysis(private val functionData: FunctionData): FunctionAnalysisPass<LivenessAnalysisInfo>() {
-    private val linearScanOrder = functionData.analysis(PreOrderFabric)
+    private val order = functionData.analysis(PreOrderFabric)
     private val liveness = run {
         val mapOf = hashMapOf<Label, LiveInfo>()
         for (bb in functionData) {
@@ -55,7 +54,7 @@ private class LivenessAnalysis(private val functionData: FunctionData): Function
 
     private fun computeLocalLiveSets(): Map<Label, KillGenSet> {
         val killGenSet = mutableMapOf<Label, KillGenSet>()
-        for (bb in linearScanOrder) {
+        for (bb in order) {
             val gen = hashSetOf<LocalValue>()
             val kill = hashSetOf<LocalValue>()
 
@@ -91,30 +90,28 @@ private class LivenessAnalysis(private val functionData: FunctionData): Function
         val killGenSet = computeLocalLiveSets()
         do {
             var changed = false
-            for (bb in linearScanOrder.reversed()) {
-                val liveOut = mutableSetOf<LocalValue>()
+            for (bb in order.reversed()) {
+                val bbLiveness = liveness[bb] ?: throw NoSuchElementException("No liveness info for block $bb")
+
+                val liveOut = bbLiveness.liveOut
                 for (succ in bb.successors()) {
                     // live_out = b.live_out ∪ succ.live_in
-                    liveOut.addAll(liveness[succ]!!.liveIn)
+                    changed = changed or liveOut.addAll(liveness[succ]!!.liveIn)
                 }
 
-                if (!liveness[bb]!!.liveOut.containsAll(liveOut)) {
-                    changed = true
-                    liveness[bb]!!.liveOut = liveOut
-                }
+                // union = (b.old_live_in ∪ b.old_live_out
+                // live_in = (union – b.live_kill) ∪ b.live_gen
+                bbLiveness.liveIn.addAll(liveOut)
 
-                // live_in = (b.live_out – b.live_kill) ∪ b.live_gen
-                val liveIn = run {
-                    val clone = liveOut.toMutableSet()
-                    clone.removeAll(killGenSet[bb]!!.kill)
-                    clone.addAll(killGenSet[bb]!!.gen)
-                    clone
-                }
-                liveness[bb]!!.liveIn = liveIn
+                val killGen = killGenSet[bb] ?: throw NoSuchElementException("No kill/gen set for block $bb")
+                bbLiveness.liveIn.removeAll(killGen.kill)
+                bbLiveness.liveIn.addAll(killGen.gen)
             }
         } while (changed)
+    }
 
-        for (bb in linearScanOrder) {
+    private fun computePhiOperands() {
+        for (bb in order) {
             bb.phis { phi ->
                 val livenessBB = liveness[bb]!!
                 phi.zip { block, value ->
@@ -129,6 +126,7 @@ private class LivenessAnalysis(private val functionData: FunctionData): Function
 
     override fun run(): LivenessAnalysisInfo {
         computeGlobalLiveSets()
+        computePhiOperands()
         return LivenessAnalysisInfo(liveness, functionData.marker())
     }
 }
