@@ -64,7 +64,7 @@ private class JoinPointSetEvaluate(private val functionData: FunctionData) : Fun
                 if (phiPlaces.contains(frontier)) {
                     continue
                 }
-                if (!liveness.liveIn(frontier).contains(v)) {
+                if (!liveness.liveIn(frontier).contains(v)) { //TODO: there is a better way to check live-in
                     continue
                 }
 
