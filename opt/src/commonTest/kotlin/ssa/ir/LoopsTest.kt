@@ -2,6 +2,7 @@ package ssa.ir
 
 import ir.instruction.*
 import ir.module.Module
+import ir.module.SSAModule
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.traverse.LinearScanOrderFabric
@@ -16,7 +17,7 @@ import kotlin.test.assertTrue
 
 
 class LoopsTest {
-    private fun makeLoop(): Module {
+    private fun makeLoop(): SSAModule {
         val moduleBuilder = ModuleBuilder.create()
         val builder = moduleBuilder.createFunction("test", I64Type, arrayListOf())
 

@@ -9,6 +9,7 @@ import ir.module.block.Label
 import ir.module.FunctionData
 import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.SSAModule
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.types.AggregateType
@@ -626,7 +627,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     companion object {
-        fun run(module: Module): Module {
+        fun run(module: SSAModule): SSAModule {
             val prototypes = module.prototypes
             for (data in module.functions.values) {
                 try {

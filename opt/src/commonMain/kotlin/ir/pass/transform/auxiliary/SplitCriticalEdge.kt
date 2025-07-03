@@ -1,8 +1,8 @@
 package ir.pass.transform.auxiliary
 
 import ir.instruction.Branch
-import ir.module.Module
 import ir.module.FunctionData
+import ir.module.SSAModule
 import ir.module.block.Block
 
 
@@ -28,7 +28,7 @@ internal class SplitCriticalEdge private constructor(private val functionData: F
     }
 
     private fun insertBasicBlock(bb: Block, p: Block) {
-        val newBlock = functionData.blocks.createBlock()
+        val newBlock = functionData.blocks().createBlock()
         newBlock.put(Branch.br(bb))
 
         val last = p.last()
@@ -36,7 +36,7 @@ internal class SplitCriticalEdge private constructor(private val functionData: F
     }
 
     companion object {
-        fun run(module: Module): Module {
+        fun run(module: SSAModule): SSAModule {
             module.functions().forEach { fnData ->
                 SplitCriticalEdge(fnData).pass()
             }

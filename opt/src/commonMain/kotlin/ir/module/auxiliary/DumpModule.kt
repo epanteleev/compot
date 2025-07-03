@@ -3,7 +3,7 @@ package ir.module.auxiliary
 import ir.module.*
 
 
-abstract class DumpModule<T: Module> protected constructor(protected val module: T) {
+abstract class DumpModule protected constructor(protected val module: SSAModule) {
     protected val builder = StringBuilder()
 
     private fun dump() {
@@ -22,11 +22,11 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
     abstract fun functionDump(functionData: FunctionData): StringBuilder
 
     private fun dumpExternFunctions() {
-        for (fn in module.functionDeclarations.values) {
+        for (fn in module.externFunctions.values) {
             builder.append(fn)
             builder.append('\n')
         }
-        if (module.functionDeclarations.isNotEmpty()) {
+        if (module.externFunctions.isNotEmpty()) {
             builder.append('\n')
         }
     }
@@ -67,7 +67,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
     }
 }
 
-internal class DumpSSAModule(module: SSAModule) : DumpModule<SSAModule>(module) {
+internal class DumpSSAModule(module: SSAModule) : DumpModule(module) {
     override fun functionDump(functionData: FunctionData): StringBuilder {
         return DumpSSAFunctionData(functionData).builder()
     }

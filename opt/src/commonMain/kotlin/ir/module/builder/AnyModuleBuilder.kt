@@ -114,5 +114,5 @@ abstract class AnyModuleBuilder {
         return structs[name]
     }
 
-    abstract fun build(): Module
+    abstract fun build(): SSAModule
 }

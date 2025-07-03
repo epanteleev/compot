@@ -38,7 +38,7 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
                 oldToNew[old] = newCFG.begin()
                 continue
             }
-            oldToNew[old] = newCFG.blocks.createBlock()
+            oldToNew[old] = newCFG.blocks().createBlock()
         }
 
         return oldToNew

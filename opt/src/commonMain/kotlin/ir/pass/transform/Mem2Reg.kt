@@ -4,6 +4,7 @@ import ir.pass.analysis.dominance.DominatorTree
 import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module
+import ir.module.SSAModule
 import ir.module.block.Block
 import ir.pass.CompileContext
 import ir.pass.common.TransformPassFabric
@@ -20,9 +21,9 @@ import ir.value.Value
 import ir.value.constant.UndefValue
 
 
-class Mem2Reg internal constructor(module: Module, ctx: CompileContext): TransformPass(module, ctx) {
+class Mem2Reg internal constructor(module: SSAModule, ctx: CompileContext): TransformPass<SSAModule>(module, ctx) {
     override fun name(): String = "mem2reg"
-    override fun run(): Module {
+    override fun run(): SSAModule {
         module.functions.values.forEach { fnData ->
             val dominatorTree = fnData.analysis(DominatorTreeFabric)
             Mem2RegImpl(fnData).pass(dominatorTree)
@@ -32,8 +33,8 @@ class Mem2Reg internal constructor(module: Module, ctx: CompileContext): Transfo
     }
 }
 
-object Mem2RegFabric: TransformPassFabric() {
-    override fun create(module: Module, ctx: CompileContext): TransformPass {
+object Mem2RegFabric: TransformPassFabric<SSAModule>() {
+    override fun create(module: SSAModule, ctx: CompileContext): TransformPass<SSAModule> {
         return Mem2Reg(module.copy(), ctx)
     }
 }

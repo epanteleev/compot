@@ -52,7 +52,7 @@ internal class RemoveDeadMemoryInstructions private constructor(private val cfg:
     }
 
     companion object {
-        fun run(module: Module): Module {
+        fun run(module: SSAModule): SSAModule {
             module.functions().forEach { fnData ->
                 RemoveDeadMemoryInstructions(fnData).pass()
             }

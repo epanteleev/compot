@@ -3,6 +3,7 @@ package ssa.ir.dominance
 import ir.value.constant.U16Value
 import ir.instruction.IntPredicate
 import ir.module.Module
+import ir.module.SSAModule
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.CompileContext
@@ -18,7 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class DominatorTreeTest {
-    private fun withBasicBlocks(): Module {
+    private fun withBasicBlocks(): SSAModule {
         val moduleBuilder = ModuleBuilder.create()
         val builder = moduleBuilder.createFunction("hello", U16Type, arrayListOf(PtrType))
         val b1 = builder.createLabel()

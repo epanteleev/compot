@@ -2,6 +2,7 @@ package startup
 
 import common.*
 import ir.module.Module
+import ir.module.SSAModule
 import ir.pass.CompileContext
 import ir.pass.CompileContextBuilder
 import ir.pass.PassPipeline
@@ -20,7 +21,7 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
         return commandLineArguments.inputs().first().basename()
     }
 
-    private fun runCompiler(suffix: String, asmFile: String, module: Module, pipeline: (CompileContext) -> PassPipeline): ExecutionResult {
+    private fun runCompiler(suffix: String, asmFile: String, module: SSAModule, pipeline: (CompileContext) -> PassPipeline): ExecutionResult {
         val builder = CompileContextBuilder(inputBasename())
             .setSuffix(suffix)
             .setPic(commandLineArguments.isPic())
@@ -73,7 +74,7 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
         }
     }
 
-    private fun compile(module: Module): ProcessedFile {
+    private fun compile(module: SSAModule): ProcessedFile {
         removeOrCreateDir()
         val result = if (commandLineArguments.getOptLevel() == 0) {
             runCompiler(".base", BASE, module, PassPipeline::base)
@@ -94,7 +95,7 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
         private const val BASE = "base.S"
         private const val OPT = "opt.S"
 
-        fun compile(cli: OptCLIArguments, module: Module): ProcessedFile {
+        fun compile(cli: OptCLIArguments, module: SSAModule): ProcessedFile {
             return OptDriver(cli).compile(module)
         }
     }

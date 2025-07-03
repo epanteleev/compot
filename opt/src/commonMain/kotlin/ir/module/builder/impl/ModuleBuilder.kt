@@ -30,7 +30,7 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
         return data
     }
 
-    override fun build(): Module {
+    override fun build(): SSAModule {
         val fns = functions.map { it.build() }
             .associateBy { it.name() }
 

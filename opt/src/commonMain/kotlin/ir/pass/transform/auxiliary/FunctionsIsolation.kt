@@ -93,9 +93,9 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     companion object {
-        fun run(module: Module, ctx: CompileContext): Module {
+        fun run(module: SSAModule, ctx: CompileContext): SSAModule {
             module.functions().forEach { FunctionsIsolation(it, ctx).pass() }
-            return SSAModule(module.functions, module.functionDeclarations, module.constantPool, module.globals, module.types)
+            return SSAModule(module.functions, module.externFunctions, module.constantPool, module.globals, module.types)
         }
     }
 }

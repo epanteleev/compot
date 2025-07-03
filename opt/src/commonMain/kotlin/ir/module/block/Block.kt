@@ -10,17 +10,16 @@ import ir.module.ModificationCounter
 import ir.value.constant.UndefValue
 
 
-class Block private constructor(private val mc: ModificationCounter, override val index: Int): Label, Iterable<Instruction> {
-    private val instructions = InstructionList()
+class Block private constructor(private val mc: ModificationCounter, index: Int): AnyBlock<Instruction>(index) {
     internal val predecessors = arrayListOf<Block>()
 
     private var instructionIndex: Int = 0
 
-    fun predecessors(): List<Block> {
+    override fun predecessors(): List<Block> {
         return predecessors
     }
 
-    fun successors(): List<Block> = arrayWrapperOf(last().targets())
+    override fun successors(): List<Block> = arrayWrapperOf(last().targets())
 
     fun last(): TerminateInstruction {
         return lastOrNull() ?:
@@ -39,13 +38,6 @@ class Block private constructor(private val mc: ModificationCounter, override va
         }
 
         return instructions.first()
-    }
-
-    val size
-        get(): Int = instructions.size
-
-    fun instructions(fn: (Instruction) -> Unit) {
-        instructions.forEach(fn)
     }
 
     fun transform(fn: (Instruction) -> Instruction?) {
@@ -72,29 +64,8 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return instructions.contains(instruction)
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-
-        if (other is BlockViewer) {
-            return index == other.index
-        }
-
-        if (other == null || this::class != other::class) return false
-        other as Block
-
-        return index == other.index
-    }
-
-    override fun hashCode(): Int {
-        return index
-    }
-
     fun isEmpty(): Boolean {
         return instructions.isEmpty()
-    }
-
-    override operator fun iterator(): Iterator<Instruction> {
-        return instructions.iterator()
     }
 
     fun phis(fn: (Phi) -> Unit) = instructions.forEach {
@@ -131,18 +102,6 @@ class Block private constructor(private val mc: ModificationCounter, override va
 
     internal fun removeEdge(to: Block) = mc.cf {
         to.predecessors.remove(this)
-    }
-
-    internal fun predIndex(pred: Block): Int {
-        assertion(pred in predecessors) {
-            "pred=$pred is not in bb=$this"
-        }
-
-        return predecessors.indexOf(pred)
-    }
-
-    internal fun setPred(pred: Block, index: Int) {
-        predecessors[index] = pred
     }
 
     private fun allocateValue(): Int {
@@ -230,5 +189,3 @@ class Block private constructor(private val mc: ModificationCounter, override va
         }
     }
 }
-
-private class InstructionList: LeakedLinkedList<Instruction>()
