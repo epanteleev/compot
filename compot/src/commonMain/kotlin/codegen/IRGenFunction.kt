@@ -23,7 +23,6 @@ import ir.Definitions.WORD_SIZE
 import ir.attributes.ByValue
 import ir.attributes.FunctionAttribute
 import ir.attributes.VarArgAttribute
-import ir.global.GlobalConstant
 import ir.global.StringLiteralGlobalConstant
 import ir.module.AnyFunctionPrototype
 import ir.module.DirectFunctionPrototype
@@ -894,8 +893,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun makeAlgebraicBinaryWithAssignment(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
-        when (val commonType = mb.toIRType<NonTrivialType>(sema.typeHolder, binOp.accept(sema))) {
-            is PtrType -> {
+        when (val commonType = binOp.accept(sema)) {
+            is CPointer -> {
                 val rvalue     = visitExpression(binOp.right, true)
                 val rValueType = binOp.right.accept(sema)
                 if (rValueType !is CPrimitive) {
@@ -917,11 +916,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val mul = ir.mul(convertedRValue, I64Value.of(dereferenced.size()))
 
                 val result = op(convertedLValue, mul)
-                val res = ir.convertLVToType(result, commonType)
+                val res = ir.convertLVToType(result, PtrType)
                 ir.store(lvalueAddress, res)
                 return res
             }
-            is FloatingPointType -> {
+            is AnyCFloat -> {
                 val right = visitExpression(binOp.right, true)
                 val leftType = binOp.left.accept(sema)
                 val leftIrType = mb.toIRType<PrimitiveType>(sema.typeHolder, leftType)
@@ -934,7 +933,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.store(left, sum)
                 return sum
             }
-            is IntegerType -> {
+            is AnyCInteger, is CEnumType -> {
                 val right = visitExpression(binOp.right, true)
                 val leftType = binOp.left.accept(sema)
                 val originalIrType = mb.toIRType<IntegerType>(sema.typeHolder, leftType)
@@ -953,7 +952,19 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.store(left, sumCvt)
                 return sum
             }
-            else -> throw RuntimeException("Unknown type: type=$commonType")
+            is BOOL -> {
+                val right = visitExpression(binOp.right, true)
+                val rightConverted = ir.convertLVToType(right, I8Type)
+
+                val left = visitExpression(binOp.left, false)
+                val loadedLeft = ir.load(I8Type, left)
+
+                val sum = op(loadedLeft, rightConverted)
+                val sumCvt = ir.convertLVToType(sum, I8Type)
+                ir.store(left, sumCvt)
+                return sum
+            }
+            else -> throw RuntimeException("Unknown type: type=$commonType in ${binOp.begin()}")
         }
     }
 

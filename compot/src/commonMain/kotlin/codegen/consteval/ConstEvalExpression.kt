@@ -428,17 +428,14 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
     }
 
     override fun visit(numNode: NumNode): Float {
-        return numNode.number.number() as Float
+        return numNode.number.number().toFloat()
     }
 
     override fun visit(varNode: VarNode): Float? {
-        val variable = ctx.getVariable(varNode.nameIdent()) ?: return null
-        return variable.toFloat()
+        return ctx.getVariable(varNode.nameIdent())
     }
 
-    override fun visit(arrowMemberAccess: ArrowMemberAccess): Float {
-        TODO("Not yet implemented")
-    }
+    override fun visit(arrowMemberAccess: ArrowMemberAccess): Float? = null
 
     override fun visit(memberAccess: MemberAccess): Float {
         TODO("Not yet implemented")
