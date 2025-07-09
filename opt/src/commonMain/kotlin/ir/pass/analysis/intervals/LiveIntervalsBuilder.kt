@@ -12,8 +12,8 @@ import ir.instruction.matching.any
 import ir.module.Sensitivity
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
-import ir.pass.analysis.traverse.LinearScanOrderFabric
 import ir.pass.analysis.LivenessAnalysisPassFabric
+import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.common.AnalysisType
 import ir.platform.x64.pass.analysis.regalloc.Group
 import ir.value.TupleValue
@@ -22,8 +22,8 @@ import ir.value.TupleValue
 private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
     private val intervals       = hashMapOf<LocalValue, LiveRangeImpl>()
     private val groups          = hashMapOf<LocalValue, Group>()
-    private val linearScanOrder = data.analysis(LinearScanOrderFabric)
-    private val liveness        = data.analysis(LivenessAnalysisPassFabric, false)
+    private val linearScanOrder = data.analysis(PreOrderFabric)
+    private val liveness        = data.analysis(LivenessAnalysisPassFabric)
 
     private fun setupArguments() {
         val arguments = data.arguments()

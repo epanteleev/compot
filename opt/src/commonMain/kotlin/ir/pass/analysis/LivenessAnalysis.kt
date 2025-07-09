@@ -39,7 +39,7 @@ class LivenessAnalysisInfo internal constructor(private val liveness: Map<Label,
         get() = liveness.size
 }
 
-private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue>)
+private data class KillGenSet(val kill: MutableSet<LocalValue>, val gen: MutableSet<LocalValue>)
 
 private class LivenessAnalysis(private val functionData: FunctionData): FunctionAnalysisPass<LivenessAnalysisInfo>() {
     private val order = functionData.analysis(PreOrderFabric)
@@ -83,6 +83,22 @@ private class LivenessAnalysis(private val functionData: FunctionData): Function
 
             killGenSet[bb] = KillGenSet(kill, gen)
         }
+
+        for (bb in order) {
+            bb.phis { phi ->
+                phi.zip { block, value ->
+                    if (value !is LocalValue) {
+                        return@zip
+                    }
+
+                    val killGen = killGenSet[block] ?: throw NoSuchElementException("No kill/gen set for block $bb")
+
+                    if (!killGen.kill.contains(value)) {
+                        killGen.gen.add(value)
+                    }
+                }
+            }
+        }
         return killGenSet
     }
 
@@ -110,23 +126,8 @@ private class LivenessAnalysis(private val functionData: FunctionData): Function
         } while (changed)
     }
 
-    private fun computePhiOperands() {
-        for (bb in order) {
-            bb.phis { phi ->
-                val livenessBB = liveness[bb]!!
-                phi.zip { block, value ->
-                    if (value is LocalValue) {
-                        liveness[block]!!.liveOut.add(value)
-                        livenessBB.liveIn.add(value)
-                    }
-                }
-            }
-        }
-    }
-
     override fun run(): LivenessAnalysisInfo {
         computeGlobalLiveSets()
-        computePhiOperands()
         return LivenessAnalysisInfo(liveness, functionData.marker())
     }
 }
