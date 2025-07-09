@@ -6,16 +6,13 @@ import ir.module.block.Block
 import ir.module.block.Label
 
 
-class BasicBlocks private constructor(): LabelResolver, Iterable<Block> {
-    private val modificationCounter = ModificationCounter()
+class BasicBlocks private constructor(): LabelResolver, AnyBasicBlocks<Block>() {
     private val basicBlocks = arrayListOf(Block.empty(modificationCounter, Label.entry.index))
     private var maxBBIndex: Int = 1
 
-    internal fun marker(): MutationMarker = modificationCounter.mutations()
-
     internal fun blocks(): List<Block> = basicBlocks
 
-    fun size(): Int = basicBlocks.size
+    override fun size(): Int = basicBlocks.size
 
     override fun findBlock(label: Label): Block {
         if (label is Block) {
@@ -26,7 +23,7 @@ class BasicBlocks private constructor(): LabelResolver, Iterable<Block> {
             ?: throw IllegalArgumentException("Cannot find correspond block: $label")
     }
 
-    internal fun begin(): Block {
+   override fun begin(): Block {
         assertion(basicBlocks.firstOrNull() == Label.entry) {
             "First block should be entry block, but got '${basicBlocks.firstOrNull()}'"
         }
@@ -34,7 +31,7 @@ class BasicBlocks private constructor(): LabelResolver, Iterable<Block> {
         return basicBlocks[0]
     }
 
-    internal fun end(): Block {
+    override fun end(): Block {
         return basicBlocks.find { it.lastOrNull() is Return }
             ?: throw IllegalStateException("Function data must have a return block")
     }

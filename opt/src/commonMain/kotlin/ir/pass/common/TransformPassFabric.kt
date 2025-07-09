@@ -6,8 +6,8 @@ import ir.module.Sensitivity
 import ir.pass.CompileContext
 
 
-abstract class TransformPassFabric {
-    abstract fun create(module: Module, ctx: CompileContext): TransformPass
+abstract class TransformPassFabric<M: Module<*>> {
+    abstract fun create(module: M, ctx: CompileContext): TransformPass<M>
 }
 
 abstract class FunctionAnalysisPassFabric<out T: AnalysisResult> {

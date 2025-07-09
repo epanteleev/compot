@@ -5,6 +5,7 @@ import ir.instruction.Projection
 import ir.instruction.TerminateInstruction
 import ir.module.FunctionData
 import ir.module.Module
+import ir.module.SSAModule
 import ir.pass.CompileContext
 import ir.pass.common.TransformPass
 import ir.pass.common.TransformPassFabric
@@ -13,9 +14,9 @@ import ir.value.LocalValue
 import ir.value.constant.UndefValue
 
 
-class DeadCodeEliminationPass internal constructor(module: Module, ctx: CompileContext): TransformPass(module, ctx) {
+class DeadCodeEliminationPass internal constructor(module: SSAModule, ctx: CompileContext): TransformPass<SSAModule>(module, ctx) {
     override fun name(): String = "dce"
-    override fun run(): Module {
+    override fun run(): SSAModule {
         module.functions.values.forEach { fnData ->
             DeadCodeEliminationPassImpl(fnData).pass()
         }
@@ -24,8 +25,8 @@ class DeadCodeEliminationPass internal constructor(module: Module, ctx: CompileC
     }
 }
 
-object DeadCodeElimination: TransformPassFabric() {
-    override fun create(module: Module, ctx: CompileContext): TransformPass {
+object DeadCodeElimination: TransformPassFabric<SSAModule>() {
+    override fun create(module: SSAModule, ctx: CompileContext): TransformPass<SSAModule> {
         return DeadCodeEliminationPass(module, ctx)
     }
 }

@@ -1,6 +1,6 @@
 package ir.pass
 
-import ir.module.Module
+import ir.module.SSAModule
 import ir.pass.analysis.VerifySSA
 import ir.pass.common.TransformPassFabric
 import ir.pass.transform.DeadCodeElimination
@@ -11,8 +11,8 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 
 
-class PassPipeline private constructor(private val name: String, private val passFabrics: List<TransformPassFabric>, private val ctx: CompileContext) {
-    fun run(start: Module): Module {
+class PassPipeline private constructor(private val name: String, private val passFabrics: List<TransformPassFabric<SSAModule>>, private val ctx: CompileContext) {
+    fun run(start: SSAModule): SSAModule {
         var current = start
         dumpIr(name) { current.toString() }
         for (fabric in passFabrics) {
@@ -45,7 +45,7 @@ class PassPipeline private constructor(private val name: String, private val pas
         fun base(ctx: CompileContext): PassPipeline = create("initial", arrayListOf(), ctx)
         fun opt(ctx: CompileContext): PassPipeline = create("initial", arrayListOf(Mem2RegFabric, Normalizer, DeadCodeElimination), ctx)
 
-        fun create(name: String, passFabrics: List<TransformPassFabric>, ctx: CompileContext): PassPipeline {
+        fun create(name: String, passFabrics: List<TransformPassFabric<SSAModule>>, ctx: CompileContext): PassPipeline {
             return PassPipeline(name, passFabrics, ctx)
         }
     }

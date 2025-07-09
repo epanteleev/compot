@@ -751,6 +751,12 @@ abstract class FunTests: CommonCTest() {
         val result = runCTest("compot/fun/124", listOf(), options())
         assertReturnCode(result, 90)
     }
+
+    @Test
+    fun test125() {
+        val result = runCTest("compot/fun/125", listOf(), options())
+        assertReturnCode(result, 1)
+    }
 }
 
 class FunTestsO0: FunTests() {

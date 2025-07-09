@@ -4,7 +4,7 @@ import ir.value.*
 import ir.instruction.Instruction
 import ir.instruction.TupleDiv
 import ir.module.FunctionData
-import ir.module.Module
+import ir.module.SSAModule
 import ir.pass.CompileContext
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.common.TransformPass
@@ -12,9 +12,9 @@ import ir.pass.common.TransformPassFabric
 import ir.value.constant.UndefValue
 
 
-class NormalizerPass internal constructor(module: Module, ctx: CompileContext): TransformPass(module, ctx) {
+class NormalizerPass internal constructor(module: SSAModule, ctx: CompileContext): TransformPass<SSAModule>(module, ctx) {
     override fun name(): String = "normalizer"
-    override fun run(): Module {
+    override fun run(): SSAModule {
         module.functions.values.forEach { fnData ->
             NormalizerPassImpl(fnData).pass()
         }
@@ -23,8 +23,8 @@ class NormalizerPass internal constructor(module: Module, ctx: CompileContext): 
     }
 }
 
-object Normalizer: TransformPassFabric() {
-    override fun create(module: Module, ctx: CompileContext): TransformPass {
+object Normalizer: TransformPassFabric<SSAModule>() {
+    override fun create(module: SSAModule, ctx: CompileContext): TransformPass<SSAModule> {
         return NormalizerPass(module.copy(), ctx)
     }
 }

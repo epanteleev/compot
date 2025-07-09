@@ -14,11 +14,11 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
     protected var bb: Block = fd.begin()
 
     protected fun allocateBlock(): Block {
-        return fd.blocks.createBlock()
+        return fd.blocks().createBlock()
     }
 
     fun switchLabel(label: Label) {
-        bb = fd.blocks.findBlock(label)
+        bb = fd.blocks().findBlock(label)
     }
 
     fun currentLabel(): Label = bb
@@ -42,11 +42,11 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
     abstract fun build(): FunctionData
 
     protected fun normalizeBlocks() {
-        val idx = fd.blocks.blocks().indexOfFirst { it.last() is Return }
+        val idx = fd.blocks().blocks().indexOfFirst { it.last() is Return }
         if (idx < 0) {
             throw IllegalStateException("Function data must have a return block")
         }
 
-        fd.blocks.swapBlocks(idx, fd.blocks.size() - 1)
+        fd.blocks().swapBlocks(idx, fd.blocks().size() - 1)
     }
 }

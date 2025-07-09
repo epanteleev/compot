@@ -9,10 +9,8 @@ import ir.pass.common.AnalysisResult
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
-class FunctionData private constructor(val prototype: FunctionPrototype, private val argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {
+class FunctionData private constructor(val prototype: FunctionPrototype, private val argumentValues: List<ArgumentValue>, blocks: BasicBlocks): AnyFunctionData<BasicBlocks>(blocks) {
     private val cache = AnalysisPassCache()
-
-    fun marker(): MutationMarker = blocks.marker()
 
     fun arguments(): List<ArgumentValue> = argumentValues
 
@@ -27,6 +25,8 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
     fun cache(): AnalysisPassCache {
         return cache
     }
+
+    fun blocks(): BasicBlocks = blocks
 
     inline fun<T> immutable(fn: () -> T): T {
         val begin = marker()
@@ -52,22 +52,6 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
 
     operator fun iterator(): Iterator<Block> {
         return blocks.iterator()
-    }
-
-    operator fun get(index: Int): Block {
-        return blocks.blocks()[index]
-    }
-
-    fun size(): Int {
-        return blocks.size()
-    }
-
-    fun begin(): Block {
-        return blocks.begin()
-    }
-
-    fun end(): Block {
-        return blocks.end()
     }
 
     override fun hashCode(): Int {

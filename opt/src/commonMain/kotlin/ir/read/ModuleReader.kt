@@ -3,6 +3,7 @@ package ir.read
 import ir.types.*
 import ir.global.*
 import ir.module.Module
+import ir.module.SSAModule
 import ir.read.bulder.*
 import ir.read.tokens.*
 import ir.value.constant.*
@@ -293,13 +294,13 @@ class ModuleReader private constructor(string: String) {
         FunctionBlockReader.parse(tokenIterator, moduleBuilder, fn)
     }
 
-    private fun read(): Module {
+    private fun read(): SSAModule {
         parseModule()
         return moduleBuilder.build()
     }
 
     companion object {
-        fun read(name: String): Module {
+        fun read(name: String): SSAModule {
             val text = FileInputStream(name).use { inputStream ->
                 inputStream.bufferedReader().use { it.readText() }
             }

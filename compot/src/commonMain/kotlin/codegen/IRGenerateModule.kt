@@ -2,6 +2,7 @@ package codegen
 
 import parser.nodes.*
 import ir.module.Module
+import ir.module.SSAModule
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
 import sema.SemanticAnalysis
@@ -13,7 +14,7 @@ import typedesc.TypeHolder
 data class IRCodeGenError(override val message: String, val position: Position) : Exception(message)
 
 object GenerateIR {
-    fun apply(typeHolder: TypeHolder, node: ProgramNode): Module {
+    fun apply(typeHolder: TypeHolder, node: ProgramNode): SSAModule {
         return IRGen.apply(typeHolder, node)
     }
 }
@@ -54,7 +55,7 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
     }
 
     companion object {
-        fun apply(typeHolder: TypeHolder, node: ProgramNode): Module {
+        fun apply(typeHolder: TypeHolder, node: ProgramNode): SSAModule {
             val irGen = IRGen(typeHolder)
             irGen.visit(node)
             try {

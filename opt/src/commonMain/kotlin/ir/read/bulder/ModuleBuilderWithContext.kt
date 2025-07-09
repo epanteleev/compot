@@ -42,7 +42,7 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
         return extern
     }
 
-    override fun build(): Module {
+    override fun build(): SSAModule {
         val fns = functions.map { it.build() }.associateBy { it.name() }
 
         val ssa = SSAModule(fns, functionDeclarations, constantPool, globals, structs)

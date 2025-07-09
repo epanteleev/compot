@@ -4,6 +4,7 @@ import common.assertion
 import ir.instruction.Phi
 import ir.module.FunctionData
 import ir.module.Module
+import ir.module.SSAModule
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.value.constant.UndefValue
 import kotlin.collections.iterator
@@ -90,7 +91,7 @@ internal class PhiFunctionPruning private constructor(private val cfg: FunctionD
     }
 
     companion object {
-        fun run(module: Module): Module {
+        fun run(module: SSAModule): SSAModule {
             for (f in module.functions()) {
                 PhiFunctionPruning(f).run()
             }

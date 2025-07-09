@@ -5,13 +5,15 @@ import ir.global.GlobalConstant
 import ir.module.auxiliary.DumpSSAModule
 import ir.types.StructType
 
-abstract class Module(internal val functions: Map<String, FunctionData>,
-                      internal val functionDeclarations: Map<String, DirectFunctionPrototype>,
-                      internal val constantPool: MutableMap<String, GlobalConstant>,
-                      internal val globals: Map<String, AnyGlobalValue>,
-                      internal val types: Map<String, StructType>) {
+class SSAModule(functions: Map<String, FunctionData>,
+                val externFunctions: Map<String, DirectFunctionPrototype>,
+                val constantPool: MutableMap<String, GlobalConstant>,
+                val globals: Map<String, AnyGlobalValue>,
+                val types: Map<String, StructType>):
+    Module<FunctionData>(functions) {
+
     val prototypes: List<AnyFunctionPrototype> by lazy {
-        functionDeclarations.values + functions.values.map { it.prototype }
+        externFunctions.values + functions.values.map { it.prototype }
     }
 
     fun findFunction(name: String): FunctionData {
@@ -27,26 +29,13 @@ abstract class Module(internal val functions: Map<String, FunctionData>,
         throw IllegalArgumentException("Constant with name ${constant.name()} already exists: $old")
     }
 
-    abstract fun copy(): Module
-
-    fun functions(): Collection<FunctionData> {
-        return functions.values
-    }
-}
-
-class SSAModule(functions: Map<String, FunctionData>,
-                externFunctions: Map<String, DirectFunctionPrototype>,
-                constantPool: MutableMap<String, GlobalConstant>,
-                globals: Map<String, AnyGlobalValue>,
-                types: Map<String, StructType>):
-    Module(functions, externFunctions, constantPool, globals, types) {
-    override fun copy(): Module {
+    override fun copy(): SSAModule {
         val newMap = hashMapOf<String, FunctionData>()
         for ((name, function) in functions) {
             newMap[name] = function.copy()
         }
 
-        return SSAModule(newMap, functionDeclarations, constantPool, globals, types) //TODO deep copy constantPool
+        return SSAModule(newMap, externFunctions, constantPool, globals, types) //TODO deep copy constantPool
     }
 
     override fun toString(): String {

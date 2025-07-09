@@ -777,7 +777,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                 asm.label(makeLabel(bb))
             }
 
-            bb.instructions { instruction ->
+            for (instruction in bb) {
                 asm.comment(instruction.dump())
                 instruction.accept(this)
             }

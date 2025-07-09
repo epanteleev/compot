@@ -102,32 +102,32 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
     }
 
     override fun call(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): Call {
-        val call = Call.call(func, args, attributes, target.resolve(fd.blocks))
+        val call = Call.call(func, args, attributes, target.resolve(fd.blocks()))
         return bb.put(call)
     }
 
     override fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): TupleCall {
-        val call = TupleCall.call(func, args, attributes, target.resolve(fd.blocks))
+        val call = TupleCall.call(func, args, attributes, target.resolve(fd.blocks()))
         return bb.put(call)
     }
 
     override fun vcall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): VoidCall {
-        val call = VoidCall.call(func, args, attributes, target.resolve(fd.blocks))
+        val call = VoidCall.call(func, args, attributes, target.resolve(fd.blocks()))
         return bb.put(call)
     }
 
     override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionCall {
-        val call = IndirectionCall.call(pointer, func, args, attributes, target.resolve(fd.blocks))
+        val call = IndirectionCall.call(pointer, func, args, attributes, target.resolve(fd.blocks()))
         return bb.put(call)
     }
 
     override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionVoidCall {
-        val call = IndirectionVoidCall.call(pointer, func, args, attributes, target.resolve(fd.blocks))
+        val call = IndirectionVoidCall.call(pointer, func, args, attributes, target.resolve(fd.blocks()))
         return bb.put(call)
     }
 
     fun branch(target: Label) {
-        branch(fd.blocks.findBlock(target))
+        branch(fd.blocks().findBlock(target))
     }
 
     override fun branch(target: Block): Branch {
@@ -135,7 +135,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
     }
 
     override fun branchCond(value: Value, onTrue: Label, onFalse: Label): BranchCond {
-        val br = BranchCond.br(value, onTrue.resolve(fd.blocks), onFalse.resolve(fd.blocks))
+        val br = BranchCond.br(value, onTrue.resolve(fd.blocks()), onFalse.resolve(fd.blocks()))
         return bb.put(br)
     }
 
@@ -202,7 +202,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
     }
 
     override fun itupleCall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionTupleCall {
-        val call = IndirectionTupleCall.call(pointer, func, args, attributes, target.resolve(fd.blocks))
+        val call = IndirectionTupleCall.call(pointer, func, args, attributes, target.resolve(fd.blocks()))
         return bb.put(call)
     }
 
@@ -223,7 +223,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
 
     override fun phi(incoming: List<Value>, valueType: PrimitiveType, labels: List<Label>): Phi {
         val resolvedLabels = arrayFrom(labels) {
-            it.resolve(fd.blocks)
+            it.resolve(fd.blocks())
         }
         return bb.put(Phi.phi(resolvedLabels, valueType, incoming.toTypedArray()))
     }
@@ -249,13 +249,13 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
     }
 
     override fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch {
-        val resolvedTargets = arrayFrom(targets) { it -> it.resolve(fd.blocks) }
-        val switch = Switch.switch(value, default.resolve(fd.blocks), table.toTypedArray(), resolvedTargets)
+        val resolvedTargets = arrayFrom(targets) { it -> it.resolve(fd.blocks()) }
+        val switch = Switch.switch(value, default.resolve(fd.blocks()), table.toTypedArray(), resolvedTargets)
         return bb.put(switch)
     }
 
     override fun intrinsic(inputs: List<Value>, implementor: IntrinsicProvider, target: Label): Intrinsic {
-        val intrinsic = Intrinsic.intrinsic(inputs.toTypedArray(), implementor, target.resolve(fd.blocks))
+        val intrinsic = Intrinsic.intrinsic(inputs.toTypedArray(), implementor, target.resolve(fd.blocks()))
         return bb.put(intrinsic)
     }
 

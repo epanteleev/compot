@@ -1,12 +1,12 @@
 package ir.platform.common
 
-import ir.module.Module
+
+import ir.module.SSAModule
 import ir.pass.CompileContext
 import ir.pass.PassPipeline
 import ir.pass.PassPipeline.Companion.create
 import ir.pass.transform.CSSAConstructionFabric
 import ir.pass.transform.DeadCodeElimination
-import ir.pass.transform.Mem2RegFabric
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.x64.LModule
 import ir.platform.x64.codegen.X64CodeGenerator
@@ -41,9 +41,11 @@ class CodeGenerationFactory {
         return this
     }
 
-    fun build(module: Module): CompiledModule {
-        val preparedModule = beforeCodegen(ctx!!)
-            .run(module) as LModule
+    fun build(module: SSAModule): CompiledModule {
+        val transformed = beforeCodegen(ctx!!)
+            .run(module)
+
+        val preparedModule = LModule(transformed.functions, transformed.externFunctions, transformed.constantPool, transformed.globals, transformed.types)
 
         val compiled = when (target as TargetPlatform) {
             TargetPlatform.X64 -> X64CodeGenerator(preparedModule, ctx!!).emit()

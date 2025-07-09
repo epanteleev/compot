@@ -7,6 +7,7 @@ import common.GNULdRunner
 import common.ProcessedFile
 import preprocess.*
 import ir.module.Module
+import ir.module.SSAModule
 import tokenizer.CTokenizer
 import parser.CProgramParser
 import preprocess.macros.MacroReplacement
@@ -78,7 +79,7 @@ class CompotDriver(private val cli: CompotArguments) {
             .setPic(cli.pic())
     }
 
-    private fun compile(filename: String): Module? {
+    private fun compile(filename: String): SSAModule? {
         val postProcessedTokens = preprocess(filename)?: return null
 
         val parser     = CProgramParser.build(filename, postProcessedTokens)

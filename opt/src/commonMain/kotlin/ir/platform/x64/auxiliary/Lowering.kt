@@ -16,12 +16,13 @@ import ir.instruction.matching.*
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.ExternFunction
 import ir.module.FunctionPrototype
+import ir.module.SSAModule
 import ir.pass.CompileContext
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
 import ir.platform.x64.CallConvention
 
 
-internal class Lowering private constructor(private val cfg: FunctionData, private val module: Module, private val ctx: CompileContext, private val idx: Int): IRInstructionVisitor<Instruction?>() {
+internal class Lowering private constructor(private val cfg: FunctionData, private val module: SSAModule, private val ctx: CompileContext, private val idx: Int): IRInstructionVisitor<Instruction?>() {
     private var bb: Block = cfg.begin()
     private var constantIndex = 0
 
@@ -1284,7 +1285,7 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
         private const val F64_SUBZERO: Double = -0.0
         private const val PREFIX = CallConvention.CONSTANT_POOL_PREFIX
 
-        fun run(module: Module, context: CompileContext): Module {
+        fun run(module: SSAModule, context: CompileContext): SSAModule {
             for ((idx, fn) in module.functions().withIndex()) {
                 Lowering(fn, module, context, idx).pass()
             }

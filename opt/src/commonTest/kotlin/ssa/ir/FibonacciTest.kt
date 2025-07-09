@@ -3,6 +3,7 @@ package ssa.ir
 import ir.value.constant.*
 import ir.instruction.IntPredicate
 import ir.module.Module
+import ir.module.SSAModule
 import ir.module.block.BlockViewer
 import ir.module.block.Label
 import ir.module.builder.impl.ModuleBuilder
@@ -23,7 +24,7 @@ import kotlin.test.assertTrue
 
 
 class FibonacciTest {
-    private fun withBasicBlocks(): Module {
+    private fun withBasicBlocks(): SSAModule {
         val moduleBuilder = ModuleBuilder.create()
         val builder = moduleBuilder.createFunction("fib", I32Type, arrayListOf(I32Type))
 

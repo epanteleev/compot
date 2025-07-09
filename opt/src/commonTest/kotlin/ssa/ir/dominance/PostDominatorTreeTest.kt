@@ -3,6 +3,7 @@ package ssa.ir.dominance
 import ir.types.Type
 import ir.module.Module
 import ir.instruction.IntPredicate
+import ir.module.SSAModule
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.dominance.PostDominatorTreeFabric
@@ -16,7 +17,7 @@ import kotlin.test.assertTrue
 
 
 class PostDominatorTreeTest {
-    private fun withBasicBlocks(): Module {
+    private fun withBasicBlocks(): SSAModule {
         val moduleBuilder = ModuleBuilder.create()
         val builder = moduleBuilder.createFunction("hello", U16Type, arrayListOf(PtrType))
         val b1 = builder.createLabel()
