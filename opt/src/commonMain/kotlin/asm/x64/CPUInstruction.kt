@@ -3,6 +3,7 @@ package asm.x64
 import common.assertion
 import asm.x64.GPRegister.rdx
 import asm.x64.GPRegister.rax
+import ir.Definitions.QWORD_SIZE
 
 
 sealed class CPUInstruction {
@@ -39,7 +40,11 @@ internal data class Pop(val size: Int, val register: GPRegister): CPUInstruction
 
 internal data class Mov(val size: Int, val src: Operand, val des: Operand): CPUInstruction() {
     override fun toString(): String {
-        return "mov${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
+        return if (size == QWORD_SIZE && src is Imm64) {
+            "movabsq ${src.toString(size)}, ${des.toString(size)}"
+        } else {
+            "mov${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
+        }
     }
 }
 

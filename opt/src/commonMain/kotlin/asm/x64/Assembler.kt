@@ -161,9 +161,9 @@ abstract class Assembler(functionName: String, val id: Int): AnonymousDirective(
 
     // Move
     protected fun mov(size: Int, src: GPRegister, dst: GPRegister) = add(Mov(size, src, dst))
-    fun mov(size: Int, src: Address, dst: GPRegister)    = add(Mov(size, src, dst))
-    fun mov(size: Int, src: GPRegister, dst: Address)    = add(Mov(size, src, dst))
-    fun mov(size: Int, imm: Imm32, dst: Address)        = add(Mov(size, imm, dst))
+    fun mov(size: Int, src: Address, dst: GPRegister) = add(Mov(size, src, dst))
+    fun mov(size: Int, src: GPRegister, dst: Address) = add(Mov(size, src, dst))
+    fun mov(size: Int, imm: Imm32, dst: Address)      = add(Mov(size, imm, dst))
     fun mov(size: Int, imm: Imm, dst: GPRegister)     = add(Mov(size, imm, dst))
 
     // Move With Sign-Extension
