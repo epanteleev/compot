@@ -42,16 +42,18 @@ class CodeGenerationFactory {
     }
 
     fun build(module: SSAModule): CompiledModule {
+        if (ctx == null) {
+            throw IllegalStateException("Compile context is not set")
+        }
+
         val transformed = beforeCodegen(ctx!!)
             .run(module)
 
         val preparedModule = LModule(transformed.functions, transformed.externFunctions, transformed.constantPool, transformed.globals, transformed.types)
 
-        val compiled = when (target as TargetPlatform) {
+        return when (target as TargetPlatform) {
             TargetPlatform.X64 -> X64CodeGenerator(preparedModule, ctx!!).emit()
         }
-
-        return compiled
     }
 
     companion object {

@@ -82,6 +82,7 @@ class FibonacciTest {
         builder.branch(forInc)
 
         builder.switchLabel(forInc)
+
         val v8 = builder.load(I32Type, i)
         val inc = builder.add(v8, I32Value.of(1))
         builder.store(i, inc)

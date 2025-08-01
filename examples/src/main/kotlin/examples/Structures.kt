@@ -15,7 +15,7 @@ fun main() {
 
     builder.createFunction("main", I32Type, arrayListOf()).apply {
         val first = alloc(pointStruct)
-        val firstField = gep(first, I32Type, I32Value.of(0))
+        val firstField = gfp(first, pointStruct, I64Value.of(0))
         store(firstField, I32Value.of(4))
         ret(I32Type, arrayOf(I32Value.of(0)))
     }
@@ -23,11 +23,10 @@ fun main() {
     val module = builder.build()
     println(module.toString())
     val ctx = CompileContext.empty()
-    val des = SSADestructionFabric.create(module, ctx).run()
-    println(des)
     val asm = CodeGenerationFactory()
         .setTarget(TargetPlatform.X64)
-        .build(SSADestructionFabric.create(module, ctx).run())
+        .setContext(ctx)
+        .build(module)
 
     println(asm.toString())
 }

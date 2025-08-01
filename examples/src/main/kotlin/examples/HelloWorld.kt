@@ -24,10 +24,10 @@ fun main() {
     val module = builder.build()
     println(module.toString())
 
-    val ctx = CompileContext.empty()
     val asm = CodeGenerationFactory()
         .setTarget(TargetPlatform.X64)
-        .build(SSADestructionFabric.create(module, ctx).run())
+        .setContext(CompileContext.empty())
+        .build(module)
 
     println(asm.toString())
 }

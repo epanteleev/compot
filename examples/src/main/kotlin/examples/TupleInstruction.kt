@@ -13,7 +13,7 @@ fun main() {
     val builder = ir.module.builder.impl.ModuleBuilder.create()
     builder.createFunction("func", I32Type, arrayListOf(I32Type)).apply {
         val divRes = tupleDiv(I32Value.of(10), I32Value.of(2))
-        ret(U32Type, arrayOf(divRes.remainder))
+        ret(I32Type, arrayOf(divRes.remainder))
     }
 
     val module = builder.build()
@@ -22,7 +22,8 @@ fun main() {
     val ctx = CompileContext.empty()
     val asm = CodeGenerationFactory()
         .setTarget(TargetPlatform.X64)
-        .build(SSADestructionFabric.create(module, ctx).run())
+        .setContext(ctx)
+        .build(module)
 
     println(asm.toString())
 }

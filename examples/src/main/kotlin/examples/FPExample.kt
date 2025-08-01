@@ -29,12 +29,11 @@ fun main() {
 
     val module = builder.build()
     println(module.toString())
-    val ctx = CompileContext.empty()
-    val des = SSADestructionFabric.create(module, ctx).run()
-    println(des)
+
     val asm = CodeGenerationFactory()
         .setTarget(TargetPlatform.X64)
-        .build(des)
+        .setContext(CompileContext.empty())
+        .build(module)
 
     println(asm.toString())
 }
