@@ -11,7 +11,7 @@ import ir.platform.x64.codegen.visitors.*
 
 
 internal class SelectCodegen(type: IntegerType, val condition: CompareInstruction, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
-    private val size: Int = type.sizeOf()
+    private val size: Int = convert_size(type.sizeOf())
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
@@ -199,5 +199,12 @@ internal class SelectCodegen(type: IntegerType, val condition: CompareInstructio
 
     override fun default(dst: Operand, first: Operand, second: Operand) {
         throw RuntimeException("Internal error: '${Select.NAME}' dst=$dst, first=$first, second=$second")
+    }
+
+    companion object {
+        private fun convert_size(size: Int): Int = when (size) {
+            1 -> 4
+            else -> size
+        }
     }
 }
