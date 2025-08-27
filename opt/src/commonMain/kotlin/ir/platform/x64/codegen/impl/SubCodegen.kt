@@ -19,9 +19,8 @@ internal class SubCodegen(val type: IntegerType, val asm: X64MacroAssembler): GP
         when {
             (first == dst) -> asm.sub(size, second, dst)
             (second == dst) -> {
-                asm.copy(size, first, temp1)
-                asm.sub(size, second, temp1)
-                asm.copy(size, temp1, dst)
+                asm.neg(size, dst)
+                asm.add(size, first, dst)
             }
             else -> {
                 asm.copy(size, first, dst)
@@ -37,9 +36,8 @@ internal class SubCodegen(val type: IntegerType, val asm: X64MacroAssembler): GP
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         if (dst == second) {
-            asm.mov(size, first, temp1)
-            asm.sub(size, second, temp1)
-            asm.copy(size, temp1, dst)
+            asm.neg(size, dst)
+            asm.add(size, first, dst)
         } else {
             asm.mov(size, first, dst)
             asm.sub(size, second, dst)
@@ -48,9 +46,8 @@ internal class SubCodegen(val type: IntegerType, val asm: X64MacroAssembler): GP
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
         if (dst == second) {
-            asm.copy(size, first, temp1)
-            asm.sub(size, second, temp1)
-            asm.copy(size, temp1, dst)
+            asm.neg(size, dst)
+            asm.add(size, first, dst)
         } else {
             asm.copy(size, first, dst)
             asm.sub(size, second, dst)
