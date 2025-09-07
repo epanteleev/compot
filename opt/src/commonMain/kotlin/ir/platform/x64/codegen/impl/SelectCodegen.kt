@@ -12,6 +12,7 @@ import ir.platform.x64.codegen.visitors.*
 
 internal class SelectCodegen(type: IntegerType, val condition: CompareInstruction, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
+    private val normalizedSize = if (size == 1) 4 else size // cmovcc does not support byte size
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
@@ -24,15 +25,15 @@ internal class SelectCodegen(type: IntegerType, val condition: CompareInstructio
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         if (first == second) {
-            asm.copy(size, first, dst)
+            asm.copy(normalizedSize, first, dst)
             return
         }
         when (dst) {
-            first -> asm.cmovcc(size, matchIntCondition().invert(), second, dst)
-            second -> asm.cmovcc(size, matchIntCondition(), first, dst)
+            first -> asm.cmovcc(normalizedSize, matchIntCondition().invert(), second, dst)
+            second -> asm.cmovcc(normalizedSize, matchIntCondition(), first, dst)
             else -> {
-                asm.copy(size, second, dst)
-                asm.cmovcc(size, matchIntCondition(), first, dst)
+                asm.copy(normalizedSize, second, dst)
+                asm.cmovcc(normalizedSize, matchIntCondition(), first, dst)
             }
         }
     }
@@ -50,10 +51,21 @@ internal class SelectCodegen(type: IntegerType, val condition: CompareInstructio
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         if (dst == second) {
-            asm.cmovcc(size, matchIntCondition(), first, dst)
+            if (size == 1) {
+                asm.mov(size, first, temp1)
+                asm.cmovcc(normalizedSize, matchIntCondition().invert(), temp1, dst)
+            } else {
+                asm.cmovcc(size, matchIntCondition(), first, dst)
+            }
         } else {
-            asm.copy(size, second, dst)
-            asm.cmovcc(size, matchIntCondition(), first, dst)
+            if (size == 1) {
+                asm.copy(size, second, dst)
+                asm.mov(size, first, temp1)
+                asm.cmovcc(normalizedSize, matchIntCondition(), temp1, dst)
+            } else {
+                asm.copy(size, second, dst)
+                asm.cmovcc(size, matchIntCondition(), first, dst)
+            }
         }
     }
 
@@ -69,8 +81,14 @@ internal class SelectCodegen(type: IntegerType, val condition: CompareInstructio
             TODO("untested")
             asm.cmovcc(size, matchIntCondition(), second, dst)
         } else {
-            asm.mov(size, second, dst)
-            asm.cmovcc(size, matchIntCondition(), first, dst)
+            if (size == 1) {
+                asm.mov(size, second, dst)
+                asm.copy(size, first, temp1)
+                asm.cmovcc(normalizedSize, matchIntCondition(), temp1, dst)
+            } else {
+                asm.mov(size, second, dst)
+                asm.cmovcc(size, matchIntCondition(), first, dst)
+            }
         }
     }
 
@@ -80,8 +98,14 @@ internal class SelectCodegen(type: IntegerType, val condition: CompareInstructio
             asm.mov(size, second, temp1)
             asm.cmovcc(size, matchIntCondition().invert(), temp1, dst)
         } else {
-            asm.mov(size, second, dst)
-            asm.cmovcc(size, matchIntCondition(), first, dst)
+            if (size == 1) {
+                asm.mov(size, second, dst)
+                asm.copy(size, first, temp1)
+                asm.cmovcc(normalizedSize, matchIntCondition(), temp1, dst)
+            } else {
+                asm.mov(size, second, dst)
+                asm.cmovcc(size, matchIntCondition(), first, dst)
+            }
         }
     }
 
@@ -103,17 +127,29 @@ internal class SelectCodegen(type: IntegerType, val condition: CompareInstructio
         }
         asm.mov(size, second, dst)
         asm.mov(size, first, temp1)
-        asm.cmovcc(size, matchIntCondition(), temp1, dst)
+        asm.cmovcc(normalizedSize, matchIntCondition(), temp1, dst)
     }
 
     override fun ria(dst: GPRegister, first: Imm, second: Address) {
-        asm.mov(size, first, dst)
-        asm.cmovcc(size, matchIntCondition().invert(), second, dst)
+        if (size == 1) {
+            asm.mov(size, first, dst)
+            asm.mov(size, second, temp1)
+            asm.cmovcc(normalizedSize, matchIntCondition().invert(), temp1, dst)
+        } else {
+            asm.mov(size, first, dst)
+            asm.cmovcc(size, matchIntCondition().invert(), second, dst)
+        }
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm) {
-        asm.mov(size, second, dst)
-        asm.cmovcc(size, matchIntCondition(), first, dst)
+        if (size == 1) {
+            asm.mov(size, second, dst)
+            asm.mov(size, first, temp1)
+            asm.cmovcc(normalizedSize, matchIntCondition(), temp1, dst)
+        } else {
+            asm.mov(size, second, dst)
+            asm.cmovcc(size, matchIntCondition(), first, dst)
+        }
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
@@ -125,14 +161,14 @@ internal class SelectCodegen(type: IntegerType, val condition: CompareInstructio
             if (Imm.canBeImm32(first.value())) {
                 asm.mov(size, first.asImm32(), dst)
             } else {
-                asm.copy(size, first, temp1)
+                asm.mov(size, first, temp1)
                 asm.mov(size, temp1, dst)
             }
             return
         }
         asm.mov(size, second, temp2)
         asm.mov(size, first, temp1)
-        asm.cmovcc(size, matchIntCondition(), temp1, temp2)
+        asm.cmovcc(normalizedSize, matchIntCondition(), temp1, temp2)
         asm.mov(size, temp2, dst)
     }
 
@@ -152,14 +188,14 @@ internal class SelectCodegen(type: IntegerType, val condition: CompareInstructio
 
     override fun ari(dst: Address, first: GPRegister, second: Imm) {
         asm.mov(size, second, temp1)
-        asm.cmovcc(size, matchIntCondition(), first, temp1)
+        asm.cmovcc(normalizedSize, matchIntCondition(), first, temp1)
         asm.mov(size, temp1, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm) {
         asm.mov(size, second, temp2)
         asm.mov(size, first, temp1)
-        asm.cmovcc(size, matchIntCondition(), temp1, temp2)
+        asm.cmovcc(normalizedSize, matchIntCondition(), temp1, temp2)
         asm.mov(size, temp2, dst)
     }
 

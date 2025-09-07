@@ -749,52 +749,6 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
     }
 
     override fun visit(select: Select): Instruction {
-        select.match(select(any(), value(i8()), value(i8()))) {
-            // Before:
-            //  %cond = icmp <predicate> i8 %a, %b
-            //  %res = select i1 %cond, i8 %onTrue, i8 %onFalse
-            //
-            // After:
-            //  %extOnTrue  = sext %onTrue to i16
-            //  %extOnFalse = sext %onFalse to i16
-            //  %cond = icmp <predicate> i8 %a, %b
-            //  %newSelect = select i1 %cond, i16 %extOnTrue, i16 %extOnFalse
-            //  %res = trunc %newSelect to i8
-
-            val insertPos = when(val selectCond = select.condition()) {
-                is CompareInstruction -> selectCond
-                else                  -> select
-            }
-
-            val extOnTrue  = bb.putBefore(insertPos, SignExtend.sext(select.onTrue(), I16Type))
-            val extOnFalse = bb.putBefore(insertPos, SignExtend.sext(select.onFalse(), I16Type))
-            val newSelect  = bb.putBefore(select, Select.select(select.condition(), I16Type, extOnTrue, extOnFalse))
-            return bb.replace(select, Truncate.trunc(newSelect, I8Type))
-        }
-
-        select.match(select(any(), value(u8()), value(u8()))) {
-            // Before:
-            //  %cond = icmp <predicate> u8 %a, %b
-            //  %res = select i1 %cond, u8 %onTrue, u8 %onFalse
-            //
-            // After:
-            //  %extOnTrue  = zext %onTrue to u16
-            //  %extOnFalse = zext %onFalse to u16
-            //  %cond = icmp <predicate> u8 %a, %b
-            //  %newSelect = select i1 %cond, u16 %extOnTrue, u16 %extOnFalse
-            //  %res = trunc %newSelect to u8
-
-            val insertPos = when(val selectCond = select.condition()) {
-                is CompareInstruction -> selectCond
-                else                  -> select
-            }
-
-            val extOnTrue  = bb.putBefore(insertPos, ZeroExtend.zext(select.onTrue(), U16Type))
-            val extOnFalse = bb.putBefore(insertPos, ZeroExtend.zext(select.onFalse(), U16Type))
-            val newSelect  = bb.putBefore(select, Select.select(select.condition(), U16Type, extOnTrue, extOnFalse))
-            return bb.replace(select, Truncate.trunc(newSelect, U8Type))
-        }
-
         return select
     }
 
