@@ -9,7 +9,7 @@ import ir.pass.common.AnalysisResult
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
-class FunctionData private constructor(val prototype: FunctionPrototype, private val argumentValues: List<ArgumentValue>, blocks: BasicBlocks): AnyFunctionData<BasicBlocks>(blocks) {
+class FunctionData private constructor(val prototype: FunctionPrototype, private val argumentValues: List<ArgumentValue>, blocks: BasicBlocks): AnyFunctionData(blocks) {
     private val cache = AnalysisPassCache()
 
     fun arguments(): List<ArgumentValue> = argumentValues

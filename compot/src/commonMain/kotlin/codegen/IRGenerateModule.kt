@@ -1,7 +1,6 @@
 package codegen
 
 import parser.nodes.*
-import ir.module.Module
 import ir.module.SSAModule
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
@@ -24,7 +23,7 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
         for (node in programNode.nodes) {
             when (node) {
                 is FunctionDeclarationNode -> generateFunction(node.function)
-                is GlobalDeclaration  -> generateDeclaration(node.declaration)
+                is GlobalDeclaration -> generateDeclaration(node.declaration)
             }
         }
     }

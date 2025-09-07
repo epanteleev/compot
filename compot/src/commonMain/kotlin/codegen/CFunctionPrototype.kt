@@ -21,8 +21,7 @@ internal class CFunctionPrototypeBuilder(
     private val functionType: CFunctionType,
     private val mb: ModuleBuilder,
     val typeHolder: TypeHolder,
-    val storageClass: StorageClass?,
-) {
+    val storageClass: StorageClass?) {
     private val returnType = irReturnType()
     private val types = arrayListOf<NonTrivialType>()
     private val attributes = hashSetOf<FunctionAttribute>()

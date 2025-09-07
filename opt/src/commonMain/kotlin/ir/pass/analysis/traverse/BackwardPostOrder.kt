@@ -3,7 +3,6 @@ package ir.pass.analysis.traverse
 import ir.module.AnyFunctionData
 import ir.module.FunctionData
 import ir.module.Sensitivity
-import ir.module.block.AnyBlock
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.pass.common.AnalysisType
@@ -11,7 +10,7 @@ import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
-private class BackwardPostOrderPass<FD: AnyFunctionData<*>>(private val functionData: FD): FunctionAnalysisPass<BlockOrder>() {
+private class BackwardPostOrderPass<FD: AnyFunctionData>(private val functionData: FD): FunctionAnalysisPass<BlockOrder>() {
     override fun run(): BlockOrder {
         val visited = BooleanArray(functionData.size())
         val order = arrayListOf<Block>()

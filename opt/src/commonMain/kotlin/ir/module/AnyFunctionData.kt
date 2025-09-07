@@ -2,7 +2,7 @@ package ir.module
 
 import ir.module.block.Block
 
-abstract class AnyFunctionData<BBS: AnyBasicBlocks<*>>(protected val blocks: BasicBlocks) {
+abstract class AnyFunctionData(protected val blocks: BasicBlocks) {
     fun size(): Int {
         return blocks.size()
     }

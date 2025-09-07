@@ -6,10 +6,8 @@ import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.Generate
 import ir.instruction.lir.Lea
-import ir.instruction.matching.anytype
 import ir.instruction.matching.gVisible
 import ir.module.FunctionData
-import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
 import ir.pass.CompileContext
